@@ -139,6 +139,7 @@ function render() {
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
+  // 📌 1파티 2파티 탭 이름을 '1PT & 2PT'로 변경
   if (p12.length > 0) tabs.push({ label: '1PT & 2PT', parties: p12 });
 
   const p3Free = [];
@@ -149,6 +150,7 @@ function render() {
     });
   }
   if (parties['FREE ROLE']) p3Free.push('FREE ROLE');
+  // 📌 3파티 FREE ROLE 탭 이름을 '3PT & FREE ROLE'로 변경
   if (p3Free.length > 0) tabs.push({ label: '3PT & FREE ROLE', parties: p3Free });
 
   allPartyNames.forEach(p => {
@@ -217,6 +219,7 @@ function render() {
     if (isMulti || currentTab.parties.length === 1) {
       const subTitle = document.createElement('div');
       subTitle.className = 'party-sub-title';
+      // 📌 파티 타이틀 앞에 어울리는 깃발(🚩) 아이콘 적용
       subTitle.innerText = `🚩 ${partyName} (${currentCount} / ${maxCount})`;
       partyColumn.appendChild(subTitle);
     }
@@ -407,7 +410,8 @@ function openAdminFloatingModal() {
 
     contentDiv.querySelector('#btn-close-modal').onclick = () => {
       modal.remove();
-      activeTabLabel = '1·2파티';
+      // 📌 탭 이름 변경에 맞춰 기본 포커스 탭 이름도 '1PT & 2PT'로 연동
+      activeTabLabel = '1PT & 2PT';
       render();
     };
 
@@ -430,7 +434,7 @@ function openAdminFloatingModal() {
     contentDiv.querySelector('#btn-toggle-party3').onclick = () => {
       socket.emit('toggleParty3');
       modal.remove();
-      activeTabLabel = '1·2파티';
+      activeTabLabel = '1PT & 2PT';
       render();
     };
 
@@ -438,7 +442,7 @@ function openAdminFloatingModal() {
       if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
         socket.emit('resetData');
         modal.remove();
-        activeTabLabel = '1·2파티';
+        activeTabLabel = '1PT & 2PT';
         render();
         alert('데이터가 초기화되었습니다.');
       }
@@ -481,7 +485,7 @@ function openAdminFloatingModal() {
           if (rRes.success) {
             alert(`조합이 [${chosenFileName}] (으)로 교체되었습니다!`);
             modal.remove();
-            activeTabLabel = '1·2파티';
+            activeTabLabel = '1PT & 2PT';
             render();
           } else {
             alert(rRes.message || '변경 실패');
