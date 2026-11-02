@@ -87,7 +87,7 @@ function renderFloatingButtons() {
   container.id = 'floating-buttons-container';
   container.style.cssText = `
     position: fixed;
-    bottom: 85px; /* 기존 위치보다 약 20px 위로 상향 조정 */
+    bottom: 80px;
     right: 20px;
     display: flex;
     flex-direction: column;
