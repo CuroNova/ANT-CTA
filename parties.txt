@@ -1,5 +1,5 @@
 [1파티]
-P1U01 / 어스룬 / 코멘트123 / https://render.albiononline.com/v1/item/T8_MAIN_SWORD
+P1U01 / 어스룬 / 코멘트123 / https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET1
 P1U02 / 홀리스태프 / 힐러 셋팅 / 
 P1U03 / 아케인 / 버퍼 / 
 P1U04 / 해머 / 탱커 / 
