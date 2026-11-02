@@ -94,7 +94,7 @@ function renderRegearButton() {
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
   regearBtn.onclick = () => {
     // 📌 지정하신 링크로 이동 (새 창)
-    window.open('https://www.naver.com', '_blank');
+    window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
   };
 
   document.body.appendChild(regearBtn);
