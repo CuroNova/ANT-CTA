@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
   renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
+  renderDaSummaryBox();      // 📌 화면 최좌측 상단에 고정될 DA 현황 박스 초기 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -75,6 +76,23 @@ function handleNicknameFocus(inputEl) {
 function handleNicknameBlur(inputEl) {
   if (!inputEl.value || inputEl.value.trim() === '') {
     inputEl.style.textAlign = 'center';
+  }
+}
+
+// 📌 화면 좌측 상단에 독립적으로 고정될 DA 현황 박스 생성 함수
+function renderDaSummaryBox() {
+  let daContainer = document.getElementById('fixed-da-summary-container');
+  if (!daContainer) {
+    daContainer = document.createElement('div');
+    daContainer.id = 'fixed-da-summary-container';
+    // 인원현황 박스와 수직 높이를 맞추고, 화면 최좌측(left: 20px)에 고정 배치
+    daContainer.style.cssText = `
+      position: fixed;
+      top: 20px; /* 상단 여백 (다른 상단 메뉴들과 나란히 보이도록 조정 가능) */
+      left: 20px; /* 화면 최좌측 고정 */
+      z-index: 9997;
+    `;
+    document.body.appendChild(daContainer);
   }
 }
 
@@ -221,39 +239,23 @@ function render() {
 
   const daValue = currentData.daValue !== undefined ? currentData.daValue : 0;
 
-  // 📌 1. 인원현황(길드/갑옷 요약 등)과 완벽히 동일한 높이·길이·스타일로 최좌측에 DA 현황판 배치
-  let daSummaryContainer = document.getElementById('da-summary');
-  if (!daSummaryContainer) {
-    const summaryParent = document.getElementById('guild-summary')?.parentNode;
-    if (summaryParent) {
-      const daDiv = document.createElement('div');
-      daDiv.id = 'da-summary-wrapper';
-      // 인원현황 요약 박스들과 완전히 똑같은 구조·클래스(summary-box)를 사용해 높이와 길이를 맞춤
-      daDiv.innerHTML = `
-        <div class="summary-box" style="margin-bottom: 10px;">
-          <div class="summary-item" id="da-summary"></div>
-        </div>
-      `;
-      // 가장 첫 번째 자식으로 삽입하여 최좌측 인원현황 라인에 자연스럽게 포함되도록 함
-      summaryParent.insertBefore(daDiv, summaryParent.firstChild);
-      daSummaryContainer = document.getElementById('da-summary');
-    }
-  }
-
-  if (daSummaryContainer) {
-    daSummaryContainer.innerHTML = '';
-    
-    // 색상 조건 (0: 흰색, 10이상: 노란색, 20이상: 주황색)
-    let daColorHex = '#f8fafc';
+  // 📌 최좌측 상단에 고정된 컨테이너 내부에 인원현황과 똑같은 디자인(summary-box)으로 DA 현황판 렌더링
+  const daContainer = document.getElementById('fixed-da-summary-container');
+  if (daContainer) {
+    let daColorHex = '#f8fafc'; // 기본 흰색 (0일 때)
     if (daValue >= 20) {
-      daColorHex = '#f97316'; // 주황색
+      daColorHex = '#f97316'; // 20 이상: 주황색
     } else if (daValue >= 10) {
-      daColorHex = '#eab308'; // 노란색
+      daColorHex = '#eab308'; // 10 이상: 노란색
     }
 
-    daSummaryContainer.innerHTML = `
-      <span class="summary-label">DA</span>
-      <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
+    daContainer.innerHTML = `
+      <div class="summary-box">
+        <div class="summary-item">
+          <span class="summary-label">DA</span>
+          <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
+        </div>
+      </div>
     `;
   }
 
