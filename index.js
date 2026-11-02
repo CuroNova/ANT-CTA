@@ -91,8 +91,8 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
-// 📌 초기 데이터 로드 함수
-function loadInitialState() {
+// 📌 초기 데이터 로드 함수 (isParty3Disabled 상태 인자 추가)
+function loadInitialState(isParty3Disabled = false) {
   let initialSlots = [];
   const mappingConfig = loadMappingConfig();
   const config = loadConfig();
@@ -137,6 +137,14 @@ function loadInitialState() {
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
+        // 📌 3파티 비활성화 상태이고, 파티 이름에 '3'이 포함되어 있거나 'FREE ROLE'인 경우 슬롯을 비워둠 처리
+        const isTargetParty3 = isParty3Disabled && (currentParty.includes('3') || currentParty === 'FREE ROLE');
+
+        if (isTargetParty3) {
+          // 비활성화된 파티는 슬롯을 넣지 않거나 빈 파티로 처리
+          return;
+        }
+
         slotsByParty[currentParty].push({
           id: slotId,
           role: roleName,
@@ -155,7 +163,26 @@ function loadInitialState() {
     });
 
     definedParties.forEach(pName => {
-      if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
+      // 📌 3파티 비활성화 대상인 경우, 빈 파티 슬롯(isEmptyParty: true)을 강제로 생성하여 "비활성화된 파티입니다" 문구가 뜨게 함
+      const isTargetParty3 = isParty3Disabled && (pName.includes('3') || pName === 'FREE ROLE');
+
+      if (isTargetParty3) {
+        initialSlots.push({
+          id: `EMPTY_${pName}`,
+          party: pName,
+          isEmptyParty: true,
+          displayIndex: 1,
+          role: '',
+          weaponName: '',
+          armorName: '',
+          weaponImg: '',
+          armorImg: '',
+          nickname: '',
+          guild: guilds[0] || 'ANT',
+          comment: '',
+          attended: false
+        });
+      } else if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
         initialSlots.push(...slotsByParty[pName]);
       } else {
         initialSlots.push({
@@ -181,13 +208,14 @@ function loadInitialState() {
     slots: initialSlots, 
     guilds, 
     inviteCode: config ? config.inviteCode : '1234',
-    currentLoadout: path.basename(currentPartiesFile, '.txt')
+    currentLoadout: path.basename(currentPartiesFile, '.txt'),
+    isParty3Disabled: isParty3Disabled // 📌 상태값 전달
   };
 }
 
 function getData() {
   if (!fs.existsSync(DATA_FILE)) {
-    const initialData = loadInitialState();
+    const initialData = loadInitialState(false);
     fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
     return initialData;
   }
@@ -195,7 +223,7 @@ function getData() {
     const content = fs.readFileSync(DATA_FILE, 'utf8');
     return JSON.parse(content);
   } catch (err) {
-    const initialData = loadInitialState();
+    const initialData = loadInitialState(false);
     fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
     return initialData;
   }
@@ -260,7 +288,7 @@ app.get('/api/admin/loadouts', (req, res) => {
   }
 });
 
-// 📌 관리자 API: 조합(.txt) 변경 (단순 교체 방식)
+// 📌 관리자 API: 조합(.txt) 변경 (단순 교체 방식, 기존 비활성화 상태 유지)
 app.post('/api/admin/change-loadout', (req, res) => {
   const { filename } = req.body;
   const targetFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
@@ -271,7 +299,8 @@ app.post('/api/admin/change-loadout', (req, res) => {
   }
 
   currentPartiesFile = targetPath;
-  const newState = loadInitialState();
+  const oldData = getData();
+  const newState = loadInitialState(oldData.isParty3Disabled || false);
 
   saveData(newState);
   io.emit('dataUpdated', newState);
@@ -292,8 +321,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 📌 3파티 비활성화/활성화 토글 이벤트 처리
+  socket.on('toggleParty3', () => {
+    const data = getData();
+    const nextDisabledState = !(data.isParty3Disabled || false);
+    
+    // 현재 조합 파일을 유지한 채 3파티 비활성화 상태만 변경하여 재생성
+    const newState = loadInitialState(nextDisabledState);
+    saveData(newState);
+    io.emit('dataUpdated', newState);
+  });
+
   socket.on('resetData', () => {
-    const resetData = loadInitialState();
+    const resetData = loadInitialState(false);
     saveData(resetData);
     io.emit('dataUpdated', resetData);
   });
