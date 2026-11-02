@@ -91,7 +91,7 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
-// 📌 💡 닉네임, 길드, 출석 상태(그리고 Free Role의 희망 포지션 역할인 코멘트 등 개인 입력값)만 백업
+// 📌 닉네임, 길드, 출석 상태 백업 (조합표 변경 시 Free Role의 희망 포지션도 유지되도록 백업)
 function getExistingUserDataMap() {
   const map = new Map();
   if (fs.existsSync(DATA_FILE)) {
@@ -104,7 +104,6 @@ function getExistingUserDataMap() {
               nickname: slot.nickname || '',
               attended: slot.attended || false,
               guild: slot.guild || '',
-              // Free Role 파티의 경우 코멘트 칸이 '희망 포지션' 입력란이므로 이 값도 개인 입력 데이터로 보존함
               comment: slot.party && slot.party.includes('FREE ROLE') ? (slot.comment || '') : ''
             });
           }
@@ -117,13 +116,13 @@ function getExistingUserDataMap() {
   return map;
 }
 
-// 📌 초기 데이터 로드 함수
+// 📌 초기 데이터 로드 함수 (isReset이 true일 때는 닉네임/길드/출석뿐만 아니라 Free Role 희망포지션까지 완벽히 초기화)
 function loadInitialState(isParty3Disabled = false, isReset = false) {
   let initialSlots = [];
   const mappingConfig = loadMappingConfig();
   const config = loadConfig();
   
-  // 💡 초기화(reset) 시에는 백업본을 비워 길드/닉네임/출석/희망포지션이 싹 비워지게 함
+  // 💡 초기화(reset) 시에는 백업본을 빈 Map으로 두어 개인 입력 데이터가 싹 비워지게 함
   const savedUserDataMap = isReset ? new Map() : getExistingUserDataMap();
 
   const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -168,13 +167,12 @@ function loadInitialState(isParty3Disabled = false, isReset = false) {
         const isTargetParty3 = isParty3Disabled && currentParty.includes('3') && currentParty !== 'FREE ROLE';
         if (isTargetParty3) return;
 
-        // 💡 기본적으로 코멘트는 txt 파일 원본(commentText)을 따름
         let userNickname = '';
         let userAttended = false;
         let userGuild = guilds[0] || 'ANT';
         let finalComment = commentText; 
 
-        // 💡 조합표 변경 시 닉네임, 길드, 출석은 유지하되 일반 파티 코멘트는 txt 원본을 따름 (Free Role은 희망포지션 유지)
+        // 💡 조합표 변경 시 닉네임, 길드, 출석, 그리고 Free Role의 희망포지션은 유지
         if (savedUserDataMap.has(slotId)) {
           const saved = savedUserDataMap.get(slotId);
           userNickname = saved.nickname;
@@ -182,7 +180,7 @@ function loadInitialState(isParty3Disabled = false, isReset = false) {
           if (saved.guild) userGuild = saved.guild;
 
           if (currentParty.includes('FREE ROLE') && saved.comment) {
-            finalComment = saved.comment; // Free Role의 희망 포지션은 유지
+            finalComment = saved.comment; 
           }
         }
 
@@ -390,7 +388,8 @@ io.on('connection', (socket) => {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
 
-      if (updatedSlot.comment !== undefined) {
+      // Free Role이 아닐 때만 일반 코멘트를 txt 파일 원본에 반영
+      if (updatedSlot.comment !== undefined && (!data.slots[index].party || !data.slots[index].party.includes('FREE ROLE'))) {
         updateTxtFileLine(updatedSlot.id, updatedSlot.comment);
       }
 
@@ -408,9 +407,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('resetData', () => {
-    // 💡 초기화 시에는 isReset을 true로 주어 닉네임, 길드, 출석, 희망포지션만 싹 비우고 txt 원본 코멘트 상태로 돌림
+    // 💡 초기화 시에는 isReset을 true로 주어 닉네임, 길드, 출석, 그리고 Free Role 희망포지션까지 싹 비움
     const resetData = loadInitialState(false, true); 
     saveData(resetData);
+    io.setItem ? null : null; // 호환용
     io.emit('dataUpdated', resetData);
   });
 });
