@@ -88,7 +88,7 @@ function renderFloatingButtons() {
   container.style.cssText = `
     position: fixed;
     bottom: 70px;
-    left: 20px; /* 📌 좌측 하단으로 위치 변경 */
+    left: 20px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -221,17 +221,20 @@ function render() {
 
   const daValue = currentData.daValue !== undefined ? currentData.daValue : 0;
 
+  // 📌 1. 인원현황(길드/갑옷 요약 등)과 완벽히 동일한 높이·길이·스타일로 최좌측에 DA 현황판 배치
   let daSummaryContainer = document.getElementById('da-summary');
   if (!daSummaryContainer) {
     const summaryParent = document.getElementById('guild-summary')?.parentNode;
     if (summaryParent) {
       const daDiv = document.createElement('div');
       daDiv.id = 'da-summary-wrapper';
+      // 인원현황 요약 박스들과 완전히 똑같은 구조·클래스(summary-box)를 사용해 높이와 길이를 맞춤
       daDiv.innerHTML = `
         <div class="summary-box" style="margin-bottom: 10px;">
           <div class="summary-item" id="da-summary"></div>
         </div>
       `;
+      // 가장 첫 번째 자식으로 삽입하여 최좌측 인원현황 라인에 자연스럽게 포함되도록 함
       summaryParent.insertBefore(daDiv, summaryParent.firstChild);
       daSummaryContainer = document.getElementById('da-summary');
     }
@@ -239,21 +242,19 @@ function render() {
 
   if (daSummaryContainer) {
     daSummaryContainer.innerHTML = '';
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'summary-item';
-
+    
+    // 색상 조건 (0: 흰색, 10이상: 노란색, 20이상: 주황색)
     let daColorHex = '#f8fafc';
     if (daValue >= 20) {
-      daColorHex = '#f97316';
+      daColorHex = '#f97316'; // 주황색
     } else if (daValue >= 10) {
-      daColorHex = '#eab308';
+      daColorHex = '#eab308'; // 노란색
     }
 
-    itemDiv.innerHTML = `
+    daSummaryContainer.innerHTML = `
       <span class="summary-label">DA</span>
       <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
     `;
-    daSummaryContainer.appendChild(itemDiv);
   }
 
   const guildSummaryContainer = document.getElementById('guild-summary');
