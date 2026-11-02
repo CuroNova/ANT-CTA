@@ -232,7 +232,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 📌 로그인 API (통합 config.json 검증)
+// 📌 💡 로그인 API 수정: 초대코드 또는 관리자 코드 모두 허용 및 관리자 여부(isAdmin) 전달
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const config = loadConfig();
@@ -246,9 +246,11 @@ app.post('/api/login', (req, res) => {
   }
 
   if (code === config.inviteCode) {
-    res.json({ success: true });
+    res.json({ success: true, isAdmin: false });
+  } else if (code === config.adminCode) {
+    res.json({ success: true, isAdmin: true }); // 관리자 코드로 로그인 시 관리자 권한 부여
   } else {
-    res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
+    res.json({ success: false, message: '코드가 일치하지 않습니다.' });
   }
 });
 
