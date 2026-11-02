@@ -80,6 +80,13 @@
         });
         const data = await res.json();
 
+        // 📌 서버 설정 파일(password.json) 로드 실패 및 암호화 관련 에러 처리
+        if (data.redirectToLogin) {
+          alert(data.message); // "암호화 로직에 문제가 생겼습니다!" 경고창 노출
+          window.location.href = '/login';
+          return;
+        }
+
         if (data.success) {
           // 일회성 로그인 플래그 부여
           sessionStorage.setItem('just_logged_in', 'true');
