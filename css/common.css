@@ -1,0 +1,26 @@
+/* 📌 1. 전역 리셋 및 기본 폰트/색상 공통화 */
+* { 
+  box-sizing: border-box; 
+  font-family: 'Pretendard', -apple-system, sans-serif; 
+}
+
+body {
+  background-color: #0f172a;
+  color: #f8fafc;
+  margin: 0;
+}
+
+/* 📌 2. 공통 스크롤바 디자인 */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
