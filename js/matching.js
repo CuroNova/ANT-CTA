@@ -173,7 +173,6 @@ function render() {
   tabs.forEach(tab => {
     const btn = document.createElement('button');
     
-    // 📌 일반 탭과 관리자 탭 클래스 분기 처리
     if (tab.isAdminTab) {
       btn.className = `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     } else {
@@ -378,7 +377,6 @@ function openAdminFloatingModal() {
     z-index: 9999; backdrop-filter: blur(4px);
   `;
 
-  // 1. 관리자 메인 메뉴 렌더링 함수
   const renderMainMenu = () => {
     const contentDiv = modal.querySelector('.modal-content');
     const isParty3Disabled = currentData.isParty3Disabled || false;
@@ -429,7 +427,6 @@ function openAdminFloatingModal() {
         });
     };
 
-    // 📌 3파티 토글 버튼 이벤트
     contentDiv.querySelector('#btn-toggle-party3').onclick = () => {
       socket.emit('toggleParty3');
       modal.remove();
@@ -448,7 +445,6 @@ function openAdminFloatingModal() {
     };
   };
 
-  // 2. 조합 선택 버튼 목록 렌더링 함수
   const renderLoadoutSelection = (files) => {
     const contentDiv = modal.querySelector('.modal-content');
     
