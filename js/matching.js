@@ -384,7 +384,7 @@ function openAdminFloatingModal() {
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <button id="btn-reset-data" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-          🔄 전체 초기화
+          🔄 초기화
         </button>
       </div>
 
