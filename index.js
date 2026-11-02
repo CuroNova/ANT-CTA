@@ -91,13 +91,38 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
-// 📌 초기 데이터 로드 함수 (isParty3Disabled 상태 인자 추가)
+// 📌 💡 기존 슬롯 데이터에서 사용자 입력값(닉네임, 출석, 코멘트, 길드)을 백업하는 함수
+function getExistingUserDataMap() {
+  const map = new Map();
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (data && data.slots) {
+        data.slots.forEach(slot => {
+          if (!slot.isEmptyParty && slot.id) {
+            map.set(slot.id, {
+              nickname: slot.nickname || '',
+              attended: slot.attended || false,
+              comment: slot.comment || '',
+              guild: slot.guild || ''
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error('기존 데이터 백업 중 오류:', err);
+    }
+  }
+  return map;
+}
+
+// 📌 초기 데이터 로드 함수 (기존 입력 데이터 병합 로직 추가)
 function loadInitialState(isParty3Disabled = false) {
   let initialSlots = [];
   const mappingConfig = loadMappingConfig();
   const config = loadConfig();
+  const savedUserDataMap = getExistingUserDataMap(); // 💡 이전에 입력되었던 유저 데이터 확보
 
-  // config.json에서 길드 목록과 초대코드 불러오기 (실패 시 기본값 적용)
   const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
   if (fs.existsSync(currentPartiesFile)) {
@@ -137,11 +162,21 @@ function loadInitialState(isParty3Disabled = false) {
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
-        // 📌 Free Role은 제외하고, '3'이 포함된 파티만 비활성화 대상으로 지정
         const isTargetParty3 = isParty3Disabled && currentParty.includes('3') && currentParty !== 'FREE ROLE';
+        if (isTargetParty3) return;
 
-        if (isTargetParty3) {
-          return;
+        // 💡 만약 이 slotId에 대해 이전에 입력된 데이터가 있다면 복원, 없으면 기본값 사용
+        let userNickname = '';
+        let userAttended = false;
+        let userComment = commentText;
+        let userGuild = guilds[0] || 'ANT';
+
+        if (savedUserDataMap.has(slotId)) {
+          const saved = savedUserDataMap.get(slotId);
+          userNickname = saved.nickname;
+          userAttended = saved.attended;
+          userComment = saved.comment !== '' ? saved.comment : commentText; // 사용자가 수정한 코멘트 우선 적용
+          if (saved.guild) userGuild = saved.guild;
         }
 
         slotsByParty[currentParty].push({
@@ -153,17 +188,16 @@ function loadInitialState(isParty3Disabled = false) {
           armorImg: finalArmorImg,
           displayIndex: partySlotCounter++,
           party: currentParty,
-          nickname: '',
-          guild: guilds[0] || 'ANT', // 첫 번째 길드를 기본값으로 설정
-          comment: commentText,
-          attended: false
+          nickname: userNickname,
+          guild: userGuild,
+          comment: userComment,
+          attended: userAttended
         });
       }
     });
 
     definedParties.forEach(pName => {
-      // 📌 Free Role은 제외하고, '3'이 포함된 파티만 빈 파티 슬롯 처리
-      const isTargetParty3 = isParty3Disabled && pName.includes('3') && pName !== 'FREE ROLE';
+      const isTargetParty3 = isParty3Disabled && pName.includes('3' ) && pName !== 'FREE ROLE';
 
       if (isTargetParty3) {
         initialSlots.push({
@@ -208,8 +242,45 @@ function loadInitialState(isParty3Disabled = false) {
     guilds, 
     inviteCode: config ? config.inviteCode : '1234',
     currentLoadout: path.basename(currentPartiesFile, '.txt'),
-    isParty3Disabled: isParty3Disabled // 📌 상태값 전달
+    isParty3Disabled: isParty3Disabled
   };
+}
+
+// 📌 💡 슬롯 코멘트 변경 시 활성화된 .txt 파일의 해당 줄을 실시간으로 수정하는 함수
+function updateTxtFileLine(slotId, newComment) {
+  try {
+    if (!fs.existsSync(currentPartiesFile)) return;
+    const content = fs.readFileSync(currentPartiesFile, 'utf8');
+    const lines = content.split('\n');
+    let updated = false;
+
+    const newLines = lines.map(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('[') || trimmed.startsWith(';')) {
+        return line;
+      }
+      // 해당 줄이 "slotId"로 시작하는지 확인
+      if (trimmed.startsWith(`"${slotId}"`)) {
+        const matches = trimmed.match(/"([^"]*)"/g);
+        if (matches && matches.length >= 5) {
+          // 파싱된 부분 중 5번째 요소(인덱스 4)가 코멘트 영역임
+          const parts = matches.map(m => m);
+          parts[4] = `"${newComment}"`; // 코멘트 내용 교체
+          
+          // 기존 라인의 구조 형태를 유지하면서 재조립 (예: "id","role","weapon","armor","comment","weaponImg","armorImg")
+          let reconstructed = parts.join(',');
+          return reconstructed;
+        }
+      }
+      return line;
+    });
+
+    if (updated || true) {
+      fs.writeFileSync(currentPartiesFile, newLines.join('\n'), 'utf8');
+    }
+  } catch (err) {
+    console.error('❌ .txt 파일 코멘트 업데이트 실패:', err);
+  }
 }
 
 function getData() {
@@ -232,7 +303,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 📌 💡 로그인 API 수정: 초대코드 또는 관리자 코드 모두 허용 및 관리자 여부(isAdmin) 전달
+// 📌 로그인 API
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const config = loadConfig();
@@ -248,13 +319,13 @@ app.post('/api/login', (req, res) => {
   if (code === config.inviteCode) {
     res.json({ success: true, isAdmin: false });
   } else if (code === config.adminCode) {
-    res.json({ success: true, isAdmin: true }); // 관리자 코드로 로그인 시 관리자 권한 부여
+    res.json({ success: true, isAdmin: true });
   } else {
     res.json({ success: false, message: '코드가 일치하지 않습니다.' });
   }
 });
 
-// 📌 관리자 인증 API (통합 config.json 검증)
+// 📌 관리자 인증 API
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
   const config = loadConfig();
@@ -274,7 +345,7 @@ app.post('/api/admin-auth', (req, res) => {
   }
 });
 
-// 📌 관리자 API: loadouts 폴더 내 .txt 파일 목록 조회 (확장자 .txt 제거 후 이름만 전달)
+// 📌 관리자 API: loadouts 폴더 내 .txt 파일 목록 조회
 app.get('/api/admin/loadouts', (req, res) => {
   try {
     if (!fs.existsSync(LOADOUTS_DIR)) {
@@ -289,7 +360,7 @@ app.get('/api/admin/loadouts', (req, res) => {
   }
 });
 
-// 📌 관리자 API: 조합(.txt) 변경 (단순 교체 방식, 기존 비활성화 상태 유지)
+// 📌 관리자 API: 조합(.txt) 변경
 app.post('/api/admin/change-loadout', (req, res) => {
   const { filename } = req.body;
   const targetFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
@@ -318,11 +389,16 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
+
+      // 💡 만약 코멘트(또는 희망 포지션)가 수정되었다면 현재 활성화된 .txt 파일에도 실시간 반영
+      if (updatedSlot.comment !== undefined) {
+        updateTxtFileLine(updatedSlot.id, updatedSlot.comment);
+      }
+
       io.emit('dataUpdated', data);
     }
   });
 
-  // 📌 3파티 비활성화/활성화 토글 이벤트 처리
   socket.on('toggleParty3', () => {
     const data = getData();
     const nextDisabledState = !(data.isParty3Disabled || false);
