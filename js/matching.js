@@ -42,15 +42,17 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
+  removeOldResetButtons();   // 📌 기존에 남아있던 초기화 버튼들 제거
+  renderRegearButton();     // 📌 우측 하단 리기어 버튼 생성
 });
 
-// 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
+// 📌 기존 HTML나 다른 곳에 남아있는 초기화 관련 버튼들을 찾아 제거하는 함수
 function removeOldResetButtons() {
-  const allElements = document.querySelectorAll('button, a, div, span');
-  allElements.forEach(el => {
+  // ID나 클래스, 혹은 텍스트 내용이 '초기화'인 버튼/요소들을 모두 색출하여 제거
+  const allButtons = document.querySelectorAll('button, a, div');
+  allButtons.forEach(el => {
     if (el.innerText && (el.innerText.includes('초기화') || el.innerText.includes('Reset'))) {
+      // 관리자 모달 내의 초기화 버튼은 제외하고 화면 하단/사이드에 있는 것만 타겟팅하거나 안전하게 제거
       if (!el.closest('#admin-floating-modal')) {
         el.remove();
       }
@@ -58,7 +60,7 @@ function removeOldResetButtons() {
   });
 }
 
-// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트/희망포지션용)
+// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용)
 function handleTextAlign(inputEl) {
   if (inputEl.value && inputEl.value.length > 0) {
     inputEl.style.textAlign = 'left';
@@ -78,24 +80,18 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 하단에 평소엔 숨겨져 있다가 마우스를 올리면 나타나는 플로팅 버튼 컨테이너 생성
-function renderFloatingButtons() {
-  const existingContainer = document.getElementById('floating-buttons-container');
-  if (existingContainer) existingContainer.remove();
+// 📌 화면 우측 최하단에 '리기어' 회색 버튼을 생성 및 고정하는 함수
+function renderRegearButton() {
+  const existingBtn = document.getElementById('floating-regear-btn');
+  if (existingBtn) existingBtn.remove();
 
-  const container = document.createElement('div');
-  container.id = 'floating-buttons-container';
-  container.style.cssText = `
+  const regearBtn = document.createElement('button');
+  regearBtn.id = 'floating-regear-btn';
+  regearBtn.innerText = '🛡️ 리기어';
+  regearBtn.style.cssText = `
     position: fixed;
-    bottom: 70px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 9998;
-  `;
-
-  const buttonStyle = `
+    bottom: 20px;
+    right: 20px;
     background: #475569;
     color: #f8fafc;
     border: 1px solid #64748b;
@@ -105,50 +101,17 @@ function renderFloatingButtons() {
     font-size: 0.9rem;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    width: 135px;
-    text-align: center;
-    box-sizing: border-box;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease, background 0.2s;
+    z-index: 9998;
+    transition: background 0.2s, transform 0.1s;
   `;
 
-  const postingBtn = document.createElement('button');
-  postingBtn.innerText = '포스팅 하러가기';
-  postingBtn.style.cssText = buttonStyle;
-  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; };
-  postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; };
-  postingBtn.onclick = () => {
-    window.open('https://www.naver.com', '_blank');
-  };
-
-  const regearBtn = document.createElement('button');
-  regearBtn.innerText = '리기어 신청';
-  regearBtn.style.cssText = buttonStyle;
   regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
   regearBtn.onclick = () => {
-    window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
+    window.open('https://www.naver.com', '_blank');
   };
 
-  container.appendChild(postingBtn);
-  container.appendChild(regearBtn);
-
-  container.onmouseenter = () => {
-    postingBtn.style.opacity = '1';
-    postingBtn.style.pointerEvents = 'auto';
-    regearBtn.style.opacity = '1';
-    regearBtn.style.pointerEvents = 'auto';
-  };
-
-  container.onmouseleave = () => {
-    postingBtn.style.opacity = '0';
-    postingBtn.style.pointerEvents = 'none';
-    regearBtn.style.opacity = '0';
-    regearBtn.style.pointerEvents = 'none';
-  };
-
-  document.body.appendChild(container);
+  document.body.appendChild(regearBtn);
 }
 
 function getRoleColor(role) {
@@ -219,47 +182,41 @@ function render() {
     }
   });
 
-  // 📌 1. 길드 현황 렌더링
   const guildSummaryContainer = document.getElementById('guild-summary');
-  if (guildSummaryContainer) {
-    guildSummaryContainer.innerHTML = '';
-    currentData.guilds.forEach((g, index) => {
-      const count = guildCounts[g] || 0;
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'summary-item';
+  guildSummaryContainer.innerHTML = '';
+  currentData.guilds.forEach((g, index) => {
+    const count = guildCounts[g] || 0;
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'summary-item';
 
-      let countClass = 'zero-count';
-      if (count > 0) {
-        countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
-      }
+    let countClass = 'zero-count';
+    if (count > 0) {
+      countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
+    }
 
-      itemDiv.innerHTML = `
-        <span class="summary-label">${g}</span>
-        <span class="${countClass}">${count}</span>
-      `;
-      guildSummaryContainer.appendChild(itemDiv);
-    });
-  }
+    itemDiv.innerHTML = `
+      <span class="summary-label">${g}</span>
+      <span class="${countClass}">${count}</span>
+    `;
+    guildSummaryContainer.appendChild(itemDiv);
+  });
 
-  // 📌 2. 갑옷 현황 렌더링
   const armorSummaryContainer = document.getElementById('armor-summary');
-  if (armorSummaryContainer) {
-    armorSummaryContainer.innerHTML = '';
-    armorTargets.forEach(a => {
-      const current = armorCurrentCounts[a] || 0;
-      const total = armorTotalCounts[a] || 0;
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'summary-item';
+  armorSummaryContainer.innerHTML = '';
+  armorTargets.forEach(a => {
+    const current = armorCurrentCounts[a] || 0;
+    const total = armorTotalCounts[a] || 0;
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'summary-item';
 
-      const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
+    const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
 
-      itemDiv.innerHTML = `
-        <span class="summary-label">${a}</span>
-        <span><span class="${currentClass}">${current}</span>/${total}</span>
-      `;
-      armorSummaryContainer.appendChild(itemDiv);
-    });
-  }
+    itemDiv.innerHTML = `
+      <span class="summary-label">${a}</span>
+      <span><span class="${currentClass}">${current}</span>/${total}</span>
+    `;
+    armorSummaryContainer.appendChild(itemDiv);
+  });
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
@@ -386,8 +343,7 @@ function render() {
         let commentHtml = '';
         if (canEditComment) {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
-          const placeholderText = isFreeRole ? '희망 포지션 입력' : '코멘트 입력';
-          commentHtml = `<input type="text" placeholder="${placeholderText}" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
           commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
@@ -464,7 +420,7 @@ function render() {
           <thead>
             <tr>
               <th style="width: 35px; text-align: center;">순번</th>
-              <th style="width: 455px; text-align: center;">희망 포지션</th>
+              <th style="width: 455px; text-align: center;">코멘트</th>
               <th style="width: 65px; text-align: center;">길드</th>
               <th style="width: 115px; text-align: center;">닉네임</th>
               <th style="width: 35px; text-align: center;">출석</th>
