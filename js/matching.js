@@ -13,6 +13,23 @@ socket.on('dataUpdated', (data) => {
   render();
 });
 
+// 📌 UTC 기준 실시간 시계 구동 함수
+function updateUtcClock() {
+  const clockEl = document.getElementById('utc-clock');
+  if (!clockEl) return;
+
+  const now = new Date();
+  const hours = String(now.getUTCHours()).padStart(2, '0');
+  const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+  
+  clockEl.innerText = `UTC ${hours}:${minutes}:${seconds}`;
+}
+
+// 1초마다 시계 갱신
+setInterval(updateUtcClock, 1000);
+window.addEventListener('DOMContentLoaded', updateUtcClock);
+
 function getRoleColor(role) {
   if (!role) return '#38bdf8';
   const trimmed = role.trim();
@@ -69,7 +86,7 @@ function render() {
     }
   });
 
-  // 📌 길드 요약 UI 렌더링 ("명" 단위 제거)
+  // 📌 길드 요약 UI 렌더링 ("명" 단위 제거 및 고정 폭 적용)
   const guildSummaryContainer = document.getElementById('guild-summary');
   guildSummaryContainer.innerHTML = '';
   currentData.guilds.forEach((g, index) => {
@@ -89,7 +106,7 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링
+  // 📌 갑옷 요약 UI 렌더링 (0만 빨간색, 뒤의 /총량은 흰색)
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
