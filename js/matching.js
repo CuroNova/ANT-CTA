@@ -40,9 +40,10 @@ function render() {
   const guildCounts = {};
   currentData.guilds.forEach(g => guildCounts[g] = 0);
   
-  // 📌 2. 주요 갑옷 종류별 인원 집계
+  // 📌 2. 주요 갑옷 종류별 인원 집계 (현재 착용 인원 / 전체 지정 총량)
   const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
-  const armorCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
+  const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
+  const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
 
   currentData.slots.forEach(slot => {
     if (slot.nickname && slot.nickname.trim() !== '') {
@@ -52,11 +53,17 @@ function render() {
       } else {
         guildCounts[gName] = 1;
       }
+    }
 
+    // 비어있는 파티 슬롯은 갑옷 총량 집계에서 제외
+    if (!slot.isEmptyParty) {
       const aName = slot.armorName || '';
       armorTargets.forEach(target => {
         if (aName.includes(target)) {
-          armorCounts[target]++;
+          armorTotalCounts[target]++; // 전체 지정된 총량 증가
+          if (slot.nickname && slot.nickname.trim() !== '') {
+            armorCurrentCounts[target]++; // 실제 착용 중인 인원 증가
+          }
         }
       });
     }
@@ -82,19 +89,20 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링
+  // 📌 갑옷 요약 UI 렌더링 (형태: 현재인원/총량, 예: 0/5)
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
-    const count = armorCounts[a] || 0;
+    const current = armorCurrentCounts[a] || 0;
+    const total = armorTotalCounts[a] || 0;
     const itemDiv = document.createElement('div');
     itemDiv.className = 'summary-item';
 
-    const countClass = count > 0 ? 'armor-count-active' : 'zero-count';
+    const countClass = current > 0 ? 'armor-count-active' : 'zero-count';
 
     itemDiv.innerHTML = `
       <span class="summary-label">${a}</span>
-      <span class="${countClass}">${count}개</span>
+      <span class="${countClass}">${current}/${total}</span>
     `;
     armorSummaryContainer.appendChild(itemDiv);
   });
@@ -274,7 +282,6 @@ function requestReset() {
   })
   .then(res => res.json())
   .then(result => {
-    // 📌 password.json 로드 실패 시 예외 처리 및 로그인 페이지 리다이렉트
     if (result.redirectToLogin) {
       alert(result.message);
       window.location.href = '/login';
