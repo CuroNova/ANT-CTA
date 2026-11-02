@@ -42,8 +42,22 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  renderRegearButton(); // 📌 우측 하단 리기어 버튼 동적 생성
+  removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
+  renderRegearButton();     // 📌 우측 하단 리기어 버튼 동적 생성
 });
+
+// 📌 기존 HTML이나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
+function removeOldResetButtons() {
+  const allElements = document.querySelectorAll('button, a, div, span');
+  allElements.forEach(el => {
+    if (el.innerText && (el.innerText.includes('초기화') || el.innerText.includes('Reset'))) {
+      // 관리자 제어 모달 내의 초기화 버튼은 유지하고 플로팅/하단 버튼만 삭제
+      if (!el.closest('#admin-floating-modal')) {
+        el.remove();
+      }
+    }
+  });
+}
 
 // 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용: 입력중/값있음=좌측, 빈칸=중앙)
 function handleTextAlign(inputEl) {
@@ -93,7 +107,7 @@ function renderRegearButton() {
   regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
   regearBtn.onclick = () => {
-    // 📌 지정하신 링크로 이동 (새 창)
+    // 📌 수정하신 Google 스프레드시트 링크로 새 창 이동
     window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
   };
 
