@@ -1,9 +1,9 @@
 [1파티]
 P1U01 / 어스룬 / 코멘트123 / https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET1
-P1U02 / 홀리스태프 / 힐러 셋팅 / 
-P1U03 / 아케인 / 버퍼 / 
+P1U02 / 홀리스태프
+P1U03 / 아케인 
 P1U04 / 해머 / 탱커 / 
-P1U05 / 커스 / 디버퍼 / 
+P1U05 / 커스 
 
 [2파티]
 P2U01 / 주 무기 / 전위 딜러 / 
