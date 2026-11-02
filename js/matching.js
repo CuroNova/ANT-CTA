@@ -8,7 +8,7 @@ const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
 
-// 📌 새로 주신 정확한 매핑 데이터를 반영한 안전한 DA 매핑 함수 (100명까지 완벽 반영, 초과 시 처리 포함)
+// 📌 주신 정확한 매핑 데이터를 반영한 안전한 DA 매핑 함수 (100명까지 완벽 반영, 초과 시 처리 포함)
 function calculateDisarray(playerCount) {
   if (playerCount <= 20) return 0;
 
@@ -24,7 +24,6 @@ function calculateDisarray(playerCount) {
   };
 
   if (playerCount > 100) {
-    // 100명 초과 시 기존 증가 추세(대략 3명당 1 증가)를 이어감
     return 36 + Math.floor((playerCount - 100) / 3);
   }
   return daTable[playerCount] !== undefined ? daTable[playerCount] : 0;
@@ -230,27 +229,30 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-left] 영역에 인원현황/갑옷현황과 완벽히 동일한 박스(.summary-item) 규격으로 DA 생성 및 주입
+  // 📌 1. [header-left] 영역에 다른 요약 아이템들과 완벽히 똑같은 규격과 박스 형태(.summary-item)로 DA 주입
   const headerLeft = document.querySelector('.header-left');
   if (headerLeft) {
     let daBox = document.getElementById('header-da-box');
     if (!daBox) {
       daBox = document.createElement('div');
       daBox.id = 'header-da-box';
-      daBox.className = 'summary-item'; // 다른 요약 항목들과 동일한 스타일 클래스 부여
+      daBox.className = 'summary-item'; // 다른 요약 항목들과 동일한 박스 스타일 클래스 적용
       headerLeft.insertBefore(daBox, headerLeft.firstChild); // 맨 왼쪽에 삽입
     }
 
-    let daColorHex = '#f8fafc'; // 기본 흰색 (0)
+    let daColorClass = 'zero-count'; // 기본 회색/기본값 스타일 클래스 (다른 요약창과 통일)
+    let daColorStyle = 'color: #f8fafc;';
     if (daValue >= 20) {
-      daColorHex = '#f97316'; // 주황색
+      daColorStyle = 'color: #f97316; font-weight: bold;'; // 주황색
     } else if (daValue >= 10) {
-      daColorHex = '#eab308'; // 노란색
+      daColorStyle = 'color: #eab308; font-weight: bold;'; // 노란색
+    } else if (daValue > 0) {
+      daColorStyle = 'color: #f8fafc; font-weight: bold;';
     }
 
     daBox.innerHTML = `
       <span class="summary-label">DA</span>
-      <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
+      <span style="${daColorStyle} font-size: 1.05rem;">${daValue}</span>
     `;
   }
 
