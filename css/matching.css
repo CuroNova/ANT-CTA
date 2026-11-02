@@ -105,7 +105,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  width: 58px; /* 4글자("VAGA") 폭 기준 고정 */
+  width: 58px; /* 4글자 폭 기준 고정 */
   box-sizing: border-box;
   text-align: center;
 }
@@ -131,7 +131,7 @@ h1 {
 /* 두 번째 길드부터 1명 이상일 때 보라색 */
 .guild-other-active { color: #a855f7; font-weight: bold; font-size: 0.95rem; }
 
-/* 📌 화면 오른쪽 최하단 고정 전체 초기화 버튼 */
+/* 📌 화면 오른쪽 최하단 고정 전체 초기화 버튼 (구버전 호환용) */
 .btn-reset {
   position: fixed;
   right: 24px;
@@ -153,8 +153,30 @@ h1 {
   transform: translateY(-2px);
 }
 
-.party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; overflow-x: auto; }
-.tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
+/* 📌 탭 영역: Flexbox 양 끝 정렬(space-between)로 일반 탭은 왼쪽, 관리자 탭은 오른쪽 끝에 배치 */
+.party-tabs { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 16px; 
+  border-bottom: 2px solid #334155; 
+  padding-bottom: 4px; 
+  overflow-x: auto; 
+  gap: 8px;
+}
+
+.tab-btn { 
+  background: #1e293b; 
+  color: #94a3b8; 
+  border: 1px solid #334155; 
+  padding: 10px 20px; 
+  border-radius: 8px 8px 0 0; 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-size: 0.95rem; 
+  white-space: nowrap; 
+  flex-shrink: 0;
+}
 .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
 .side-by-side-grid {
