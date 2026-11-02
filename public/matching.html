@@ -8,7 +8,6 @@
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
     
-    /* 헤더 및 탭 스타일 */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
     .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -23,7 +22,7 @@
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
     table.sheet-table { width: 100%; border-collapse: collapse; min-width: 750px; text-align: left; }
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 12px 14px; font-size: 0.9rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; }
-    table.sheet-table td { padding: 8px 12px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; vertical-align: middle; }
+    table.sheet-table td { padding: 8px 12px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
     table.sheet-table tr:hover { background-color: #273549; }
 
     /* 알비온 아이템 이미지 스타일 */
@@ -67,9 +66,12 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // 🔒 로그인 인증을 거치지 않았으면 로그인 페이지로 강제 이동
-    if (sessionStorage.getItem('guildCTA_auth') !== 'true') {
+    // 🔒 새로고침 시 세션이 만료되도록 일회성 플래그 검사
+    if (sessionStorage.getItem('just_logged_in') !== 'true') {
       window.location.href = 'login.html';
+    } else {
+      // 진입 성공 시 플래그를 바로 소모(삭제)하여 다음 새로고침 시에는 무조건 튕기게 함
+      sessionStorage.removeItem('just_logged_in');
     }
 
     const socket = io();
