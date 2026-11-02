@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
 });
 
+// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (중앙 ↔ 좌측)
+function handleTextAlign(inputEl) {
+  if (inputEl.value && inputEl.value.length > 0) {
+    inputEl.style.textAlign = 'left';
+  } else {
+    inputEl.style.textAlign = 'center';
+  }
+}
+
 function getRoleColor(role) {
   if (!role) return '#38bdf8';
   const trimmed = role.trim();
@@ -258,19 +267,22 @@ function render() {
           currentComment = activeInputValue;
         }
 
-        // 📌 관리자이거나 FREE ROLE인 경우 코멘트 입력창 활성화
         const canEditComment = isAdmin || isFreeRole;
         let commentHtml = '';
         if (canEditComment) {
-          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box;" />`;
+          // 📌 코멘트 입력창: 값이 있으면 좌측, 없으면 중앙 정렬 적용
+          const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
-          commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box;" />`;
+          const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
+          commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         }
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
+        // 📌 닉네임 입력창: 값이 있으면 좌측, 없으면 중앙 정렬 적용
+        const nicknameAlign = (currentNickname && currentNickname.length > 0) ? 'left' : 'center';
 
         if (isFreeRole) {
-          // 📌 FREE ROLE용 테이블 행 (무기, 갑옷 제외 및 코멘트 칸 확장: 폭 455px)
           tbodyHtml += `
             <tr>
               <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
@@ -283,7 +295,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -291,7 +303,6 @@ function render() {
             </tr>
           `;
         } else {
-          // 📌 일반 파티용 테이블 행
           const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
           const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
           const weaponName = slot.weaponName || '';
@@ -322,7 +333,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -334,7 +345,6 @@ function render() {
     }
 
     if (isFreeRole) {
-      // 📌 FREE ROLE 전용 테이블 헤더 (무기, 갑옷 제외 및 코멘트 폭 대폭 확장)
       tableWrapper.innerHTML = `
         <table class="sheet-table">
           <thead>
@@ -352,7 +362,6 @@ function render() {
         </table>
       `;
     } else {
-      // 📌 일반 파티 전용 테이블 헤더
       tableWrapper.innerHTML = `
         <table class="sheet-table">
           <thead>
