@@ -13,13 +13,13 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 
-// 🔑 코드 분리 설정
+// 🔑 코드 설정
 const INVITE_CODE = '1234';          // 일반 참여자 입장용 초대코드
-const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코드 (원하시는 값으로 변경 가능)
+const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코드
 
 app.use(express.json());
 
-// 🔀 분리된 HTML 파일을 확장자 없이 깔끔한 주소로 매핑
+// 페이지 라우팅
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -36,7 +36,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수
+// 초기 데이터 로드 함수 (parties.txt 기반 파싱)
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -60,30 +60,15 @@ function loadInitialState() {
       } else {
         initialSlots.push({
           id: line,
-          itemCode: line,
+          itemCode: line.startsWith('FREEROLE') ? 'T8_MAIN_SWORD' : line, // FREE ROLE은 기본 무기 코드 지정 가능
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
           guild: 'ANT',
-          comment: '',
+          comment: currentParty === 'FREE ROLE' ? '자유 롤' : '',
           attended: false
         });
       }
-    });
-  }
-
-  // 📌 "FREE ROLE" 파티 및 기본 빈 슬롯 5개 생성
-  const freeRoleSlotsCount = 5;
-  for (let i = 1; i <= freeRoleSlotsCount; i++) {
-    initialSlots.push({
-      id: `FREEROLE_${i}`,
-      itemCode: 'T8_MAIN_SWORD', // 기본 아이템 코드
-      displayIndex: i,
-      party: 'FREE ROLE',
-      nickname: '',
-      guild: 'ANT',
-      comment: '자유 롤',
-      attended: false
     });
   }
 
@@ -121,7 +106,7 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// 🛡️ 관리자 코드 전용 인증 API (추가됨)
+// 🛡️ 관리자 코드 전용 인증 API
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
   if (code === ADMIN_CODE) {
@@ -141,7 +126,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.io.emit('dataUpdated', data); // 기존 코드 흐름 반영
+      io.emit('dataUpdated', data);
     }
   });
 
