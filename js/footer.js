@@ -1,11 +1,11 @@
 (function() {
-  // 1. 좌측 상단 고정용 스타일 주입
+  // 1. 우측 하단 고정용 스타일 주입
   const style = document.createElement('style');
   style.innerHTML = `
     .site-footer {
       position: fixed;
-      left: 20px;
-      top: 16px;
+      right: 20px;
+      bottom: 16px;
       color: #475569;
       font-size: 0.8rem;
       font-weight: 500;
