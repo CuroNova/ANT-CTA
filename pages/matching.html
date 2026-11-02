@@ -6,7 +6,16 @@
   <title>Another Guild CTA</title>
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; padding-bottom: 80px; }
+    
+    /* 📌 body에 scrollbar-gutter: stable 적용하여 스크롤바 유무에 따른 레이아웃 흔들림 방지 */
+    body { 
+      background-color: #0f172a; 
+      color: #f8fafc; 
+      margin: 0; 
+      padding: 20px; 
+      padding-bottom: 80px; 
+      scrollbar-gutter: stable; 
+    }
     
     /* 📌 헤더 영역: 3등분(1fr auto 1fr) Grid 적용으로 제목 정중앙 고정 */
     .header { 
@@ -114,7 +123,6 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-    /* 📌 minmax(0, 1fr) 적용으로 내용량에 상관없이 탭 간 컬럼 크기와 비율을 완전히 동일하게 맞춤 */
     .side-by-side-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
