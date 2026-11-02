@@ -1,4 +1,4 @@
-- { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
+*, *:before, *:after { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
 
 /* 📌 body: 인원수와 관계없이 세로 스크롤바 영역을 항상 강제하여 탭 전환 시 레이아웃 덜컹거림 방지 */
 body { 
@@ -89,7 +89,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  width: 58px; /* 📌 4글자("VAGA") 폭 기준으로 각 항목의 가로길이를 일정하게 고정 */
+  width: 58px; /* 4글자("VAGA") 폭 기준 고정 */
   box-sizing: border-box;
   text-align: center;
 }
@@ -156,14 +156,26 @@ h1 {
 
 .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px; }
 table.sheet-table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; }
-table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 8px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; }
-table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
+table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 6px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.sheet-table td { padding: 5px 6px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; overflow: hidden; }
 table.sheet-table tr:hover { background-color: #273549; }
 
-.gear-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; }
+.gear-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; width: 100%; }
 .gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
+.gear-cell span { overflow: hidden; text-overflow: ellipsis; }
 
-input[type="text"], select { width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 5px 6px; border-radius: 4px; font-size: 0.85rem; }
+/* 📌 입력칸/셀렉트박스가 범위를 벗어나지 않도록 강제 제한 */
+input[type="text"], select { 
+  width: 100%; 
+  max-width: 100%;
+  background: #0f172a; 
+  color: #f8fafc; 
+  border: 1px solid #475569; 
+  padding: 5px 6px; 
+  border-radius: 4px; 
+  font-size: 0.85rem; 
+  box-sizing: border-box;
+}
 select { padding-right: 2px; text-align: center; }
 .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; text-align: center; }
 
