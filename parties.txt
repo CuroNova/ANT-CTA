@@ -1,27 +1,17 @@
 [1파티]
-P1U01
-P1U02
-P1U03
-P1U04
-P1U05
-
-[2파티]
-P2U01
-P2U02
-P2U03
-P2U04
-P2U05
+P1U01 / 전위 딜러 / 
+P1U02 / 힐러 / https://render.albiononline.com/v1/item/T8_HOLYSTAFF
 
 [3파티]
-P3U01
-P3U02
-P3U03
-P3U04
-P3U05
+P3U01 / 딜러 / 
+P3U02 / 힐러 / 
+P3U03 / 어스룬 코멘트123 / https://i.imgur.com/abc1234.png
+P3U04 / 탱커 / 
+P3U05 / 디버퍼 / 
 
 [FREE ROLE]
-FREEROLE_01
-FREEROLE_02
-FREEROLE_03
-FREEROLE_04
-FREEROLE_05
+FPU01 / 자유 롤 / 
+FPU02 / 자유 롤 / 
+FPU03 / 자유 롤 / 
+FPU04 / 자유 롤 / 
+FPU05 / 자유 롤 /
