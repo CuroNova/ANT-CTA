@@ -383,6 +383,10 @@ function openAdminFloatingModal() {
       <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+          📂 조합 변경
+        </button>
+
         <button id="btn-reset-data" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
           🔄 초기화
         </button>
@@ -400,6 +404,50 @@ function openAdminFloatingModal() {
     modal.remove();
     activeTabLabel = '1·2파티';
     render();
+  };
+
+  // 📌 조합 변경 버튼 클릭 이벤트 (.txt 제외한 이름 리스트 연동)
+  document.getElementById('btn-loadout-change').onclick = () => {
+    fetch('/api/admin/loadouts')
+      .then(res => res.json())
+      .then(resData => {
+        if (!resData.success || resData.files.length === 0) {
+          alert('loadouts 폴더에 사용 가능한 .txt 파일이 없습니다.');
+          return;
+        }
+
+        let fileListStr = resData.files.map((name, i) => `${i + 1}. ${name}`).join('\n');
+        let selectedIdxStr = prompt(`변경할 조합 번호를 입력하세요:\n\n${fileListStr}`);
+        if (!selectedIdxStr) return;
+
+        let idx = parseInt(selectedIdxStr.trim()) - 1;
+        if (isNaN(idx) || !resData.files[idx]) {
+          alert('올바른 번호를 입력해주세요.');
+          return;
+        }
+
+        let chosenFileName = resData.files[idx];
+        fetch('/api/admin/change-loadout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: chosenFileName })
+        })
+        .then(r => r.json())
+        .then(rRes => {
+          if (rRes.success) {
+            alert(`조합이 [${chosenFileName}] (으)로 교체되었습니다!`);
+            modal.remove();
+            activeTabLabel = '1·2파티';
+            render();
+          } else {
+            alert(rRes.message || '변경 실패');
+          }
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        alert('서버 통신 중 오류가 발생했습니다.');
+      });
   };
 
   document.getElementById('btn-reset-data').onclick = () => {
