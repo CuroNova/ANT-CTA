@@ -139,7 +139,7 @@ function render() {
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
-  if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
+  if (p12.length > 0) tabs.push({ label: '1파티&2파티', parties: p12 });
 
   const p3Free = [];
   if (parties['3파티']) p3Free.push('3파티');
