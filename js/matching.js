@@ -217,7 +217,7 @@ function render() {
     if (isMulti || currentTab.parties.length === 1) {
       const subTitle = document.createElement('div');
       subTitle.className = 'party-sub-title';
-      subTitle.innerText = `📌 ${partyName} (${currentCount} / ${maxCount})`;
+      subTitle.innerText = `🚩 ${partyName} (${currentCount} / ${maxCount})`;
       partyColumn.appendChild(subTitle);
     }
 
