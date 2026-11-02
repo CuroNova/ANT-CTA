@@ -139,7 +139,6 @@ function render() {
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
-  // 📌 1파티 2파티 탭 이름을 '1PT & 2PT'로 변경
   if (p12.length > 0) tabs.push({ label: '1PT & 2PT', parties: p12 });
 
   const p3Free = [];
@@ -150,7 +149,6 @@ function render() {
     });
   }
   if (parties['FREE ROLE']) p3Free.push('FREE ROLE');
-  // 📌 3파티 FREE ROLE 탭 이름을 '3PT & FREE ROLE'로 변경
   if (p3Free.length > 0) tabs.push({ label: '3PT & FREE ROLE', parties: p3Free });
 
   allPartyNames.forEach(p => {
@@ -219,7 +217,6 @@ function render() {
     if (isMulti || currentTab.parties.length === 1) {
       const subTitle = document.createElement('div');
       subTitle.className = 'party-sub-title';
-      // 📌 파티 타이틀 앞에 어울리는 깃발(🚩) 아이콘 적용
       subTitle.innerText = `🚩 ${partyName} (${currentCount} / ${maxCount})`;
       partyColumn.appendChild(subTitle);
     }
@@ -334,7 +331,14 @@ function updateSlot(id, key, value) {
   }
 }
 
+// 📌 💡 관리자 인증 및 메뉴 오픈 함수 (세션 기반 권한 검증 추가)
 function verifyAdminAndOpenMenu() {
+  // 이미 세션에 관리자 권한이 있는 경우 비밀번호 입력창 스킵
+  if (sessionStorage.getItem('is_admin') === 'true') {
+    openAdminFloatingModal();
+    return;
+  }
+
   const code = prompt('관리자 메뉴를 열려면 [관리자 코드]를 입력하세요:');
   if (code === null) return;
 
@@ -357,6 +361,8 @@ function verifyAdminAndOpenMenu() {
     }
 
     if (result.success) {
+      // 📌 인증 성공 시 세션에 관리자 권한 저장 (이후부터는 패스워드 생략)
+      sessionStorage.setItem('is_admin', 'true');
       openAdminFloatingModal();
     } else {
       alert('관리자 코드가 일치하지 않습니다.');
@@ -410,7 +416,6 @@ function openAdminFloatingModal() {
 
     contentDiv.querySelector('#btn-close-modal').onclick = () => {
       modal.remove();
-      // 📌 탭 이름 변경에 맞춰 기본 포커스 탭 이름도 '1PT & 2PT'로 연동
       activeTabLabel = '1PT & 2PT';
       render();
     };
