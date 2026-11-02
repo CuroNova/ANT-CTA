@@ -7,14 +7,29 @@
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     
-    /* 📌 body에 scrollbar-gutter: stable 적용하여 스크롤바 유무에 따른 레이아웃 흔들림 방지 */
+    /* 📌 body: 인원수와 관계없이 세로 스크롤바 영역을 항상 강제하여 탭 전환 시 레이아웃 덜컹거림 방지 */
     body { 
       background-color: #0f172a; 
       color: #f8fafc; 
       margin: 0; 
       padding: 20px; 
       padding-bottom: 80px; 
-      scrollbar-gutter: stable; 
+      overflow-y: scroll;
+    }
+
+    /* 📌 스크롤바 항시 노출 및 커스텀 스타일 (웹킷 브라우저 및 모바일 연동) */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
     
     /* 📌 헤더 영역: 3등분(1fr auto 1fr) Grid 적용으로 제목 정중앙 고정 */
