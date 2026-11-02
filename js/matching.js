@@ -7,9 +7,12 @@ if (sessionStorage.getItem('just_logged_in') !== 'true') {
 const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
+let isComposing = false; // 📌 한글 조합(IME) 중인지 확인하는 플래그 변수
 
+// 📌 소켓 데이터 수신 시 조합 중이면 리렌더링을 차단하여 한글 깨짐 방지
 socket.on('dataUpdated', (data) => {
   currentData = data;
+  if (isComposing) return; 
   render();
 });
 
@@ -270,16 +273,15 @@ function render() {
         const canEditComment = isAdmin || isFreeRole;
         let commentHtml = '';
         if (canEditComment) {
-          // 📌 코멘트 입력창: 값이 있으면 좌측, 없으면 중앙 정렬 적용
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
-          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
+          // 📌 oncompositionstart / oncompositionend 추가로 한글 조합 중 렌더링 방지
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
           commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         }
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
-        // 📌 닉네임 입력창: 값이 있으면 좌측, 없으면 중앙 정렬 적용
         const nicknameAlign = (currentNickname && currentNickname.length > 0) ? 'left' : 'center';
 
         if (isFreeRole) {
@@ -295,7 +297,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -333,7 +335,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
