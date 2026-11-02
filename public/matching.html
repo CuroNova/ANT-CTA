@@ -3,283 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Another Guild - 매칭현황</title>
-  <script src="/socket.io/socket.io.js"></script>
+  <title>Another Guild CTA - 현황판</title>
   <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 15px;
-    }
-    h1 { font-size: 20px; margin: 0; color: #38bdf8; }
-    .ip-display { font-size: 14px; color: #94a3b8; }
+    * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    
+    /* 헤더 및 탭 스타일 */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
+    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-reset:hover { background-color: #dc2626; }
 
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .tab-btn {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #94a3b8;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: #0284c7;
-      color: white;
-      border-color: #0284c7;
-    }
+    /* 파티 탭 */
+    .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; }
+    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-    .table-container {
-      background: #1e293b;
-      border-radius: 8px;
-      overflow-x: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 14px;
-      min-width: 800px;
-    }
-    th, td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #334155;
-    }
-    th {
-      background: #0f172a;
-      color: #38bdf8;
-      font-weight: 600;
-    }
-    tr:hover { background: rgba(255,255,255,0.02); }
+    /* 엑셀 스타일 테이블 */
+    .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
+    table.sheet-table { width: 100%; border-collapse: collapse; min-width: 750px; text-align: left; }
+    table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 12px 14px; font-size: 0.9rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; }
+    table.sheet-table td { padding: 8px 12px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; vertical-align: middle; }
+    table.sheet-table tr:hover { background-color: #273549; }
 
-    input[type="text"], select {
-      width: 100%;
-      padding: 6px 10px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: white;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    input[type="text"]:focus, select:focus {
-      outline: none;
-      border-color: #38bdf8;
-    }
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
+    /* 알비온 아이템 이미지 스타일 */
+    .weapon-cell { display: flex; align-items: center; gap: 10px; }
+    .item-img { width: 40px; height: 40px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; }
 
-    .weapon-cell {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .weapon-cell img {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
-      background: #0f172a;
-      border-radius: 4px;
-      padding: 2px;
-    }
-
-    .party-content { display: none; }
-    .party-content.active { display: block; }
-
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #ef4444;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      font-size: 14px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-      z-index: 9999;
-    }
-    #toast.show { opacity: 1; }
-    .footer-credit {
-      text-align: right;
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 15px;
-    }
+    /* 입력 요소 스타일 */
+    input[type="text"], select { width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 4px; font-size: 0.9rem; }
+    .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; }
+    
+    .chk-center { text-align: center; }
+    .chk-center input { width: 18px; height: 18px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Another Guild - 매칭현황</h1>
-    <div class="ip-display" id="clientIp">현재 접속한 IP: 확인 중...</div>
-  </header>
+  <div class="header">
+    <h1>⚔️ Another Guild CTA ⚔️</h1>
+    <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+  </div>
 
-  <div class="tabs" id="partyTabs"></div>
-  <div id="partyTablesContainer"></div>
+  <!-- 파티 선택 탭 -->
+  <div id="party-tabs" class="party-tabs"></div>
 
-  <div class="footer-credit">mady by CuroNova</div>
-  <div id="toast">알림 메시지</div>
+  <!-- 엑셀시트 테이블 -->
+  <div class="excel-container">
+    <table class="sheet-table">
+      <thead>
+        <tr>
+          <th style="width: 60px; text-align: center;">순번</th>
+          <th style="width: 180px;">무기</th>
+          <th style="width: 220px;">코멘트</th>
+          <th style="width: 130px;">길드</th>
+          <th style="width: 160px;">닉네임</th>
+          <th style="width: 70px; text-align: center;">출석</th>
+        </tr>
+      </thead>
+      <tbody id="sheet-body"></tbody>
+    </table>
+  </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
-    let guildsList = [];
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+    // 🔒 로그인 인증을 거치지 않았으면 로그인 페이지로 강제 이동
+    if (sessionStorage.getItem('guildCTA_auth') !== 'true') {
+      window.location.href = 'login.html';
     }
 
-    async function loadData() {
-      try {
-        const res = await fetch('/api/matching-data');
-        if (res.status === 403) {
-          window.location.href = '/login.html';
-          return;
-        }
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('clientIp').textContent = `현재 접속한 IP: ${data.clientIp}`;
-          guildsList = data.guilds;
-          renderUI(data.parties);
-        }
-      } catch (err) {
-        showToast('데이터를 불러오는 중 오류가 발생했습니다.');
+    const socket = io();
+    let currentData = { slots: [], guilds: [] };
+    let activeParty = '';
+
+    socket.on('dataUpdated', (data) => {
+      currentData = data;
+      render();
+    });
+
+    function render() {
+      const parties = {};
+      currentData.slots.forEach(slot => {
+        if (!parties[slot.party]) parties[slot.party] = [];
+        parties[slot.party].push(slot);
+      });
+
+      const partyNames = Object.keys(parties);
+      if (partyNames.length === 0) return;
+      if (!activeParty || !parties[activeParty]) activeParty = partyNames[0];
+
+      // 1. 파티 탭 그리기
+      const tabsContainer = document.getElementById('party-tabs');
+      tabsContainer.innerHTML = '';
+      partyNames.forEach(pName => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${pName === activeParty ? 'active' : ''}`;
+        btn.innerText = pName;
+        btn.onclick = () => { activeParty = pName; render(); };
+        tabsContainer.appendChild(btn);
+      });
+
+      // 2. 선택된 파티 엑셀 표 그리기
+      const tbody = document.getElementById('sheet-body');
+      tbody.innerHTML = '';
+
+      const currentSlots = parties[activeParty] || [];
+      currentSlots.forEach((slot, idx) => {
+        const guildOptions = currentData.guilds.map(g => 
+          `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
+        ).join('');
+
+        const itemCode = slot.itemCode || ''; 
+        const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="text-align: center; font-weight: bold; color: #94a3b8;">${slot.displayIndex || (idx + 1)}번</td>
+          <td>
+            <div class="weapon-cell">
+              <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
+              <span style="font-size: 0.85rem; font-weight: bold; color: #38bdf8;">${itemCode}</span>
+            </div>
+          </td>
+          <td>
+            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
+          </td>
+          <td>
+            <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+              ${guildOptions}
+            </select>
+          </td>
+          <td>
+            <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+          </td>
+          <td class="chk-center">
+            <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateSlot(id, key, value) {
+      const slot = currentData.slots.find(s => s.id === id);
+      if (slot) {
+        slot[key] = value;
+        socket.emit('updateSlot', slot);
       }
     }
 
-    function renderUI(parties) {
-      const tabsContainer = document.getElementById('partyTabs');
-      const tablesContainer = document.getElementById('partyTablesContainer');
-
-      const activeTabBtn = document.querySelector('.tab-btn.active');
-      let activePartyNum = activeTabBtn ? activeTabBtn.dataset.party : (parties[0] ? parties[0].partyNum : 1);
-
-      tabsContainer.innerHTML = '';
-      tablesContainer.innerHTML = '';
-
-      parties.forEach((party, idx) => {
-        const btn = document.createElement('button');
-        btn.className = `tab-btn ${party.partyNum == activePartyNum ? 'active' : ''}`;
-        btn.dataset.party = party.partyNum;
-        btn.textContent = `${party.partyNum}파티 (${party.filledCount}명)`;
-        btn.onclick = () => switchTab(party.partyNum);
-        tabsContainer.appendChild(btn);
-
-        const div = document.createElement('div');
-        div.className = `party-content ${party.partyNum == activePartyNum ? 'active' : ''}`;
-        div.id = `party-content-${party.partyNum}`;
-
-        let tableHtml = `
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 50px;">No</th>
-                  <th>무기</th>
-                  <th>갑옷</th>
-                  <th style="width: 120px;">길드</th>
-                  <th style="width: 180px;">닉네임 (최대 30자)</th>
-                  <th>코멘트</th>
-                  <th style="width: 60px; text-align: center;">출결</th>
-                  <th style="width: 100px;">수정시간</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-
-        party.slots.forEach((slot, sIdx) => {
-          let guildOptions = guildsList.map(g => `<option value="${g}" ${slot.guild === g ? 'selected' : ''}>${g}</option>`).join('');
-
-          tableHtml += `
-            <tr>
-              <td>${sIdx + 1}</td>
-              <td>
-                <div class="weapon-cell">
-                  <img src="${slot.imageUrl}" alt="weapon" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD@4'">
-                  <span>${slot.weaponName}</span>
-                </div>
-              </td>
-              <td>${slot.armorName}</td>
-              <td>
-                <select onchange="updateField('${slot.slotId}', 'guild', this.value)">
-                  ${guildOptions}
-                </select>
-              </td>
-              <td>
-                <input type="text" maxlength="30" value="${slot.nickname || ''}" 
-                  onchange="updateField('${slot.slotId}', 'nickname', this.value)" 
-                  placeholder="닉네임 입력">
-              </td>
-              <td>
-                <input type="text" value="${slot.comment || ''}" 
-                  onchange="updateField('${slot.slotId}', 'comment', this.value)" 
-                  placeholder="코멘트">
-              </td>
-              <td style="text-align: center;">
-                <input type="checkbox" ${slot.attendance ? 'checked' : ''} 
-                  onchange="updateField('${slot.slotId}', 'attendance', this.checked ? 1 : 0)">
-              </td>
-              <td style="font-size: 12px; color: #94a3b8;">${formatTime(slot.updated_at)}</td>
-            </tr>
-          `;
-        });
-
-        tableHtml += `</tbody></table></div>`;
-        div.innerHTML = tableHtml;
-        tablesContainer.appendChild(div);
-      });
+    function resetAll() {
+      if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+        socket.emit('resetData');
+      }
     }
 
-    function switchTab(partyNum) {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.party == partyNum);
-      });
-      document.querySelectorAll('.party-content').forEach(c => {
-        c.classList.toggle('active', c.id === `party-content-${partyNum}`);
-      });
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
-
-    function updateField(slotId, field, value) {
-      socket.emit('update-slot', { slotId, field, value });
-    }
-
-    function formatTime(isoString) {
-      if (!isoString || isoString === '-') return '-';
-      const date = new Date(isoString);
-      return date.toTimeString().split(' ')[0];
-    }
-
-    socket.on('refresh-data', () => {
-      loadData();
-    });
-
-    loadData();
   </script>
 </body>
 </html>
