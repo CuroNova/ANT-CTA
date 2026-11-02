@@ -34,6 +34,14 @@ body {
   gap: 15px; 
 }
 
+/* 📌 제목과 UTC 시계를 감싸는 중앙 정렬 영역 */
+.header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 /* 📌 ⚔️ Another Guild CTA ⚔️ 제목 정중앙 정렬 */
 h1 { 
   margin: 0; 
@@ -41,6 +49,14 @@ h1 {
   color: #38bdf8; 
   text-align: center; 
   white-space: nowrap; 
+}
+
+/* 📌 UTC 시계 디자인 */
+.utc-clock {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* 좌측 영역 (필요시 내부 정렬용) */
