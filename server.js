@@ -9,37 +9,33 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'data.json');
+const PARTIES_FILE = path.join(__dirname, 'parties.txt');
+const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
+const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
-// 📌 `js/` 폴더 안으로 들어갔으므로 상위 폴더(프로젝트 루트)를 기준 경로로 설정
-const ROOT_DIR = path.join(__dirname, '..');
-
-const DATA_FILE = path.join(ROOT_DIR, 'data.json');
-const PARTIES_FILE = path.join(ROOT_DIR, 'parties.txt');
-const GUILDS_FILE = path.join(ROOT_DIR, 'guilds.txt');
-const JSON_MAPPING_FILE = path.join(ROOT_DIR, 'settings', 'mapping_image.json');
-
-// 🔑 코드 설정
+// 🔑 코드 설정 (필요시 여기서 수정 가능)
 const INVITE_CODE = '1234';         // 일반 참여자 입장용 초대코드
 const ADMIN_CODE = 'admin9999';     // 🛡️ 관리자 초기화 전용 코드
 
 app.use(express.json());
 
-// 📌 페이지 라우팅 (루트 기준 pages 폴더 경로 연결)
+// 📌 페이지 라우팅
 app.get('/', (req, res) => {
-  res.sendFile(path.join(ROOT_DIR, 'pages', 'index.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(ROOT_DIR, 'pages', 'login.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'login.html'));
 });
 
 app.get('/matching', (req, res) => {
-  res.sendFile(path.join(ROOT_DIR, 'pages', 'matching.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'matching.html'));
 });
 
-// 📌 정적 파일 및 이미지 서빙 폴더 설정 (루트 기준 경로 연결)
-app.use(express.static(path.join(ROOT_DIR, 'pages')));
-app.use('/images', express.static(path.join(ROOT_DIR, 'images')));
+// 📌 정적 파일 및 이미지 서빙 폴더 설정
+app.use(express.static('pages'));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // 📌 JSON 매핑 파일 로드 함수
 function loadMappingConfig() {
@@ -56,10 +52,12 @@ function loadMappingConfig() {
 
 // 📌 이미지 경로 결정 함수
 function resolveImagePath(name, directUrl, type, mappingConfig) {
+  // 1순위: 직접 입력된 웹 이미지 링크
   if (directUrl && directUrl.trim() !== '') {
     return directUrl.trim();
   }
 
+  // 2순위: mapping_image.json 키워드 매핑 확인
   const mapRules = mappingConfig[type] || {};
   if (name && name.trim() !== '') {
     const trimmedName = name.trim();
@@ -73,6 +71,7 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
     }
   }
 
+  // 3순위: 기본 폴백 이미지
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
@@ -141,6 +140,7 @@ function loadInitialState() {
       }
     });
 
+    // 빈 파티 플레이스홀더 처리
     definedParties.forEach(pName => {
       if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
         initialSlots.push(...slotsByParty[pName]);
@@ -218,7 +218,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.emit('dataUpdated', data);
+      io.emit('dataUpdated', data); // 중복 삼항 연산자 정리 완료
     }
   });
 
