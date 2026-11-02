@@ -15,7 +15,7 @@ const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
 // 🔑 코드 설정
-const INVITE_CODE = '1234';          // 일반 참여자 입장용 초대코드
+const INVITE_CODE = '1234';         // 일반 참여자 입장용 초대코드
 const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코드
 
 app.use(express.json());
@@ -91,6 +91,8 @@ function loadInitialState() {
     const lines = fs.readFileSync(PARTIES_FILE, 'utf8').split('\n');
     let currentParty = '';
     let partySlotCounter = 1;
+    let definedParties = [];
+    let slotsByParty = {};
 
     lines.forEach(line => {
       line = line.trim();
@@ -98,7 +100,14 @@ function loadInitialState() {
       if (line.startsWith('[') && line.endsWith(']')) {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
+        if (!definedParties.includes(currentParty)) {
+          definedParties.push(currentParty);
+        }
+        if (!slotsByParty[currentParty]) {
+          slotsByParty[currentParty] = [];
+        }
       } else {
+        if (!currentParty) return;
         const matches = line.match(/"([^"]*)"/g);
         if (!matches || matches.length < 1) return;
 
@@ -115,7 +124,7 @@ function loadInitialState() {
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
-        initialSlots.push({
+        slotsByParty[currentParty].push({
           id: slotId,
           role: roleName,
           weaponName: weaponName,
@@ -127,6 +136,29 @@ function loadInitialState() {
           nickname: '',
           guild: 'ANT',
           comment: commentText,
+          attended: false
+        });
+      }
+    });
+
+    // 📌 parties.txt에 정의된 파티 중 슬롯이 없는 빈 파티는 플레이스홀더 추가
+    definedParties.forEach(pName => {
+      if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
+        initialSlots.push(...slotsByParty[pName]);
+      } else {
+        initialSlots.push({
+          id: `EMPTY_${pName}`,
+          party: pName,
+          isEmptyParty: true,
+          displayIndex: 1,
+          role: '',
+          weaponName: '',
+          armorName: '',
+          weaponImg: '',
+          armorImg: '',
+          nickname: '',
+          guild: 'ANT',
+          comment: '',
           attended: false
         });
       }
