@@ -43,15 +43,14 @@ function initUtcClock(selector = '[data-utc-clock]') {
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderRegearButton();     // 📌 우측 하단 리기어 버튼 동적 생성
+  renderFloatingButtons();   // 📌 우측 하단 플로팅 버튼들('포스팅 하러가기', '리기어 신청') 동적 생성
 });
 
-// 📌 기존 HTML이나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
+// 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
 function removeOldResetButtons() {
   const allElements = document.querySelectorAll('button, a, div, span');
   allElements.forEach(el => {
     if (el.innerText && (el.innerText.includes('초기화') || el.innerText.includes('Reset'))) {
-      // 관리자 제어 모달 내의 초기화 버튼은 유지하고 플로팅/하단 버튼만 삭제
       if (!el.closest('#admin-floating-modal')) {
         el.remove();
       }
@@ -59,7 +58,7 @@ function removeOldResetButtons() {
   });
 }
 
-// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용: 입력중/값있음=좌측, 빈칸=중앙)
+// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트/희망포지션용)
 function handleTextAlign(inputEl) {
   if (inputEl.value && inputEl.value.length > 0) {
     inputEl.style.textAlign = 'left';
@@ -68,7 +67,7 @@ function handleTextAlign(inputEl) {
   }
 }
 
-// 📌 닉네임 전용 정렬 함수 (포커스 중이거나 값 있으면 좌측, 포커스 해제되고 비어있으면 가운데)
+// 📌 닉네임 전용 정렬 함수
 function handleNicknameFocus(inputEl) {
   inputEl.style.textAlign = 'left';
 }
@@ -79,18 +78,25 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 우측 최하단에 '리기어' 회색 버튼을 생성 및 고정하는 함수
-function renderRegearButton() {
-  const existingBtn = document.getElementById('floating-regear-btn');
-  if (existingBtn) existingBtn.remove();
+// 📌 화면 우측 최하단에 '포스팅 하러가기' 및 '리기어 신청' 버튼을 세로로 나란히 생성하는 함수
+function renderFloatingButtons() {
+  const existingContainer = document.getElementById('floating-buttons-container');
+  if (existingContainer) existingContainer.remove();
 
-  const regearBtn = document.createElement('button');
-  regearBtn.id = 'floating-regear-btn';
-  regearBtn.innerText = '🛡️ 리기어';
-  regearBtn.style.cssText = `
+  const container = document.createElement('div');
+  container.id = 'floating-buttons-container';
+  container.style.cssText = `
     position: fixed;
-    bottom: 20px;
+    bottom: 85px; /* 기존 위치보다 약 20px 위로 상향 조정 */
     right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9998;
+  `;
+
+  // 공통 버튼 스타일 (가로 길이 동일하게 맞춤)
+  const buttonStyle = `
     background: #475569;
     color: #f8fafc;
     border: 1px solid #64748b;
@@ -100,18 +106,36 @@ function renderRegearButton() {
     font-size: 0.9rem;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    z-index: 9998;
     transition: background 0.2s, transform 0.1s;
+    width: 135px;
+    text-align: center;
+    box-sizing: border-box;
   `;
 
+  // 1. 포스팅 하러가기 버튼
+  const postingBtn = document.createElement('button');
+  postingBtn.innerText = '포스팅 하러가기';
+  postingBtn.style.cssText = buttonStyle;
+  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; };
+  postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; };
+  postingBtn.onclick = () => {
+    // 📌 추후 포스팅 링크 주소를 이곳에 넣어주시면 됩니다.
+    window.open('https://www.naver.com', '_blank');
+  };
+
+  // 2. 리기어 신청 버튼
+  const regearBtn = document.createElement('button');
+  regearBtn.innerText = '리기어 신청';
+  regearBtn.style.cssText = buttonStyle;
   regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
   regearBtn.onclick = () => {
-    // 📌 수정하신 Google 스프레드시트 링크로 새 창 이동
     window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
   };
 
-  document.body.appendChild(regearBtn);
+  container.appendChild(postingBtn);
+  container.appendChild(regearBtn);
+  document.body.appendChild(container);
 }
 
 function getRoleColor(role) {
@@ -343,15 +367,14 @@ function render() {
         let commentHtml = '';
         if (canEditComment) {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
-          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
+          const placeholderText = isFreeRole ? '희망 포지션 입력' : '코멘트 입력';
+          commentHtml = `<input type="text" placeholder="${placeholderText}" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
           commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         }
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
-        
-        // 📌 닉네임 정렬 제어: 값이 있거나 포커스 중이면 좌측, 비어있으면 가운데
         const nicknameAlign = (currentNickname && currentNickname.trim() !== '') ? 'left' : 'center';
 
         if (isFreeRole) {
@@ -422,7 +445,7 @@ function render() {
           <thead>
             <tr>
               <th style="width: 35px; text-align: center;">순번</th>
-              <th style="width: 455px; text-align: center;">코멘트</th>
+              <th style="width: 455px; text-align: center;">희망 포지션</th>
               <th style="width: 65px; text-align: center;">길드</th>
               <th style="width: 115px; text-align: center;">닉네임</th>
               <th style="width: 35px; text-align: center;">출석</th>
