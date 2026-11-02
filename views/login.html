@@ -4,56 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Another Guild Login</title>
-  <style>
-    * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .login-card {
-      background: #1e293b;
-      padding: 40px;
-      border-radius: 12px;
-      border: 1px solid #334155;
-      text-align: center;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    h1 { font-size: 24px; margin-bottom: 8px; color: #38bdf8; }
-    p.cta { font-size: 14px; color: #94a3b8; margin-bottom: 30px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      background: #0f172a;
-      border: 1px solid #475569;
-      color: white;
-      border-radius: 6px;
-      font-size: 16px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    input:focus { outline: none; border-color: #38bdf8; }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #38bdf8;
-      border: none;
-      color: #0f172a;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #0ea5e9; }
-    .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 10px; display: none; }
-  </style>
+  <!-- 📌 CSS 파일 분리 연동 -->
+  <link rel="stylesheet" href="/css/login.css">
 </head>
 <body>
 
@@ -67,42 +19,8 @@
     </form>
   </div>
 
-  <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const code = document.getElementById('inviteCode').value;
-
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
-        });
-        const data = await res.json();
-
-        // 📌 서버 설정 파일(password.json) 로드 실패 시 에러 처리
-        if (data.redirectToLogin) {
-          alert(data.message); // "암호화 로직에 문제가 생겼습니다!" 경고창 표시
-          window.location.href = '/login';
-          return;
-        }
-
-        if (data.success) {
-          // 일회성 로그인 플래그 부여
-          sessionStorage.setItem('just_logged_in', 'true');
-          window.location.href = '/matching';
-        } else {
-          const errDiv = document.getElementById('error-msg');
-          errDiv.style.display = 'block';
-          errDiv.innerText = data.message;
-        }
-      } catch (err) {
-        const errDiv = document.getElementById('error-msg');
-        errDiv.style.display = 'block';
-        errDiv.innerText = '서버 통신 오류가 발생했습니다.';
-      }
-    });
-  </script>
+  <!-- 📌 JS 기능 파일 분리 연동 -->
+  <script src="/js/login.js"></script>
   <script src="/js/footer.js"></script>
 </body>
 </html>
