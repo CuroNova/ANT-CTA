@@ -70,7 +70,6 @@
     if (sessionStorage.getItem('just_logged_in') !== 'true') {
       window.location.href = 'login.html';
     } else {
-      // 진입 성공 시 플래그를 바로 소모(삭제)하여 다음 새로고침 시에는 무조건 튕기게 함
       sessionStorage.removeItem('just_logged_in');
     }
 
