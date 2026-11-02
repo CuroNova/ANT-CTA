@@ -1,10 +1,11 @@
 (function() {
+  // 1. 좌측 상단 고정용 스타일 주입
   const style = document.createElement('style');
   style.innerHTML = `
     .site-footer {
       position: fixed;
-      right: 20px;
-      bottom: 16px;
+      left: 20px;
+      top: 16px;
       color: #475569;
       font-size: 0.8rem;
       font-weight: 500;
@@ -15,6 +16,7 @@
   `;
   document.head.appendChild(style);
 
+  // 2. 푸터 엘리먼트 생성 및 바디에 추가
   const footer = document.createElement('div');
   footer.className = 'site-footer';
   footer.innerText = 'made by CuroNova';
