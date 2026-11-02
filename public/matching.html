@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ANT CTA</title>
+  <title>Another Guild CTA - 현황판</title>
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
@@ -14,8 +14,8 @@
     .btn-reset:hover { background-color: #dc2626; }
 
     /* 파티 탭 */
-    .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; }
-    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+    .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; overflow-x: auto; }
+    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
     /* 📌 좌우 배치용 그리드 레이아웃 (1·2파티 동시 노출 시 좌우로 분할) */
@@ -26,7 +26,7 @@
     }
     @media (max-width: 1400px) {
       .side-by-side-grid {
-        grid-template-columns: 1fr; /* 화면이 좁아지면 세로로 자동 전환 */
+        grid-template-columns: 1fr; 
       }
     }
 
@@ -94,7 +94,7 @@
       const allPartyNames = Object.keys(parties);
       if (allPartyNames.length === 0) return;
 
-      // 📌 탭 그룹 정의: 1파티와 2파티는 '1·2파티' 탭으로 묶고, 나머지는 개별 탭으로 구성
+      // 📌 탭 그룹 구성: 1·2파티 묶음 -> 3파티 등 개별 파티들 -> FREE ROLE 탭 순서로 정렬
       const tabs = [];
       const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
       
@@ -102,12 +102,17 @@
         tabs.push({ label: '1·2파티', parties: p12 });
       }
 
-      // 3파티 및 기타 파티들은 개별 탭으로 추가
+      // 3파티 등 중간 파티들 추가 (1파티, 2파티, FREE ROLE 제외)
       allPartyNames.forEach(p => {
-        if (p !== '1파티' && p !== '2파티' && p !== '1' && p !== '2') {
+        if (p !== '1파티' && p !== '2파티' && p !== '1' && p !== '2' && p !== 'FREE ROLE') {
           tabs.push({ label: p, parties: [p] });
         }
       });
+
+      // FREE ROLE 탭 마지막에 추가
+      if (parties['FREE ROLE']) {
+        tabs.push({ label: 'FREE ROLE', parties: ['FREE ROLE'] });
+      }
 
       if (tabs.length === 0) {
         allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
@@ -128,7 +133,7 @@
         tabsContainer.appendChild(btn);
       });
 
-      // 2. 선택된 탭의 파티 표들 그리기 (1·2파티 선택 시 좌우 2열 그리드 구조 적용)
+      // 2. 선택된 탭의 파티 표들 그리기
       const container = document.getElementById('sheet-container');
       container.innerHTML = '';
 
@@ -145,11 +150,13 @@
 
         const partyColumn = document.createElement('div');
 
-        // 파티 구분용 서브 타이틀
-        const subTitle = document.createElement('div');
-        subTitle.className = 'party-sub-title';
-        subTitle.innerText = `📌 ${partyName}`;
-        partyColumn.appendChild(subTitle);
+        // 다중 표시일 때만 서브 타이틀 표시
+        if (isMulti) {
+          const subTitle = document.createElement('div');
+          subTitle.className = 'party-sub-title';
+          subTitle.innerText = `📌 ${partyName}`;
+          partyColumn.appendChild(subTitle);
+        }
 
         const tableWrapper = document.createElement('div');
         tableWrapper.className = 'excel-container';
