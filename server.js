@@ -16,11 +16,11 @@ const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 // 초대코드 설정
 const INVITE_CODE = '1234';
 
-app.use(express.static('public'));
-app.use('/images', express.static(path.join(__dirname, 'images'))); // 👈 images 폴더 정적 서빙 추가
 app.use(express.json());
+app.use(express.static('public'));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드
+// 초기 데이터 로드 함수
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -40,17 +40,17 @@ function loadInitialState() {
       if (!line) return;
       if (line.startsWith('[') && line.endsWith(']')) {
         currentParty = line.replace(/[\[\]]/g, '');
-        partySlotCounter = 1; // 파티가 바뀔 때 번호 초기화
+        partySlotCounter = 1; 
       } else {
         initialSlots.push({
           id: line,
-          itemCode: line, // parties.txt에 적힌 텍스트가 곧 알비온 아이템 코드
-          displayIndex: partySlotCounter++, // 파티 내 순번 (1, 2, 3...)
+          itemCode: line,
+          displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
-          guild: 'ANT', // 기본 길드 ANT
+          guild: 'ANT',
           comment: '',
-          attended: false // 출결 체크박스
+          attended: false
         });
       }
     });
