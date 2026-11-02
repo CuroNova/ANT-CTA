@@ -11,9 +11,8 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
-const GUILDS_FILE = path.join(__dirname, 'settings', 'guilds.txt');
+const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
-const PASSWORD_FILE = path.join(__dirname, 'settings', 'password.json'); // 🔑 비밀번호 설정 파일 경로
 
 app.use(express.json());
 
@@ -34,25 +33,24 @@ app.get('/matching', (req, res) => {
 app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
-// 📌 💡 CSS 폴더 서빙 경로 추가 (welcome.css 등을 읽어오기 위함)
 app.use('/css', express.static(path.join(__dirname, 'css')));
 
-// 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
-function loadPasswords() {
+// 📌 💡 통합 설정 파일(config.json) 로드 함수
+function loadConfig() {
   try {
-    if (fs.existsSync(PASSWORD_FILE)) {
-      const fileContents = fs.readFileSync(PASSWORD_FILE, 'utf8');
-      const passwords = JSON.parse(fileContents);
+    if (fs.existsSync(CONFIG_FILE)) {
+      const fileContents = fs.readFileSync(CONFIG_FILE, 'utf8');
+      const config = JSON.parse(fileContents);
       
-      if (!passwords.inviteCode || !passwords.adminCode) {
-        throw new Error('password.json 내부 키값이 누락되었습니다.');
+      if (!config.inviteCode || !config.adminCode || !config.guilds) {
+        throw new Error('config.json 내부 필수 키값(inviteCode, adminCode, guilds)이 누락되었습니다.');
       }
-      return passwords;
+      return config;
     } else {
-      throw new Error('password.json 파일이 존재하지 않습니다.');
+      throw new Error('config.json 파일이 존재하지 않습니다.');
     }
   } catch (e) {
-    console.error('❌ 암호화 설정 로드 실패:', e.message);
+    console.error('❌ 설정 파일 로드 실패:', e.message);
     return null; // 실패 시 null 반환
   }
 }
@@ -95,14 +93,11 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
 // 📌 초기 데이터 로드 함수
 function loadInitialState() {
   let initialSlots = [];
-  let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
   const mappingConfig = loadMappingConfig();
-  const passwords = loadPasswords();
+  const config = loadConfig();
 
-  if (fs.existsSync(GUILDS_FILE)) {
-    const rawGuilds = fs.readFileSync(GUILDS_FILE, 'utf8');
-    guilds = rawGuilds.split('\n').map(g => g.trim()).filter(Boolean);
-  }
+  // config.json에서 길드 목록과 초대코드 불러오기 (실패 시 기본값 적용)
+  const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
   if (fs.existsSync(PARTIES_FILE)) {
     const lines = fs.readFileSync(PARTIES_FILE, 'utf8').split('\n');
@@ -151,7 +146,7 @@ function loadInitialState() {
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
-          guild: 'ANT',
+          guild: guilds[0] || 'ANT', // 첫 번째 길드를 기본값으로 설정
           comment: commentText,
           attended: false
         });
@@ -173,7 +168,7 @@ function loadInitialState() {
           weaponImg: '',
           armorImg: '',
           nickname: '',
-          guild: 'ANT',
+          guild: guilds[0] || 'ANT',
           comment: '',
           attended: false
         });
@@ -184,7 +179,7 @@ function loadInitialState() {
   return { 
     slots: initialSlots, 
     guilds, 
-    inviteCode: passwords ? passwords.inviteCode : '1234' 
+    inviteCode: config ? config.inviteCode : '1234' 
   };
 }
 
@@ -208,40 +203,40 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 📌 로그인 API (비밀번호 파일 검증 및 예외 처리 추가)
+// 📌 로그인 API (통합 config.json 검증)
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
-  const passwords = loadPasswords();
+  const config = loadConfig();
 
-  if (!passwords) {
+  if (!config) {
     return res.json({ 
       success: false, 
-      message: '암호화 로직에 문제가 생겼습니다!', 
+      message: '설정 파일 로드에 문제가 생겼습니다!', 
       redirectToLogin: true 
     });
   }
 
-  if (code === passwords.inviteCode) {
+  if (code === config.inviteCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
   }
 });
 
-// 📌 관리자 인증 API (비밀번호 파일 검증 및 예외 처리 추가)
+// 📌 관리자 인증 API (통합 config.json 검증)
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
-  const passwords = loadPasswords();
+  const config = loadConfig();
 
-  if (!passwords) {
+  if (!config) {
     return res.json({ 
       success: false, 
-      message: '암호화 로직에 문제가 생겼습니다!', 
+      message: '설정 파일 로드에 문제가 생겼습니다!', 
       redirectToLogin: true 
     });
   }
 
-  if (code === passwords.adminCode) {
+  if (code === config.adminCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '관리자 코드가 일치하지 않습니다.' });
