@@ -100,6 +100,20 @@
       render();
     });
 
+    // 📌 역할에 따른 무기명 글자 색상 매핑 함수
+    function getRoleColor(role) {
+      if (!role) return '#38bdf8'; // 기본 색상
+      const trimmed = role.trim();
+      switch (trimmed) {
+        case '디펜': return '#38bdf8'; // 파랑색
+        case '오펜': return '#a855f7'; // 보라색
+        case '서폿': return '#eab308'; // 노란색
+        case '딜러': return '#ef4444'; // 빨간색
+        case '힐러': return '#22c55e'; // 초록색
+        default: return '#38bdf8';
+      }
+    }
+
     function render() {
       const parties = {};
       currentData.slots.forEach(slot => {
@@ -207,13 +221,15 @@
             `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
           ).join('');
 
-          // 📌 무기/갑옷 이미지 링크 처리 (없으면 각각 기본 이미지 폴백)
           const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
           const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
           
           const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0') + '번';
           const weaponName = slot.weaponName || '';
           const armorName = slot.armorName || '';
+          
+          // 📌 역할에 따른 무기명 글자 색상 동적 지정
+          const weaponTextColor = getRoleColor(slot.role);
 
           tbodyHtml += `
             <tr>
@@ -221,7 +237,7 @@
               <td style="width: 125px;">
                 <div class="gear-cell">
                   <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
-                  <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
+                  <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
                 </div>
               </td>
               <td style="width: 125px;">
