@@ -66,7 +66,7 @@
   <!-- 👁️ 현황판 메인 콘텐츠 -->
   <div id="main-content">
     <div class="header">
-      <h1>⚔️ guildCTA 실시간 매칭 현황판</h1>
+      <h1>⚔️ Another Guild CTA ⚔️</h1>
       <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
     </div>
 
@@ -175,7 +175,7 @@
             </div>
           </td>
           <td>
-            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '코멘트 (읽기 전용)')}" disabled />
+            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
           </td>
           <td>
             <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
