@@ -8,14 +8,30 @@ const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
 
-// 📌 소켓 데이터 수신 시, 현재 입력 중인(포커스된) 상태라면 리렌더링을 아예 차단하여 입력 끊김 원천 차단
+// 📌 알비온 온라인 Disarray(DA) 로그함수 및 데이터 기반 자동 계산 함수
+function calculateDisarray(playerCount) {
+  if (playerCount <= 20) return 0;
+  
+  // 인원수가 늘어날수록 완만해지는 알비온 특유의 로그 곡선 적용 (412명 기준 66 DA 수렴)
+  const effectiveCount = playerCount - 20;
+  const calculatedDa = Math.round(1 + Math.log(effectiveCount * 1.5 + 1) * 11.2);
+  
+  return Math.min(66, Math.max(1, calculatedDa));
+}
+
+// 📌 소켓 데이터 수신 시: 상단 요약판(DA, 길드, 갑옷)은 조건 없이 '무조건 실시간 갱신'
 socket.on('dataUpdated', (data) => {
   currentData = data;
+  
+  // 1. 상단 현황판은 입력 상태와 관계없이 실시간 동기화
+  renderSummaryPanels();
+
+  // 2. 파티 슬롯 입력창(INPUT/SELECT) 포커스 시에만 폼 리렌더링 방어
   const activeEl = document.activeElement;
   if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
     return; 
   }
-  render();
+  renderPartyTables();
 });
 
 // 📌 UTC 시계 기능 전용 모듈/함수
@@ -44,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
   renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
-  renderDaSummaryBox();      // 📌 화면 최좌측 상단에 고정될 DA 현황 박스 초기 생성
+  renderDaSummaryBox();      // 📌 화면 최좌측 상단 DA 현황 박스 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -79,24 +95,23 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 상단에 독립적으로 고정될 DA 현황 박스 생성 함수
+// 📌 화면 좌측 상단 DA 현황 박스 컨테이너 생성 함수
 function renderDaSummaryBox() {
   let daContainer = document.getElementById('fixed-da-summary-container');
   if (!daContainer) {
     daContainer = document.createElement('div');
     daContainer.id = 'fixed-da-summary-container';
-    // 인원현황 박스와 수직 높이를 맞추고, 화면 최좌측(left: 20px)에 고정 배치
     daContainer.style.cssText = `
       position: fixed;
-      top: 20px; /* 상단 여백 (다른 상단 메뉴들과 나란히 보이도록 조정 가능) */
-      left: 20px; /* 화면 최좌측 고정 */
+      top: 20px;
+      left: 20px;
       z-index: 9997;
     `;
     document.body.appendChild(daContainer);
   }
 }
 
-// 📌 화면 좌측 하단에 평소엔 숨겨져 있다가 마우스를 올리면 나타나는 플로팅 버튼 컨테이너 생성
+// 📌 화면 좌측 하단 마우스 오버 플로팅 버튼 생성
 function renderFloatingButtons() {
   const existingContainer = document.getElementById('floating-buttons-container');
   if (existingContainer) existingContainer.remove();
@@ -182,7 +197,114 @@ function getRoleColor(role) {
   }
 }
 
-function render() {
+// ⚡ 1. 상단 요약 현황판(DA, 길드, 갑옷) 전용 '무조건 실시간 갱신' 함수
+function renderSummaryPanels() {
+  if (!currentData.slots) return;
+
+  const guildCounts = {};
+  if (currentData.guilds) {
+    currentData.guilds.forEach(g => guildCounts[g] = 0);
+  }
+  
+  const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
+  const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
+  const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
+
+  let activePlayerCount = 0; // DA 자동 산출용 인원 카운트
+
+  currentData.slots.forEach(slot => {
+    if (slot.nickname && slot.nickname.trim() !== '') {
+      activePlayerCount++;
+      const gName = slot.guild || 'ANT';
+      if (guildCounts[gName] !== undefined) {
+        guildCounts[gName]++;
+      } else {
+        guildCounts[gName] = 1;
+      }
+    }
+
+    if (!slot.isEmptyParty && slot.party && !slot.party.includes('FREE ROLE')) {
+      const aName = slot.armorName || '';
+      armorTargets.forEach(target => {
+        if (aName.includes(target)) {
+          armorTotalCounts[target]++;
+          if (slot.nickname && slot.nickname.trim() !== '') {
+            armorCurrentCounts[target]++;
+          }
+        }
+      });
+    }
+  });
+
+  // 서버 전달 daValue가 있으면 사용, 없으면 활성 인원수 기반 자동 계산 적용
+  const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
+
+  // 📌 DA 현황 업데이트
+  renderDaSummaryBox();
+  const daContainer = document.getElementById('fixed-da-summary-container');
+  if (daContainer) {
+    let daColorHex = '#f8fafc'; // 기본 흰색 (0)
+    if (daValue >= 20) {
+      daColorHex = '#f97316'; // 20 이상: 주황색
+    } else if (daValue >= 10) {
+      daColorHex = '#eab308'; // 10 이상: 노란색
+    }
+
+    daContainer.innerHTML = `
+      <div class="summary-box">
+        <div class="summary-item">
+          <span class="summary-label">DA</span>
+          <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // 📌 길드 현황 업데이트
+  const guildSummaryContainer = document.getElementById('guild-summary');
+  if (guildSummaryContainer && currentData.guilds) {
+    guildSummaryContainer.innerHTML = '';
+    currentData.guilds.forEach((g, index) => {
+      const count = guildCounts[g] || 0;
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
+
+      let countClass = 'zero-count';
+      if (count > 0) {
+        countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
+      }
+
+      itemDiv.innerHTML = `
+        <span class="summary-label">${g}</span>
+        <span class="${countClass}">${count}</span>
+      `;
+      guildSummaryContainer.appendChild(itemDiv);
+    });
+  }
+
+  // 📌 갑옷 현황 업데이트
+  const armorSummaryContainer = document.getElementById('armor-summary');
+  if (armorSummaryContainer) {
+    armorSummaryContainer.innerHTML = '';
+    armorTargets.forEach(a => {
+      const current = armorCurrentCounts[a] || 0;
+      const total = armorTotalCounts[a] || 0;
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
+
+      const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
+
+      itemDiv.innerHTML = `
+        <span class="summary-label">${a}</span>
+        <span><span class="${currentClass}">${current}</span>/${total}</span>
+      `;
+      armorSummaryContainer.appendChild(itemDiv);
+    });
+  }
+}
+
+// ⚡ 2. 메인 파티 슬롯 렌더링 함수
+function renderPartyTables() {
   const activeEl = document.activeElement;
   let activeSlotId = null;
   let activeFieldType = null;
@@ -206,98 +328,6 @@ function render() {
 
   const allPartyNames = Object.keys(parties);
   if (allPartyNames.length === 0) return;
-
-  const guildCounts = {};
-  currentData.guilds.forEach(g => guildCounts[g] = 0);
-  
-  const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
-  const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
-  const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
-
-  currentData.slots.forEach(slot => {
-    if (slot.nickname && slot.nickname.trim() !== '') {
-      const gName = slot.guild || 'ANT';
-      if (guildCounts[gName] !== undefined) {
-        guildCounts[gName]++;
-      } else {
-        guildCounts[gName] = 1;
-      }
-    }
-
-    if (!slot.isEmptyParty && !slot.party.includes('FREE ROLE')) {
-      const aName = slot.armorName || '';
-      armorTargets.forEach(target => {
-        if (aName.includes(target)) {
-          armorTotalCounts[target]++;
-          if (slot.nickname && slot.nickname.trim() !== '') {
-            armorCurrentCounts[target]++;
-          }
-        }
-      });
-    }
-  });
-
-  const daValue = currentData.daValue !== undefined ? currentData.daValue : 0;
-
-  // 📌 최좌측 상단에 고정된 컨테이너 내부에 인원현황과 똑같은 디자인(summary-box)으로 DA 현황판 렌더링
-  const daContainer = document.getElementById('fixed-da-summary-container');
-  if (daContainer) {
-    let daColorHex = '#f8fafc'; // 기본 흰색 (0일 때)
-    if (daValue >= 20) {
-      daColorHex = '#f97316'; // 20 이상: 주황색
-    } else if (daValue >= 10) {
-      daColorHex = '#eab308'; // 10 이상: 노란색
-    }
-
-    daContainer.innerHTML = `
-      <div class="summary-box">
-        <div class="summary-item">
-          <span class="summary-label">DA</span>
-          <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  const guildSummaryContainer = document.getElementById('guild-summary');
-  if (guildSummaryContainer) {
-    guildSummaryContainer.innerHTML = '';
-    currentData.guilds.forEach((g, index) => {
-      const count = guildCounts[g] || 0;
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'summary-item';
-
-      let countClass = 'zero-count';
-      if (count > 0) {
-        countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
-      }
-
-      itemDiv.innerHTML = `
-        <span class="summary-label">${g}</span>
-        <span class="${countClass}">${count}</span>
-      `;
-      guildSummaryContainer.appendChild(itemDiv);
-    });
-  }
-
-  const armorSummaryContainer = document.getElementById('armor-summary');
-  if (armorSummaryContainer) {
-    armorSummaryContainer.innerHTML = '';
-    armorTargets.forEach(a => {
-      const current = armorCurrentCounts[a] || 0;
-      const total = armorTotalCounts[a] || 0;
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'summary-item';
-
-      const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
-
-      itemDiv.innerHTML = `
-        <span class="summary-label">${a}</span>
-        <span><span class="${currentClass}">${current}</span>/${total}</span>
-      `;
-      armorSummaryContainer.appendChild(itemDiv);
-    });
-  }
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
@@ -323,7 +353,6 @@ function render() {
     allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
   }
 
-  // 📌 관리자 메뉴 탭 추가
   tabs.push({ label: '관리자 메뉴', isAdminTab: true });
 
   if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
@@ -334,13 +363,7 @@ function render() {
   tabsContainer.innerHTML = '';
   tabs.forEach(tab => {
     const btn = document.createElement('button');
-    
-    if (tab.isAdminTab) {
-      btn.className = `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
-    } else {
-      btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
-    }
-
+    btn.className = tab.isAdminTab ? `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}` : `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     btn.innerText = tab.label;
     btn.onclick = () => {
       if (tab.isAdminTab) {
@@ -357,10 +380,7 @@ function render() {
   container.innerHTML = '';
 
   const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
-  
-  if (currentTab.isAdminTab) {
-    return;
-  }
+  if (currentTab.isAdminTab) return;
 
   const isMulti = currentTab.parties.length > 1;
 
@@ -438,9 +458,7 @@ function render() {
           tbodyHtml += `
             <tr>
               <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
-              <td style="width: 455px;">
-                ${commentHtml}
-              </td>
+              <td style="width: 455px;">${commentHtml}</td>
               <td style="width: 65px;">
                 <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
                   ${guildOptions}
@@ -476,9 +494,7 @@ function render() {
                   <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
                 </div>
               </td>
-              <td style="width: 250px;">
-                ${commentHtml}
-              </td>
+              <td style="width: 250px;">${commentHtml}</td>
               <td style="width: 65px;">
                 <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
                   ${guildOptions}
@@ -496,43 +512,20 @@ function render() {
       });
     }
 
-    if (isFreeRole) {
-      tableWrapper.innerHTML = `
-        <table class="sheet-table">
-          <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">순번</th>
-              <th style="width: 455px; text-align: center;">희망 포지션</th>
-              <th style="width: 65px; text-align: center;">길드</th>
-              <th style="width: 115px; text-align: center;">닉네임</th>
-              <th style="width: 35px; text-align: center;">출석</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tbodyHtml}
-          </tbody>
-        </table>
-      `;
-    } else {
-      tableWrapper.innerHTML = `
-        <table class="sheet-table">
-          <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">순번</th>
-              <th style="width: 110px; text-align: center;">무기</th>
-              <th style="width: 95px; text-align: center;">갑옷</th>
-              <th style="width: 250px; text-align: center;">코멘트</th>
-              <th style="width: 65px; text-align: center;">길드</th>
-              <th style="width: 115px; text-align: center;">닉네임</th>
-              <th style="width: 35px; text-align: center;">출석</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tbodyHtml}
-          </tbody>
-        </table>
-      `;
-    }
+    tableWrapper.innerHTML = `
+      <table class="sheet-table">
+        <thead>
+          <tr>
+            <th style="width: 35px; text-align: center;">순번</th>
+            ${isFreeRole ? '<th style="width: 455px; text-align: center;">희망 포지션</th>' : '<th style="width: 110px; text-align: center;">무기</th><th style="width: 95px; text-align: center;">갑옷</th><th style="width: 250px; text-align: center;">코멘트</th>'}
+            <th style="width: 65px; text-align: center;">길드</th>
+            <th style="width: 115px; text-align: center;">닉네임</th>
+            <th style="width: 35px; text-align: center;">출석</th>
+          </tr>
+        </thead>
+        <tbody>${tbodyHtml}</tbody>
+      </table>
+    `;
 
     partyColumn.appendChild(tableWrapper);
     gridWrapper.appendChild(partyColumn);
@@ -551,6 +544,12 @@ function render() {
       }
     }
   }
+}
+
+// 📌 전체 메인 렌더링 함수
+function render() {
+  renderSummaryPanels();
+  renderPartyTables();
 }
 
 function updateSlot(id, key, value) {
