@@ -13,7 +13,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 
-// 초대코드 설정 (필요시 수정 가능)
+// 초대코드 설정
 const INVITE_CODE = '1234';
 
 app.use(express.static('public'));
@@ -43,6 +43,7 @@ function loadInitialState() {
       } else {
         initialSlots.push({
           id: line,
+          itemCode: line, // parties.txt에 적힌 텍스트가 곧 알비온 아이템 코드
           displayIndex: partySlotCounter++, // 파티 내 순번 (1, 2, 3...)
           party: currentParty,
           nickname: '',
@@ -77,18 +78,20 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
+// 🔑 login.html에서 보내는 POST 요청을 처리하는 API 라우트 추가
+app.post('/api/login', (req, res) => {
+  const { code } = req.body;
+  const data = getData();
+  if (code === (data.inviteCode || INVITE_CODE)) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
+  }
+});
+
 // Socket.io 실시간 동기화
 io.on('connection', (socket) => {
   socket.emit('dataUpdated', getData());
-
-  socket.on('verifyCode', (code, callback) => {
-    const data = getData();
-    if (code === (data.inviteCode || INVITE_CODE)) {
-      callback({ success: true });
-    } else {
-      callback({ success: false, message: '초대코드가 일치하지 않습니다.' });
-    }
-  });
 
   socket.on('updateSlot', (updatedSlot) => {
     const data = getData();
