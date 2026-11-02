@@ -11,7 +11,7 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
-const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
+const GUILDS_FILE = path.join(__dirname, 'settings', 'guilds.txt');
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
 // 🔑 코드 설정 (필요시 여기서 수정 가능)
