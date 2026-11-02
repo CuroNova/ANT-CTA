@@ -17,25 +17,23 @@ const PASSWORD_FILE = path.join(__dirname, 'settings', 'password.json'); // 🔑
 
 app.use(express.json());
 
-// 📌 페이지 라우팅
+// 📌 페이지 라우팅 (새로 개편된 views 폴더 기준)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'welcome.html'));
+  res.sendFile(path.join(__dirname, 'views', 'welcome.html'));
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'login.html'));
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
 app.get('/matching', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'matching.html'));
+  res.sendFile(path.join(__dirname, 'views', 'matching.html'));
 });
 
-// 📌 정적 파일 및 이미지 서빙 폴더 설정
-app.use(express.static('pages'));
-app.use('/images', express.static(path.join(__dirname, 'images')));
-
-// 📌 [추가됨] 루트에 위치한 js 폴더 서빙 설정 (footer.js 등 공통 스크립트 로드용)
+// 📌 정적 파일 및 에셋 폴더 서빙 설정 (루트 기준 폴더별 매핑)
+app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
 function loadPasswords() {
@@ -258,7 +256,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.io.emit('dataUpdated', data);
+      io.emit('dataUpdated', data);
     }
   });
 
