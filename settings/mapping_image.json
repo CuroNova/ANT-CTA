@@ -8,7 +8,8 @@
     "왕실아머": "/images/armor_royalarmor.png",
     "왕실재킷": "/images/armor_royaljacket.png",
     "재킷": "/images/armor_mercenary.png",
-    "로브": "/images/armor_robe.png"
+    "로브": "/images/armor_robe.png",
+    "판금": "/images/armor_plate.png"
   },
   "weapon": {
     "자유무기": "/images/weapon_free.png",
