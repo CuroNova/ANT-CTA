@@ -36,7 +36,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수 (parties.txt 기반 파싱)
+// 초기 데이터 로드 함수 (parties.txt 기반 파싱: 고유ID / 코멘트 / 이미지링크)
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -58,14 +58,20 @@ function loadInitialState() {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
       } else {
+        // 📌 슬래시(/) 기준으로 [고유ID, 코멘트, 이미지링크] 파싱
+        const parts = line.split('/').map(p => p.trim());
+        const slotId = parts[0];                              // 숨겨진 고유 기본키 (예: P1U01, FPU01)
+        const commentText = parts[1] || (currentParty === 'FREE ROLE' ? '자유 롤' : ''); // 코멘트
+        const imgUrl = parts[2] || '';                        // 마지막에 위치한 이미지 링크 (없으면 빈값)
+
         initialSlots.push({
-          id: line,
-          itemCode: line.startsWith('FREEROLE') ? 'T8_MAIN_SWORD' : line, // FREE ROLE은 기본 무기 코드 지정 가능
+          id: slotId,                                         // 내부 식별용 ID
+          itemCode: imgUrl,                                   // 이미지 링크 저장 위치
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
           guild: 'ANT',
-          comment: currentParty === 'FREE ROLE' ? '자유 롤' : '',
+          comment: commentText,                               // 코멘트 내용
           attended: false
         });
       }
