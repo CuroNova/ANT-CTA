@@ -50,7 +50,7 @@ function loadMappingConfig() {
   return { weapon: {}, armor: {} };
 }
 
-// 📌 이미지 경로 결정 함수 (우선순위: 1. 직접 입력 링크 -> 2. JSON 매핑 -> 3. 기본 이미지)
+// 📌 이미지 경로 결정 함수 (상대 경로 입력 시 /images/ 자동 결합 지원)
 function resolveImagePath(name, directUrl, type, mappingConfig) {
   // 1순위: parties.txt에 직접 입력한 웹 이미지 링크가 있으면 우선 사용
   if (directUrl && directUrl.trim() !== '') {
@@ -63,7 +63,11 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
     const trimmedName = name.trim();
     for (const [key, imagePath] of Object.entries(mapRules)) {
       if (trimmedName.includes(key)) {
-        return imagePath;
+        // 이미 http나 절대경로(/)로 시작하면 그대로 반환, 아니면 앞에 /images/ 자동 결합
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('/')) {
+          return imagePath;
+        }
+        return `/images/${imagePath}`;
       }
     }
   }
@@ -99,13 +103,13 @@ function loadInitialState() {
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
-        const slotId = parts[0] || '';                              // 1. 기본키
-        const roleName = parts[1] || '';                            // 2. 역할명
-        const weaponName = parts[2] || '';                          // 3. 무기명
-        const armorName = parts[3] || '';                           // 4. 갑옷명
-        const commentText = parts[4] || '';                         // 5. 코멘트
-        const rawWeaponImg = parts[5] || '';                        // 6. 무기 이미지 링크
-        const rawArmorImg = parts[6] || '';                         // 7. 갑옷 이미지 링크
+        const slotId = parts[0] || '';                         // 1. 기본키
+        const roleName = parts[1] || '';                       // 2. 역할명
+        const weaponName = parts[2] || '';                       // 3. 무기명
+        const armorName = parts[3] || '';                        // 4. 갑옷명
+        const commentText = parts[4] || '';                      // 5. 코멘트
+        const rawWeaponImg = parts[5] || '';                     // 6. 무기 이미지 링크
+        const rawArmorImg = parts[6] || '';                      // 7. 갑옷 이미지 링크
 
         // 📌 3단계 우선순위 적용 (직접 입력 -> JSON 매핑 -> 기본 이미지)
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
@@ -183,7 +187,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.emit('dataUpdated', data);
+      io.io ? io.emit('dataUpdated', data) : io.emit('dataUpdated', data);
     }
   });
 
