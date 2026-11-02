@@ -36,7 +36,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수 (parties.txt 기반 파싱: 기본키 / 무기명 / 코멘트 / 이미지링크)
+// 초기 데이터 로드 함수 (parties.txt 기반 파싱: "기본키","무기명","코멘트","이미지링크")
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -58,22 +58,25 @@ function loadInitialState() {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
       } else {
-        // 📌 형식: 기본키 / 무기명 / 코멘트 / 이미지링크
-        const parts = line.split('/').map(p => p.trim());
-        const slotId = parts[0];                              // 1. 기본키 (숨겨진 고유 ID)
-        const weaponName = parts[1] || '';                    // 2. 무기명 (이미지 우측 표시)
-        const commentText = parts[2] || '';                   // 3. 코멘트
-        const imgUrl = parts[3] || '';                        // 4. 이미지 링크
+        // 📌 큰따옴표(") 안의 값들을 순서대로 추출
+        const matches = line.match(/"([^"]*)"/g);
+        if (!matches || matches.length < 1) return;
+
+        const parts = matches.map(m => m.replace(/"/g, '').trim());
+        const slotId = parts[0] || '';                              // 1. 기본키 (숨겨진 고유 ID)
+        const weaponName = parts[1] || '';                          // 2. 무기명 (이미지 우측 표시)
+        const commentText = parts[2] || '';                         // 3. 코멘트
+        const imgUrl = parts[3] || '';                              // 4. 이미지 링크
 
         initialSlots.push({
-          id: slotId,                                         // 내부 식별용 ID (기본키)
-          weaponName: weaponName,                             // 무기명 속성
-          itemCode: imgUrl,                                   // 이미지 링크 저장 위치
+          id: slotId,                                               // 내부 식별용 ID (기본키)
+          weaponName: weaponName,                                   // 무기명 속성
+          itemCode: imgUrl,                                         // 이미지 링크 저장 위치
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
           guild: 'ANT',
-          comment: commentText,                               // 코멘트 내용
+          comment: commentText,                                     // 코멘트 내용
           attended: false
         });
       }
