@@ -17,6 +17,21 @@ const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 const INVITE_CODE = '1234';
 
 app.use(express.json());
+
+// 🔀 분리된 HTML 파일을 확장자 없이 깔끔한 주소로 매핑
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/matching', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'matching.html'));
+});
+
+// 정적 파일 및 이미지 서빙
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
@@ -79,7 +94,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 🔑 로그인 API 라우트
+// 로그인 API
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const data = getData();
