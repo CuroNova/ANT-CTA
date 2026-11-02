@@ -1,8 +1,20 @@
 [1파티]
-어스룬 | 판금 갑옷 | Judi | 없음 | https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET1@4
-킹메이커 | 가죽 갑옷 | | | https://render.albiononline.com/v1/item/T8_WEAPON_SWORD
-힐러무기 | 로브 갑옷 | | 힐 집중 | 
+P1U01
+P1U02
+P1U03
+P1U04
+P1U05
 
 [2파티]
-활무기 | 가죽 갑옷 | 헌터 | 원딜 | https://render.albiononline.com/v1/item/T8_BOW
-법사무기 | 로브 갑옷 | | | 
+P2U01
+P2U02
+P2U03
+P2U04
+P2U05
+
+[3파티]
+P3U01
+P3U02
+P3U03
+P3U04
+P3U05

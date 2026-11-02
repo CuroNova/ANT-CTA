@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>guildCTA - 실시간 길드 매칭 현황판</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
+    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-reset:hover { background-color: #dc2626; }
+    
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .party-card { background-color: #1e293b; border-radius: 8px; padding: 16px; border: 1px solid #334155; }
+    .party-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 12px; color: #facc15; border-bottom: 2px solid #334155; padding-bottom: 6px; }
+    
+    .slot-row { display: flex; flex-direction: column; gap: 6px; background-color: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #334155; }
+    .slot-row input, .slot-row select { background-color: #1e293b; color: #f8fafc; border: 1px solid #475569; padding: 6px; border-radius: 4px; font-size: 0.9rem; }
+    .slot-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #94a3b8; }
+    .slot-inputs { display: flex; gap: 6px; }
+    .slot-inputs input[type="text"] { flex: 1; }
+    
+    .status-select { font-weight: bold; }
+    .status-pending { color: #cbd5e1; }
+    .status-joined { color: #4ade80; }
+    .status-absent { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚔️ guildCTA 실시간 매칭 현황판</h1>
+    <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+  </div>
+
+  <div id="app" class="grid-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentData = { slots: [], guilds: [] };
+
+    socket.on('dataUpdated', (data) => {
+      currentData = data;
+      render();
+    });
+
+    function render() {
+      const container = document.getElementById('app');
+      container.innerHTML = '';
+
+      // Group by party
+      const parties = {};
+      currentData.slots.forEach(slot => {
+        if (!parties[slot.party]) parties[slot.party] = [];
+        parties[slot.party].push(slot);
+      });
+
+      Object.keys(parties).forEach(partyName => {
+        const card = document.createElement('div');
+        card.className = 'party-card';
+        
+        let html = `<div class="party-title">${partyName}</div>`;
+        parties[partyName].forEach(slot => {
+          const guildOptions = currentData.guilds.map(g => 
+            `<option value="${g}" ${slot.guild === g ? 'selected' : ''}>${g}</option>`
+          ).join('');
+
+          html += `
+            <div class="slot-row">
+              <div class="slot-header">
+                <span>슬롯 ${slot.id}</span>
+                <select class="status-select status-${slot.status}" onchange="updateSlot('${slot.id}', 'status', this.value)">
+                  <option value="pending" ${slot.status === 'pending' ? 'selected' : ''}>대기중</option>
+                  <option value="joined" ${slot.status === 'joined' ? 'selected' : ''}>참여완료</option>
+                  <option value="absent" ${slot.status === 'absent' ? 'selected' : ''}>불참</option>
+                </select>
+              </div>
+              <div class="slot-inputs">
+                <input type="text" placeholder="닉네임" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+                <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+                  <option value="">길드 선택</option>
+                  ${guildOptions}
+                </select>
+              </div>
+              <input type="text" placeholder="메모 / 코멘트" value="${escapeHtml(slot.comment)}" onchange="updateSlot('${slot.id}', 'comment', this.value)" />
+            </div>
+          `;
+        });
+
+        card.innerHTML = html;
+        container.appendChild(card);
+      });
+    }
+
+    function updateSlot(id, key, value) {
+      const slot = currentData.slots.find(s => s.id === id);
+      if (slot) {
+        slot[key] = value;
+        socket.emit('updateSlot', slot);
+      }
+    }
+
+    function resetAll() {
+      if (confirm('모든 입력 데이터를 초기화하시겠습니까?')) {
+        socket.emit('resetData');
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>
