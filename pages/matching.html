@@ -321,8 +321,10 @@
 
         const partyColumn = document.createElement('div');
 
-        const maxCount = partySlots.length;
-        const currentCount = partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
+        // 📌 빈 파티(isEmptyParty: true) 판별 로직 추가
+        const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
+        const maxCount = isEmpty ? 0 : partySlots.length;
+        const currentCount = isEmpty ? 0 : partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
 
         if (isMulti || currentTab.parties.length === 1) {
           const subTitle = document.createElement('div');
@@ -336,7 +338,7 @@
 
         let tbodyHtml = '';
         
-        if (partySlots.length === 0) {
+        if (isEmpty) {
           tbodyHtml = `
             <tr>
               <td colspan="7" style="text-align: center; padding: 30px; color: #64748b; font-weight: bold;">
