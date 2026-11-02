@@ -10,7 +10,7 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const PARTIES_FILE = path.join(__dirname, 'parties.txt');
+const PARTIES_FILE = path.join(__dirname, 'loadouts', 'brawlClap.txt');
 const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
