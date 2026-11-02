@@ -13,58 +13,48 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 
+// 초대코드 설정 (필요시 수정 가능)
+const INVITE_CODE = '1234';
+
 app.use(express.static('public'));
 app.use(express.json());
 
-// Initialize data.json if it doesn't exist
+// 초기 데이터 로드
 function loadInitialState() {
   let initialSlots = [];
-  let guilds = ['길드 A', '길드 B', '길드 C'];
+  let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
-  // Load guilds if file exists
   if (fs.existsSync(GUILDS_FILE)) {
     const rawGuilds = fs.readFileSync(GUILDS_FILE, 'utf8');
     guilds = rawGuilds.split('\n').map(g => g.trim()).filter(Boolean);
   }
 
-  // Load parties structure from parties.txt if exists
   if (fs.existsSync(PARTIES_FILE)) {
     const lines = fs.readFileSync(PARTIES_FILE, 'utf8').split('\n');
     let currentParty = '';
+    let partySlotCounter = 1;
+
     lines.forEach(line => {
       line = line.trim();
       if (!line) return;
       if (line.startsWith('[') && line.endsWith(']')) {
         currentParty = line.replace(/[\[\]]/g, '');
+        partySlotCounter = 1; // 파티가 바뀔 때 번호 초기화
       } else {
         initialSlots.push({
           id: line,
+          displayIndex: partySlotCounter++, // 파티 내 순번 (1, 2, 3...)
           party: currentParty,
           nickname: '',
-          guild: '',
+          guild: 'ANT', // 기본 길드 ANT
           comment: '',
-          status: 'pending' // pending, joined, absent
+          attended: false // 출결 체크박스
         });
       }
     });
-  } else {
-    // Default fallback structure
-    for (let p = 1; p <= 4; p++) {
-      for (let u = 1; u <= 5; u++) {
-        const id = `P${p}U${u < 10 ? '0' + u : u}`;
-        initialSlots.push({
-          id,
-          party: `파티 ${p}`,
-          nickname: '',
-          guild: '',
-          comment: '',
-          status: 'pending'
-        });
-      }
-    }
   }
 
-  return { slots: initialSlots, guilds };
+  return { slots: initialSlots, guilds, inviteCode: INVITE_CODE };
 }
 
 function getData() {
@@ -87,21 +77,18 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// API Routes
-app.get('/api/data', (req, res) => {
-  res.json(getData());
-});
-
-app.post('/api/reset', (req, res) => {
-  const resetData = loadInitialState();
-  saveData(resetData);
-  io.emit('dataUpdated', resetData);
-  res.json({ success: true, message: '초기화되었습니다.' });
-});
-
-// Socket.io Real-time connection
+// Socket.io 실시간 동기화
 io.on('connection', (socket) => {
   socket.emit('dataUpdated', getData());
+
+  socket.on('verifyCode', (code, callback) => {
+    const data = getData();
+    if (code === (data.inviteCode || INVITE_CODE)) {
+      callback({ success: true });
+    } else {
+      callback({ success: false, message: '초대코드가 일치하지 않습니다.' });
+    }
+  });
 
   socket.on('updateSlot', (updatedSlot) => {
     const data = getData();
