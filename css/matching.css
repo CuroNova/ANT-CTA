@@ -1,4 +1,4 @@
-* { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
+- { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
 
 /* 📌 body: 인원수와 관계없이 세로 스크롤바 영역을 항상 강제하여 탭 전환 시 레이아웃 덜컹거림 방지 */
 body { 
@@ -50,13 +50,12 @@ h1 {
   justify-content: flex-start; 
 }
 
-/* 우측 요약 박스 정렬 */
+/* 우측 요약 박스 정렬 (세로 상하 배치로 수정 완료) */
 .header-right { 
   display: flex; 
-  align-items: center; 
-  justify-content: flex-end; 
-  gap: 15px; 
-  flex-wrap: wrap; 
+  flex-direction: column; /* 📌 인원현황 아래에 갑옷현황이 오도록 세로 정렬 */
+  align-items: flex-end;    /* 우측 정렬 맞춤 */
+  gap: 8px;                 /* 위·아래 요약 박스 간격 */
 }
 
 /* 화면이 좁아질 때(모바일 등) 반응형 처리 */
@@ -68,7 +67,7 @@ h1 {
     gap: 15px; 
   }
   .header-right { 
-    justify-content: center; 
+    align-items: center;    /* 모바일에서는 가운데 정렬 */
     width: 100%; 
   }
 }
