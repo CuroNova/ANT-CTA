@@ -13,7 +13,7 @@ socket.on('dataUpdated', (data) => {
   render();
 });
 
-// 📌 UTC 시계 기능 전용 모듈/함수
+// UTC 시계 기능
 function initUtcClock(selector = '[data-utc-clock]') {
   function update() {
     const elements = document.querySelectorAll(selector);
@@ -43,20 +43,19 @@ function getRoleColor(role) {
   if (!role) return '#38bdf8';
   const trimmed = role.trim();
   switch (trimmed) {
-    case '디펜': return '#38bdf8'; // 파랑색
-    case '오펜': return '#a855f7'; // 보라색
-    case '서폿': return '#eab308'; // 노란색
-    case '딜러': return '#ef4444'; // 빨간색
-    case '힐러': return '#22c55e'; // 초록색
+    case '디펜': return '#38bdf8';
+    case '오펜': return '#a855f7';
+    case '서폿': return '#eab308';
+    case '딜러': return '#ef4444';
+    case '힐러': return '#22c55e';
     default: return '#38bdf8';
   }
 }
 
 function render() {
-  // 📌 1. 현재 사용자가 포커스 중인 요소(입력 중인 인풋 등)의 정보 파악 (포커스 유실 방지 핵심)
   const activeEl = document.activeElement;
   let activeSlotId = null;
-  let activeFieldType = null; // 'nickname' 또는 'guild' 등
+  let activeFieldType = null;
 
   if (activeEl && activeEl.dataset.slotId) {
     activeSlotId = activeEl.dataset.slotId;
@@ -72,11 +71,9 @@ function render() {
   const allPartyNames = Object.keys(parties);
   if (allPartyNames.length === 0) return;
 
-  // 📌 2. 길드별 참여 인원 집계
   const guildCounts = {};
   currentData.guilds.forEach(g => guildCounts[g] = 0);
   
-  // 📌 3. 주요 갑옷 종류별 인원 집계
   const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
   const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
   const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
@@ -104,7 +101,7 @@ function render() {
     }
   });
 
-  // 📌 길드 요약 UI 렌더링
+  // 길드 요약 UI
   const guildSummaryContainer = document.getElementById('guild-summary');
   guildSummaryContainer.innerHTML = '';
   currentData.guilds.forEach((g, index) => {
@@ -124,7 +121,7 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링
+  // 갑옷 요약 UI
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
@@ -142,7 +139,7 @@ function render() {
     armorSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 탭 설정 및 렌더링
+  // 탭 구성
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
   if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
@@ -167,6 +164,9 @@ function render() {
     allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
   }
 
+  // 📌 탭 목록 맨 우측에 '관리자 메뉴' 추가
+  tabs.push({ label: '관리자 메뉴', isAdminTab: true });
+
   if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
     activeTabLabel = tabs[0].label;
   }
@@ -176,8 +176,19 @@ function render() {
   tabs.forEach(tab => {
     const btn = document.createElement('button');
     btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
+    if (tab.isAdminTab) {
+      btn.style.borderColor = '#ef4444';
+      btn.style.color = '#f87171';
+    }
     btn.innerText = tab.label;
-    btn.onclick = () => { activeTabLabel = tab.label; render(); };
+    btn.onclick = () => {
+      if (tab.isAdminTab) {
+        verifyAdminAndOpenMenu();
+      } else {
+        activeTabLabel = tab.label;
+        render();
+      }
+    };
     tabsContainer.appendChild(btn);
   });
 
@@ -185,6 +196,12 @@ function render() {
   container.innerHTML = '';
 
   const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
+  
+  // 관리자 메뉴 탭일 때는 시트 내용을 띄우지 않음 (플로팅 모달이 뜸)
+  if (currentTab.isAdminTab) {
+    return;
+  }
+
   const isMulti = currentTab.parties.length > 1;
 
   const gridWrapper = document.createElement('div');
@@ -193,7 +210,6 @@ function render() {
 
   currentTab.parties.forEach(partyName => {
     const partySlots = parties[partyName] || [];
-
     const partyColumn = document.createElement('div');
 
     const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
@@ -215,7 +231,7 @@ function render() {
     if (isEmpty) {
       tbodyHtml = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 30px; color: #64748b; font-weight: bold;">
+          <td colspan="7" style="text-align: center; padding: 40px; color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.05);">
             비활성화된 파티입니다.
           </td>
         </tr>
@@ -232,10 +248,8 @@ function render() {
         const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0');
         const weaponName = slot.weaponName || '';
         const armorName = slot.armorName || '';
-        
         const weaponTextColor = getRoleColor(slot.role);
 
-        // 📌 사용자가 입력 중인 필드라면 서버 데이터가 새로 들어와도 현재 입력값을 우선 유지 (커서 튐 방지)
         let currentNickname = slot.nickname;
         if (activeSlotId === slot.id && activeFieldType === 'nickname') {
           const activeInputValue = activeEl ? activeEl.value : slot.nickname;
@@ -298,13 +312,11 @@ function render() {
     gridWrapper.appendChild(partyColumn);
   });
 
-  // 📌 4. 렌더링 직후 사용자가 포커스 중이던 요소가 있었다면 포커스를 정확히 재복구
   if (activeSlotId && activeFieldType) {
     const selector = `[data-slot-id="${activeSlotId}"][data-field-type="${activeFieldType}"]`;
     const targetToFocus = document.querySelector(selector);
     if (targetToFocus) {
       targetToFocus.focus();
-      // 텍스트 인풋인 경우 커서가 맨 앞으로 튀는 현상을 막기 위해 맨 뒤로 이동
       if (targetToFocus.tagName === 'INPUT' && typeof targetToFocus.selectionStart === 'number') {
         const len = targetToFocus.value.length;
         targetToFocus.setSelectionRange(len, len);
@@ -313,16 +325,9 @@ function render() {
   }
 }
 
-function updateSlot(id, key, value) {
-  const slot = currentData.slots.find(s => s.id === id);
-  if (slot) {
-    slot[key] = value;
-    socket.emit('updateSlot', slot);
-  }
-}
-
-function requestReset() {
-  const code = prompt('전체 초기화를 진행하려면 [관리자 코드]를 입력하세요:');
+// 📌 관리자 인증 후 플로팅 모달 메뉴 오픈
+function verifyAdminAndOpenMenu() {
+  const code = prompt('관리자 메뉴를 열려면 [관리자 코드]를 입력하세요:');
   if (code === null) return;
 
   if (code.trim() === '') {
@@ -344,9 +349,7 @@ function requestReset() {
     }
 
     if (result.success) {
-      if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
-        socket.emit('resetData');
-      }
+      openAdminFloatingModal();
     } else {
       alert('관리자 코드가 일치하지 않습니다.');
     }
@@ -355,6 +358,120 @@ function requestReset() {
     console.error(err);
     alert('서버 통신 중 오류가 발생했습니다.');
   });
+}
+
+// 📌 화면 정중앙 플로팅 관리자 메뉴 팝업 생성
+function openAdminFloatingModal() {
+  // 기존에 열려있는 모달이 있다면 제거
+  const existingModal = document.getElementById('admin-floating-modal');
+  if (existingModal) existingModal.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'admin-floating-modal';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
+    z-index: 9999; backdrop-filter: blur(4px);
+  `;
+
+  const isParty3Disabled = currentData.isParty3Disabled || false;
+  const party3ToggleText = isParty3Disabled ? '🟢 3파티 활성화하기' : '🔴 3파티 비활성화';
+
+  modal.innerHTML = `
+    <div style="background: #1e293b; padding: 30px; border-radius: 12px; width: 360px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 1px solid #334155; text-align: center; color: #f8fafc;">
+      <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+          📂 조합 변경 (로드아웃 선택)
+        </button>
+        
+        <button id="btn-toggle-party3" style="padding: 12px; background: ${isParty3Disabled ? '#10b981' : '#f59e0b'}; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          ${party3ToggleText}
+        </button>
+
+        <button id="btn-reset-data" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          🔄 전체 초기화
+        </button>
+      </div>
+
+      <button id="btn-close-modal" style="margin-top: 20px; padding: 8px 16px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+        닫기
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // 이벤트 바인딩
+  document.getElementById('btn-close-modal').onclick = () => modal.remove();
+  
+  // 1. 조합 변경 버튼 클릭 시 .txt 파일 리스트 팝업 띄우기
+  document.getElementById('btn-loadout-change').onclick = () => {
+    fetch('/api/admin/loadouts')
+      .then(res => res.json())
+      .then(resData => {
+        if (!resData.success || resData.files.length === 0) {
+          alert('loadouts 폴더에 사용 가능한 .txt 파일이 없습니다.');
+          return;
+        }
+        
+        let fileListStr = resData.files.map((f, i) => `${i + 1}. ${f}`).join('\n');
+        let selectedIdxStr = prompt(`변경할 조합 파일 번호를 입력하세요:\n\n${fileListStr}`);
+        if (!selectedIdxStr) return;
+
+        let idx = parseInt(selectedIdxStr.trim()) - 1;
+        if (isNaN(idx) || !resData.files[idx]) {
+          alert('올바른 번호를 입력해주세요.');
+          return;
+        }
+
+        let chosenFile = resData.files[idx];
+        fetch('/api/admin/change-loadout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: chosenFile })
+        })
+        .then(r => r.json())
+        .then(rRes => {
+          if (rRes.success) {
+            alert(`조합이 [${chosenFile}] (으)로 성공적으로 변경되었습니다!`);
+            modal.remove();
+          } else {
+            alert(rRes.message || '변경 실패');
+          }
+        });
+      });
+  };
+
+  // 2. 3파티 비활성화/활성화 토글
+  document.getElementById('btn-toggle-party3').onclick = () => {
+    fetch('/api/admin/toggle-party3', { method: 'POST' })
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success) {
+          alert(resData.isParty3Disabled ? '3파티가 비활성화되었습니다.' : '3파티가 활성화되었습니다.');
+          modal.remove();
+        }
+      });
+  };
+
+  // 3. 전체 초기화
+  document.getElementById('btn-reset-data').onclick = () => {
+    if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
+      socket.emit('resetData');
+      modal.remove();
+      alert('초기화되었습니다.');
+    }
+  };
+}
+
+function updateSlot(id, key, value) {
+  const slot = currentData.slots.find(s => s.id === id);
+  if (slot) {
+    slot[key] = value;
+    socket.emit('updateSlot', slot);
+  }
 }
 
 function escapeHtml(str) {
