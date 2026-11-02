@@ -8,25 +8,62 @@ const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
 
-// 📌 알비온 온라인 Disarray(DA) 로그함수 및 데이터 기반 자동 계산 함수
+// 📌 주신 데이터를 완벽하게 반영한 안전한 DA 매핑 함수 (20명 이하 0, 21명부터 정확한 값 매핑)
 function calculateDisarray(playerCount) {
   if (playerCount <= 20) return 0;
-  
-  // 인원수가 늘어날수록 완만해지는 알비온 특유의 로그 곡선 적용 (412명 기준 66 DA 수렴)
-  const effectiveCount = playerCount - 20;
-  const calculatedDa = Math.round(1 + Math.log(effectiveCount * 1.5 + 1) * 11.2);
-  
-  return Math.min(66, Math.max(1, calculatedDa));
+
+  const daTable = {
+    21: 1, 22: 2, 23: 2, 24: 2, 25: 2, 26: 3, 27: 3, 28: 8, 29: 9, 30: 10,
+    31: 11, 32: 12, 33: 13, 34: 14, 35: 15, 36: 16, 37: 17, 38: 17, 39: 18, 40: 18,
+    41: 19, 42: 19, 43: 20, 44: 20, 45: 20, 46: 21, 47: 21, 48: 22, 49: 22, 50: 23,
+    51: 23, 52: 23, 53: 23, 54: 24, 55: 24, 56: 25, 57: 25, 58: 26, 59: 26, 60: 26,
+    61: 27, 62: 27, 63: 27, 64: 28, 65: 28, 66: 28, 67: 29, 68: 29, 69: 29, 70: 30,
+    71: 30, 72: 30, 73: 30, 74: 31, 75: 31, 76: 31, 77: 31, 78: 31, 79: 32, 80: 32,
+    81: 32, 82: 32, 83: 33, 84: 33, 85: 33, 86: 33, 87: 33, 88: 33, 89: 34, 90: 34,
+    91: 34, 92: 34, 93: 34, 94: 34, 95: 35, 96: 35, 97: 35, 98: 35, 99: 36, 100: 36,
+    101: 36, 102: 36, 103: 37, 104: 37, 105: 37, 106: 37, 107: 37, 108: 38, 109: 38, 110: 38,
+    111: 38, 112: 38, 113: 38, 114: 39, 115: 39, 116: 39, 117: 39, 118: 39, 119: 40, 120: 40,
+    121: 40, 122: 40, 123: 40, 124: 40, 125: 40, 126: 41, 127: 41, 128: 41, 129: 41, 130: 41,
+    131: 41, 132: 41, 133: 42, 134: 42, 135: 42, 136: 42, 137: 42, 138: 42, 139: 42, 140: 42,
+    141: 43, 142: 43, 143: 43, 144: 43, 145: 43, 146: 43, 147: 43, 148: 44, 149: 44, 150: 44,
+    151: 44, 152: 44, 153: 44, 154: 45, 155: 45, 156: 45, 157: 45, 158: 45, 159: 45, 160: 46,
+    161: 46, 162: 46, 163: 46, 164: 46, 165: 46, 166: 46, 167: 47, 168: 47, 169: 47, 170: 47,
+    171: 47, 172: 47, 173: 47, 174: 47, 175: 48, 176: 48, 177: 48, 178: 48, 179: 48, 180: 48,
+    181: 48, 182: 48, 183: 49, 184: 49, 185: 49, 186: 49, 187: 49, 188: 49, 189: 49, 190: 49,
+    191: 49, 192: 50, 193: 50, 194: 50, 195: 50, 196: 50, 197: 50, 198: 50, 199: 50, 200: 51,
+    201: 51, 202: 51, 203: 51, 204: 51, 205: 51, 206: 51, 207: 52, 208: 52, 209: 52, 210: 52,
+    211: 52, 212: 52, 213: 52, 214: 52, 215: 53, 216: 53, 217: 53, 218: 53, 219: 53, 220: 53,
+    221: 53, 222: 53, 223: 54, 224: 54, 225: 54, 226: 54, 227: 54, 228: 54, 229: 54, 230: 54,
+    231: 54, 232: 55, 233: 55, 234: 55, 235: 55, 236: 55, 237: 55, 238: 55, 239: 55, 240: 55,
+    241: 55, 242: 56, 243: 56, 244: 56, 245: 56, 246: 56, 247: 56, 248: 56, 249: 56, 250: 56,
+    251: 56, 252: 57, 253: 57, 254: 57, 255: 57, 256: 57, 257: 57, 258: 57, 259: 57, 260: 57,
+    261: 57, 262: 57, 263: 57, 264: 58, 265: 58, 266: 58, 267: 58, 268: 58, 269: 58, 270: 58,
+    271: 58, 272: 58, 273: 58, 274: 58, 275: 58, 276: 59, 277: 59, 278: 59, 279: 59, 280: 59,
+    281: 59, 282: 59, 283: 59, 284: 59, 285: 59, 286: 59, 287: 59, 288: 59, 289: 59, 290: 60,
+    291: 60, 292: 60, 293: 60, 294: 60, 295: 60, 296: 60, 297: 60, 298: 60, 299: 60, 300: 60,
+    301: 60, 302: 60, 303: 60, 304: 60, 305: 61, 306: 61, 307: 61, 308: 61, 309: 61, 310: 61,
+    311: 61, 312: 61, 313: 61, 314: 61, 315: 61, 316: 61, 317: 61, 318: 61, 319: 61, 320: 61,
+    321: 61, 322: 62, 323: 62, 324: 62, 325: 62, 326: 62, 327: 62, 328: 62, 329: 62, 330: 62,
+    331: 62, 332: 62, 333: 62, 334: 62, 335: 62, 336: 62, 337: 62, 338: 62, 339: 62, 340: 62,
+    341: 62, 342: 62, 343: 62, 344: 62, 345: 62, 346: 62, 347: 62, 348: 62, 349: 62, 350: 62,
+    351: 62, 352: 62, 353: 62, 354: 62, 355: 62, 356: 62, 357: 62, 358: 62, 359: 62, 360: 62,
+    361: 64, 362: 64, 363: 64, 364: 64, 365: 64, 366: 64, 367: 64, 368: 64, 369: 64, 370: 64,
+    371: 64, 372: 64, 373: 64, 374: 64, 375: 64, 376: 64, 377: 64, 378: 64, 379: 64, 380: 64,
+    381: 64, 382: 64, 383: 64, 384: 64, 385: 65, 386: 65, 387: 65, 388: 65, 389: 65, 390: 65,
+    391: 65, 392: 65, 393: 65, 394: 65, 395: 65, 396: 65, 397: 65, 398: 65, 399: 65, 400: 65,
+    401: 65, 402: 65, 403: 65, 404: 65, 405: 65, 406: 65, 407: 65, 408: 65, 409: 65, 410: 65,
+    411: 65, 412: 66
+  };
+
+  if (playerCount > 412) return 66;
+  return daTable[playerCount] !== undefined ? daTable[playerCount] : 0;
 }
 
-// 📌 소켓 데이터 수신 시: 상단 요약판(DA, 길드, 갑옷)은 조건 없이 '무조건 실시간 갱신'
+// 📌 소켓 데이터 수신 시: 상단 요약판 실시간 갱신
 socket.on('dataUpdated', (data) => {
   currentData = data;
-  
-  // 1. 상단 현황판은 입력 상태와 관계없이 실시간 동기화
   renderSummaryPanels();
 
-  // 2. 파티 슬롯 입력창(INPUT/SELECT) 포커스 시에만 폼 리렌더링 방어
   const activeEl = document.activeElement;
   if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
     return; 
@@ -60,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
   renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
-  renderDaSummaryBox();      // 📌 화면 최좌측 상단 DA 현황 박스 생성
+  ensureDaSummaryBox();      // 📌 상단 요약 영역 내에 DA 박스 DOM 안전 주입
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -95,19 +132,25 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 상단 DA 현황 박스 컨테이너 생성 함수
-function renderDaSummaryBox() {
-  let daContainer = document.getElementById('fixed-da-summary-container');
-  if (!daContainer) {
-    daContainer = document.createElement('div');
-    daContainer.id = 'fixed-da-summary-container';
-    daContainer.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 9997;
-    `;
-    document.body.appendChild(daContainer);
+// 📌 상단 요약 영역(guild-summary 등)의 최좌측에 DA 박스가 제자리에 머물도록 안전하게 생성
+function ensureDaSummaryBox() {
+  const guildSummaryContainer = document.getElementById('guild-summary');
+  if (guildSummaryContainer) {
+    let daWrapper = document.getElementById('da-summary-wrapper');
+    if (!daWrapper) {
+      const summaryBox = guildSummaryContainer.closest('.summary-box') || guildSummaryContainer.parentElement;
+      if (summaryBox) {
+        daWrapper = document.createElement('div');
+        daWrapper.id = 'da-summary-wrapper';
+        daWrapper.className = 'summary-item'; // 다른 요약 아이템들과 완벽히 동일한 클래스 유지
+        daWrapper.innerHTML = `
+          <span class="summary-label">DA</span>
+          <span id="da-value-span" style="font-weight: bold; font-size: 1.05rem;">0</span>
+        `;
+        // 길드 요약 박스보다 앞에(최좌측에) 삽입하여 스크롤 시에도 제자리에 고정되도록 처리
+        summaryBox.insertBefore(daWrapper, summaryBox.firstChild);
+      }
+    }
   }
 }
 
@@ -197,7 +240,7 @@ function getRoleColor(role) {
   }
 }
 
-// ⚡ 1. 상단 요약 현황판(DA, 길드, 갑옷) 전용 '무조건 실시간 갱신' 함수
+// ⚡ 1. 상단 요약 현황판(DA, 길드, 갑옷) 전용 실시간 갱신 함수
 function renderSummaryPanels() {
   if (!currentData.slots) return;
 
@@ -210,7 +253,7 @@ function renderSummaryPanels() {
   const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
   const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
 
-  let activePlayerCount = 0; // DA 자동 산출용 인원 카운트
+  let activePlayerCount = 0; // 활성 닉네임 인원 카운트
 
   currentData.slots.forEach(slot => {
     if (slot.nickname && slot.nickname.trim() !== '') {
@@ -236,28 +279,21 @@ function renderSummaryPanels() {
     }
   });
 
-  // 서버 전달 daValue가 있으면 사용, 없으면 활성 인원수 기반 자동 계산 적용
+  // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 DA 현황 업데이트
-  renderDaSummaryBox();
-  const daContainer = document.getElementById('fixed-da-summary-container');
-  if (daContainer) {
-    let daColorHex = '#f8fafc'; // 기본 흰색 (0)
+  // 📌 DA 수치 및 색상 업데이트
+  ensureDaSummaryBox();
+  const daValueSpan = document.getElementById('da-value-span');
+  if (daValueSpan) {
+    daValueSpan.innerText = daValue;
     if (daValue >= 20) {
-      daColorHex = '#f97316'; // 20 이상: 주황색
+      daValueSpan.style.color = '#f97316'; // 주황색
     } else if (daValue >= 10) {
-      daColorHex = '#eab308'; // 10 이상: 노란색
+      daValueSpan.style.color = '#eab308'; // 노란색
+    } else {
+      daValueSpan.style.color = '#f8fafc'; // 흰색
     }
-
-    daContainer.innerHTML = `
-      <div class="summary-box">
-        <div class="summary-item">
-          <span class="summary-label">DA</span>
-          <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
-        </div>
-      </div>
-    `;
   }
 
   // 📌 길드 현황 업데이트
