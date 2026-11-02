@@ -64,8 +64,8 @@
     table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
     table.sheet-table tr:hover { background-color: #273549; }
 
-    /* 알비온 아이템 이미지 스타일 */
-    .weapon-cell { display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+    /* 무기 및 이미지 셀 스타일 */
+    .weapon-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; }
     .item-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
 
     /* 입력 요소 스타일 */
@@ -227,17 +227,18 @@
             `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
           ).join('');
 
-          const itemCode = slot.itemCode || ''; 
-          const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
+          // 📌 이미지 링크가 비어있으면 로컬 기본 이미지(/images/default_weapon) 적용, 깨질 경우에도 폴백 처리
+          const itemImgUrl = (slot.itemCode && slot.itemCode.trim() !== '') ? slot.itemCode : '/images/default_weapon';
           const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0') + '번';
+          const weaponName = slot.weaponName || '';
 
           tbodyHtml += `
             <tr>
               <td style="width: 50px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
-              <td style="width: 110px;">
+              <td style="width: 130px;">
                 <div class="weapon-cell">
-                  <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
-                  <span style="font-size: 0.82rem; font-weight: bold; color: #38bdf8; overflow: hidden; text-overflow: ellipsis;">${itemCode}</span>
+                  <img src="${itemImgUrl}" alt="Weapon" class="item-img" onerror="this.src='/images/default_weapon'" />
+                  <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
                 </div>
               </td>
               <td style="width: 150px;">
@@ -263,7 +264,7 @@
             <thead>
               <tr>
                 <th style="width: 50px; text-align: center;">순번</th>
-                <th style="width: 110px; text-align: center;">무기</th>
+                <th style="width: 130px; text-align: center;">무기</th>
                 <th style="width: 150px; text-align: center;">코멘트</th>
                 <th style="width: 75px; text-align: center;">길드</th>
                 <th style="width: 160px; text-align: center;">닉네임</th>
