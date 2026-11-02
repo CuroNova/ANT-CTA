@@ -5,7 +5,7 @@ if (sessionStorage.getItem('just_logged_in') !== 'true') {
 }
 
 const socket = io();
-let currentData = { slots: [], guilds: [] };
+let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
 
 socket.on('dataUpdated', (data) => {
@@ -381,12 +381,20 @@ function openAdminFloatingModal() {
   // 1. 관리자 메인 메뉴 렌더링 함수
   const renderMainMenu = () => {
     const contentDiv = modal.querySelector('.modal-content');
+    const isParty3Disabled = currentData.isParty3Disabled || false;
+    const party3ToggleBtnText = isParty3Disabled ? '🟢 3파티 활성화하기' : '🔴 3파티 비활성화하기';
+    const party3ToggleBtnBg = isParty3Disabled ? '#10b981' : '#f59e0b';
+
     contentDiv.innerHTML = `
       <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
           📂 조합 변경
+        </button>
+
+        <button id="btn-toggle-party3" style="padding: 12px; background: ${party3ToggleBtnBg}; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+          ${party3ToggleBtnText}
         </button>
 
         <button id="btn-reset-data" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
@@ -419,6 +427,14 @@ function openAdminFloatingModal() {
           console.error(err);
           alert('서버 통신 중 오류가 발생했습니다.');
         });
+    };
+
+    // 📌 3파티 토글 버튼 이벤트
+    contentDiv.querySelector('#btn-toggle-party3').onclick = () => {
+      socket.emit('toggleParty3');
+      modal.remove();
+      activeTabLabel = '1·2파티';
+      render();
     };
 
     contentDiv.querySelector('#btn-reset-data').onclick = () => {
