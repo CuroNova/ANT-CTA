@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ANT CTA</title>
+  <title>Another Guild CTA - 현황판</title>
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
@@ -18,8 +18,11 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
+    /* 파티별 서브 타이틀 */
+    .party-sub-title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; margin: 15px 0 8px 5px; }
+
     /* 엑셀 스타일 테이블 */
-    .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
+    .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px; }
     table.sheet-table { width: 100%; border-collapse: collapse; table-layout: auto; text-align: left; }
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 8px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; }
     table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
@@ -48,22 +51,8 @@
   <!-- 파티 선택 탭 -->
   <div id="party-tabs" class="party-tabs"></div>
 
-  <!-- 엑셀시트 테이블 -->
-  <div class="excel-container">
-    <table class="sheet-table">
-      <thead>
-        <tr>
-          <th style="width: 50px; text-align: center;">순번</th>
-          <th style="width: 110px; text-align: center;">무기</th>
-          <th style="width: 150px; text-align: center;">코멘트</th>
-          <th style="width: 75px; text-align: center;">길드</th>
-          <th style="width: 160px; text-align: center;">닉네임</th>
-          <th style="width: 50px; text-align: center;">출석</th>
-        </tr>
-      </thead>
-      <tbody id="sheet-body"></tbody>
-    </table>
-  </div>
+  <!-- 엑셀시트 테이블들이 동적으로 들어갈 컨테이너 -->
+  <div id="sheet-container"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -76,7 +65,7 @@
 
     const socket = io();
     let currentData = { slots: [], guilds: [] };
-    let activeParty = '';
+    let activeTabLabel = '';
 
     socket.on('dataUpdated', (data) => {
       currentData = data;
@@ -90,59 +79,119 @@
         parties[slot.party].push(slot);
       });
 
-      const partyNames = Object.keys(parties);
-      if (partyNames.length === 0) return;
-      if (!activeParty || !parties[activeParty]) activeParty = partyNames[0];
+      const allPartyNames = Object.keys(parties);
+      if (allPartyNames.length === 0) return;
+
+      // 📌 탭 그룹 정의: 1파티와 2파티는 '1·2파티' 탭으로 묶고, 나머지는 개별 탭으로 구성
+      const tabs = [];
+      const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
+      
+      if (p12.length > 0) {
+        tabs.push({ label: '1·2파티', parties: p12 });
+      }
+
+      // 3파티 및 기타 파티들은 개별 탭으로 추가
+      allPartyNames.forEach(p => {
+        if (p !== '1파티' && p !== '2파티' && p !== '1' && p !== '2') {
+          tabs.push({ label: p, parties: [p] });
+        }
+      });
+
+      // 만약 1,2파티 명칭이 다를 경우의 대비책
+      if (tabs.length === 0) {
+        allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
+      }
+
+      if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
+        activeTabLabel = tabs[0].label;
+      }
 
       // 1. 파티 탭 그리기
       const tabsContainer = document.getElementById('party-tabs');
       tabsContainer.innerHTML = '';
-      partyNames.forEach(pName => {
+      tabs.forEach(tab => {
         const btn = document.createElement('button');
-        btn.className = `tab-btn ${pName === activeParty ? 'active' : ''}`;
-        btn.innerText = pName;
-        btn.onclick = () => { activeParty = pName; render(); };
+        btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
+        btn.innerText = tab.label;
+        btn.onclick = () => { activeTabLabel = tab.label; render(); };
         tabsContainer.appendChild(btn);
       });
 
-      // 2. 선택된 파티 엑셀 표 그리기
-      const tbody = document.getElementById('sheet-body');
-      tbody.innerHTML = '';
+      // 2. 선택된 탭의 파티 표들 그리기 (1·2파티 선택 시 두 파티가 모두 화면에 출력됨)
+      const container = document.getElementById('sheet-container');
+      container.innerHTML = '';
 
-      const currentSlots = parties[activeParty] || [];
-      currentSlots.forEach((slot, idx) => {
-        const guildOptions = currentData.guilds.map(g => 
-          `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
-        ).join('');
+      const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
 
-        const itemCode = slot.itemCode || ''; 
-        const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
+      currentTab.parties.forEach(partyName => {
+        const partySlots = parties[partyName] || [];
+        if (partySlots.length === 0) return;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${slot.displayIndex || (idx + 1)}번</td>
-          <td>
-            <div class="weapon-cell">
-              <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
-              <span style="font-size: 0.82rem; font-weight: bold; color: #38bdf8;">${itemCode}</span>
-            </div>
-          </td>
-          <td>
-            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
-          </td>
-          <td>
-            <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
-              ${guildOptions}
-            </select>
-          </td>
-          <td>
-            <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
-          </td>
-          <td class="chk-center">
-            <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
-          </td>
+        // 탭 안에 여러 파티가 표시될 때 구분용 서브 타이틀 표시
+        if (currentTab.parties.length > 1) {
+          const subTitle = document.createElement('div');
+          subTitle.className = 'party-sub-title';
+          subTitle.innerText = `📌 ${partyName}`;
+          container.appendChild(subTitle);
+        }
+
+        const tableWrapper = document.createElement('div');
+        tableWrapper.className = 'excel-container';
+
+        let tbodyHtml = '';
+        partySlots.forEach((slot, idx) => {
+          const guildOptions = currentData.guilds.map(g => 
+            `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
+          ).join('');
+
+          const itemCode = slot.itemCode || ''; 
+          const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
+
+          tbodyHtml += `
+            <tr>
+              <td style="width: 50px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${slot.displayIndex || (idx + 1)}번</td>
+              <td style="width: 110px;">
+                <div class="weapon-cell">
+                  <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
+                  <span style="font-size: 0.82rem; font-weight: bold; color: #38bdf8;">${itemCode}</span>
+                </div>
+              </td>
+              <td style="width: 150px;">
+                <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
+              </td>
+              <td style="width: 75px;">
+                <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+                  ${guildOptions}
+                </select>
+              </td>
+              <td style="width: 160px;">
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+              </td>
+              <td style="width: 50px;" class="chk-center">
+                <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+              </td>
+            </tr>
+          `;
+        });
+
+        tableWrapper.innerHTML = `
+          <table class="sheet-table">
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center;">순번</th>
+                <th style="width: 110px; text-align: center;">무기</th>
+                <th style="width: 150px; text-align: center;">코멘트</th>
+                <th style="width: 75px; text-align: center;">길드</th>
+                <th style="width: 160px; text-align: center;">닉네임</th>
+                <th style="width: 50px; text-align: center;">출석</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tbodyHtml}
+            </tbody>
+          </table>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(tableWrapper);
       });
     }
 
