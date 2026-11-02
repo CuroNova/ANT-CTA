@@ -83,7 +83,7 @@
         if (data.success) {
           // 일회성 로그인 플래그 부여
           sessionStorage.setItem('just_logged_in', 'true');
-          window.location.href = '/matching.html';
+          window.location.href = '/matching';
         } else {
           const errDiv = document.getElementById('error-msg');
           errDiv.style.display = 'block';
