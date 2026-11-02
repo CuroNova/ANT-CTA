@@ -11,9 +11,10 @@
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
     
-    .header-right { display: flex; align-items: center; gap: 15px; }
+    .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
 
-    .guild-summary-box {
+    /* 요약 박스 공통 스타일 */
+    .summary-box {
       display: flex;
       background: #1e293b;
       border: 1px solid #334155;
@@ -21,7 +22,7 @@
       overflow: hidden;
       font-size: 0.82rem;
     }
-    .guild-summary-item {
+    .summary-item {
       padding: 6px 10px;
       border-right: 1px solid #334155;
       display: flex;
@@ -29,9 +30,12 @@
       align-items: center;
       gap: 2px;
     }
-    .guild-summary-item:last-child { border-right: none; }
-    .gs-label { color: #94a3b8; font-weight: 500; }
-    .gs-count { color: #38bdf8; font-weight: bold; font-size: 0.95rem; }
+    .summary-item:last-child { border-right: none; }
+    .summary-label { color: #94a3b8; font-weight: 500; }
+    .summary-count { color: #38bdf8; font-weight: bold; font-size: 0.95rem; }
+    
+    /* 갑옷 요약 박스 전용 포인트 색상 */
+    .armor-count { color: #f43f5e; font-weight: bold; font-size: 0.95rem; }
 
     .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .btn-reset:hover { background-color: #dc2626; }
@@ -75,7 +79,10 @@
   <div class="header">
     <h1>⚔️ Another Guild CTA ⚔️</h1>
     <div class="header-right">
-      <div id="guild-summary" class="guild-summary-box"></div>
+      <!-- 📌 길드별 인원 집계 현황판 -->
+      <div id="guild-summary" class="summary-box"></div>
+      <!-- 📌 갑옷 종류별 인원 집계 현황판 (추가) -->
+      <div id="armor-summary" class="summary-box"></div>
       <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
     </div>
   </div>
@@ -123,33 +130,64 @@
       const allPartyNames = Object.keys(parties);
       if (allPartyNames.length === 0) return;
 
+      // 📌 1. 길드별 참여 인원 집계 (닉네임 입력 기준)
       const guildCounts = {};
       currentData.guilds.forEach(g => guildCounts[g] = 0);
       
+      // 📌 2. 주요 갑옷 종류별 인원 집계 (닉네임 입력 기준)
+      const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
+      const armorCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
+
       currentData.slots.forEach(slot => {
+        // 닉네임이 입력된 행만 카운트
         if (slot.nickname && slot.nickname.trim() !== '') {
+          // 길드 집계
           const gName = slot.guild || 'ANT';
           if (guildCounts[gName] !== undefined) {
             guildCounts[gName]++;
           } else {
             guildCounts[gName] = 1;
           }
+
+          // 갑옷 집계 (갑옷명에 해당 키워드가 포함되어 있는지 체크)
+          const aName = slot.armorName || '';
+          armorTargets.forEach(target => {
+            if (aName.includes(target)) {
+              armorCounts[target]++;
+            }
+          });
         }
       });
 
-      const summaryContainer = document.getElementById('guild-summary');
-      summaryContainer.innerHTML = '';
+      // 📌 길드 요약 UI 렌더링
+      const guildSummaryContainer = document.getElementById('guild-summary');
+      guildSummaryContainer.innerHTML = '';
       currentData.guilds.forEach(g => {
         const count = guildCounts[g] || 0;
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'guild-summary-item';
+        itemDiv.className = 'summary-item';
         itemDiv.innerHTML = `
-          <span class="gs-label">${g}</span>
-          <span class="gs-count">${count}명</span>
+          <span class="summary-label">${g}</span>
+          <span class="summary-count">${count}명</span>
         `;
-        summaryContainer.appendChild(itemDiv);
+        guildSummaryContainer.appendChild(itemDiv);
       });
 
+      // 📌 갑옷 요약 UI 렌더링
+      const armorSummaryContainer = document.getElementById('armor-summary');
+      armorSummaryContainer.innerHTML = '';
+      armorTargets.forEach(a => {
+        const count = armorCounts[a] || 0;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'summary-item';
+        itemDiv.innerHTML = `
+          <span class="summary-label">${a}</span>
+          <span class="armor-count">${count}개</span>
+        `;
+        armorSummaryContainer.appendChild(itemDiv);
+      });
+
+      // 📌 탭 설정 및 렌더링
       const tabs = [];
       const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
       if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
@@ -204,7 +242,6 @@
 
         const partyColumn = document.createElement('div');
 
-        // 📌 현재인원(닉네임이 입력된 수) / 최대인원(전체 슬롯 수) 계산
         const maxCount = partySlots.length;
         const currentCount = partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
 
