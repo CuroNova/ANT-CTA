@@ -36,7 +36,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수 (6개 필드 파싱 반영)
+// 초기 데이터 로드 함수 (7개 필드 파싱 반영)
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -58,20 +58,22 @@ function loadInitialState() {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
       } else {
-        // 📌 형식: "기본키", "무기명", "갑옷명", "코멘트", "무기이미지링크", "갑옷이미지링크"
+        // 📌 형식: "기본키", "역할명", "무기명", "갑옷명", "코멘트", "무기이미지링크", "갑옷이미지링크"
         const matches = line.match(/"([^"]*)"/g);
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
         const slotId = parts[0] || '';                              // 1. 기본키
-        const weaponName = parts[1] || '';                          // 2. 무기명
-        const armorName = parts[2] || '';                           // 3. 갑옷명
-        const commentText = parts[3] || '';                         // 4. 코멘트
-        const weaponImgUrl = parts[4] || '';                        // 5. 무기 이미지 링크
-        const armorImgUrl = parts[5] || '';                         // 6. 갑옷 이미지 링크
+        const roleName = parts[1] || '';                            // 2. 역할명 (디펜, 오펜, 서폿, 딜러, 힐러 등)
+        const weaponName = parts[2] || '';                          // 3. 무기명
+        const armorName = parts[3] || '';                           // 4. 갑옷명
+        const commentText = parts[4] || '';                         // 5. 코멘트
+        const weaponImgUrl = parts[5] || '';                        // 6. 무기 이미지 링크
+        const armorImgUrl = parts[6] || '';                         // 7. 갑옷 이미지 링크
 
         initialSlots.push({
           id: slotId,
+          role: roleName,
           weaponName: weaponName,
           armorName: armorName,
           weaponImg: weaponImgUrl,
