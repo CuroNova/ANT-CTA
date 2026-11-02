@@ -10,7 +10,8 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const PARTIES_FILE = path.join(__dirname, 'loadouts', 'brawlClap.txt');
+const LOADOUTS_DIR = path.join(__dirname, 'loadouts'); // 📌 로드아웃 폴더 경로 정의
+let currentPartiesFile = path.join(__dirname, 'loadouts', 'brawlClap.txt'); // 📌 현재 활성화된 파티 파일 추적 변수
 const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
@@ -99,8 +100,8 @@ function loadInitialState() {
   // config.json에서 길드 목록과 초대코드 불러오기 (실패 시 기본값 적용)
   const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
-  if (fs.existsSync(PARTIES_FILE)) {
-    const lines = fs.readFileSync(PARTIES_FILE, 'utf8').split('\n');
+  if (fs.existsSync(currentPartiesFile)) {
+    const lines = fs.readFileSync(currentPartiesFile, 'utf8').split('\n');
     let currentParty = '';
     let partySlotCounter = 1;
     let definedParties = [];
@@ -179,7 +180,8 @@ function loadInitialState() {
   return { 
     slots: initialSlots, 
     guilds, 
-    inviteCode: config ? config.inviteCode : '1234' 
+    inviteCode: config ? config.inviteCode : '1234',
+    currentLoadout: path.basename(currentPartiesFile, '.txt')
   };
 }
 
@@ -241,6 +243,39 @@ app.post('/api/admin-auth', (req, res) => {
   } else {
     res.json({ success: false, message: '관리자 코드가 일치하지 않습니다.' });
   }
+});
+
+// 📌 관리자 API: loadouts 폴더 내 .txt 파일 목록 조회 (확장자 .txt 제거 후 이름만 전달)
+app.get('/api/admin/loadouts', (req, res) => {
+  try {
+    if (!fs.existsSync(LOADOUTS_DIR)) {
+      return res.json({ success: true, files: [] });
+    }
+    const files = fs.readdirSync(LOADOUTS_DIR)
+      .filter(f => f.endsWith('.txt'))
+      .map(f => path.basename(f, '.txt'));
+    res.json({ success: true, files });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '파일 목록을 불러오는 중 오류가 발생했습니다.' });
+  }
+});
+
+// 📌 관리자 API: 조합(.txt) 변경 (단순 교체 방식)
+app.post('/api/admin/change-loadout', (req, res) => {
+  const { filename } = req.body;
+  const targetFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
+  const targetPath = path.join(LOADOUTS_DIR, targetFilename);
+
+  if (!fs.existsSync(targetPath)) {
+    return res.json({ success: false, message: '존재하지 않는 파일입니다.' });
+  }
+
+  currentPartiesFile = targetPath;
+  const newState = loadInitialState();
+
+  saveData(newState);
+  io.emit('dataUpdated', newState);
+  res.json({ success: true });
 });
 
 // 📌 Socket.io 실시간 동기화
