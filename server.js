@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
+const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
 // 🔑 코드 설정
 const INVITE_CODE = '1234';          // 일반 참여자 입장용 초대코드
@@ -36,10 +37,46 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수 (7개 필드 파싱 반영)
+// 📌 JSON 매핑 파일 로드 함수 (추가 설치 없음)
+function loadMappingConfig() {
+  try {
+    if (fs.existsSync(JSON_MAPPING_FILE)) {
+      const fileContents = fs.readFileSync(JSON_MAPPING_FILE, 'utf8');
+      return JSON.parse(fileContents);
+    }
+  } catch (e) {
+    console.error('mapping_image.json 로드 실패:', e);
+  }
+  return { weapon: {}, armor: {} };
+}
+
+// 📌 이미지 경로 결정 함수 (우선순위: 1. 직접 입력 링크 -> 2. JSON 매핑 -> 3. 기본 이미지)
+function resolveImagePath(name, directUrl, type, mappingConfig) {
+  // 1순위: parties.txt에 직접 입력한 웹 이미지 링크가 있으면 우선 사용
+  if (directUrl && directUrl.trim() !== '') {
+    return directUrl.trim();
+  }
+
+  // 2순위: mapping_image.json의 키워드 매핑 확인
+  const mapRules = mappingConfig[type] || {};
+  if (name && name.trim() !== '') {
+    const trimmedName = name.trim();
+    for (const [key, imagePath] of Object.entries(mapRules)) {
+      if (trimmedName.includes(key)) {
+        return imagePath;
+      }
+    }
+  }
+
+  // 3순위: 둘 다 없으면 기본 폴백 이미지 사용
+  return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
+}
+
+// 초기 데이터 로드 함수
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
+  const mappingConfig = loadMappingConfig();
 
   if (fs.existsSync(GUILDS_FILE)) {
     const rawGuilds = fs.readFileSync(GUILDS_FILE, 'utf8');
@@ -58,26 +95,29 @@ function loadInitialState() {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
       } else {
-        // 📌 형식: "기본키", "역할명", "무기명", "갑옷명", "코멘트", "무기이미지링크", "갑옷이미지링크"
         const matches = line.match(/"([^"]*)"/g);
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
         const slotId = parts[0] || '';                              // 1. 기본키
-        const roleName = parts[1] || '';                            // 2. 역할명 (디펜, 오펜, 서폿, 딜러, 힐러 등)
+        const roleName = parts[1] || '';                            // 2. 역할명
         const weaponName = parts[2] || '';                          // 3. 무기명
         const armorName = parts[3] || '';                           // 4. 갑옷명
         const commentText = parts[4] || '';                         // 5. 코멘트
-        const weaponImgUrl = parts[5] || '';                        // 6. 무기 이미지 링크
-        const armorImgUrl = parts[6] || '';                         // 7. 갑옷 이미지 링크
+        const rawWeaponImg = parts[5] || '';                        // 6. 무기 이미지 링크
+        const rawArmorImg = parts[6] || '';                         // 7. 갑옷 이미지 링크
+
+        // 📌 3단계 우선순위 적용
+        const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
+        const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
         initialSlots.push({
           id: slotId,
           role: roleName,
           weaponName: weaponName,
           armorName: armorName,
-          weaponImg: weaponImgUrl,
-          armorImg: armorImgUrl,
+          weaponImg: finalWeaponImg,
+          armorImg: finalArmorImg,
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
