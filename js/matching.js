@@ -31,14 +31,12 @@ function initUtcClock(selector = '[data-utc-clock]') {
     });
   }
 
-  // 즉시 실행 및 1초 간격 갱신
   update();
   setInterval(update, 1000);
 }
 
-// 페이지가 로드되면 언제든 실행
 document.addEventListener('DOMContentLoaded', () => {
-  initUtcClock('[data-utc-clock]'); // 이 셀렉터를 가진 모든 요소에 시계 기능 주입
+  initUtcClock('[data-utc-clock]');
 });
 
 function getRoleColor(role) {
@@ -55,7 +53,6 @@ function getRoleColor(role) {
 }
 
 function render() {
-  // 📌 1. 현재 사용자가 포커스 중인 요소(입력 중인 인풋 등)의 정보 파악 (포커스 유실 및 커서 튐 방지)
   const activeEl = document.activeElement;
   let activeSlotId = null;
   let activeFieldType = null;
@@ -74,11 +71,9 @@ function render() {
   const allPartyNames = Object.keys(parties);
   if (allPartyNames.length === 0) return;
 
-  // 📌 2. 길드별 참여 인원 집계
   const guildCounts = {};
   currentData.guilds.forEach(g => guildCounts[g] = 0);
   
-  // 📌 3. 주요 갑옷 종류별 인원 집계 (현재 착용 인원 / 전체 지정 총량)
   const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
   const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
   const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
@@ -93,21 +88,19 @@ function render() {
       }
     }
 
-    // 비어있는 파티 슬롯은 갑옷 총량 집계에서 제외
     if (!slot.isEmptyParty) {
       const aName = slot.armorName || '';
       armorTargets.forEach(target => {
         if (aName.includes(target)) {
-          armorTotalCounts[target]++; // 전체 지정된 총량 증가
+          armorTotalCounts[target]++;
           if (slot.nickname && slot.nickname.trim() !== '') {
-            armorCurrentCounts[target]++; // 실제 착용 중인 인원 증가
+            armorCurrentCounts[target]++;
           }
         }
       });
     }
   });
 
-  // 📌 길드 요약 UI 렌더링 ("명" 단위 제거 및 고정 폭 적용)
   const guildSummaryContainer = document.getElementById('guild-summary');
   guildSummaryContainer.innerHTML = '';
   currentData.guilds.forEach((g, index) => {
@@ -127,7 +120,6 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링 (0만 빨간색, 뒤의 /총량은 흰색)
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
@@ -145,7 +137,6 @@ function render() {
     armorSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 탭 설정 및 렌더링
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
   if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
@@ -170,7 +161,7 @@ function render() {
     allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
   }
 
-  // 📌 탭 목록 맨 우측에 '관리자 메뉴' 추가
+  // 📌 관리자 메뉴 탭 추가
   tabs.push({ label: '관리자 메뉴', isAdminTab: true });
 
   if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
@@ -181,18 +172,18 @@ function render() {
   tabsContainer.innerHTML = '';
   tabs.forEach(tab => {
     const btn = document.createElement('button');
-    btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     
-    // 관리자 메뉴 탭은 테두리와 글자를 붉은색 계열로 강조
+    // 📌 일반 탭과 관리자 탭 클래스 분기 처리
     if (tab.isAdminTab) {
-      btn.style.borderColor = '#ef4444';
-      btn.style.color = '#f87171';
+      btn.className = `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
+    } else {
+      btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     }
 
     btn.innerText = tab.label;
     btn.onclick = () => {
       if (tab.isAdminTab) {
-        verifyAdminAndOpenMenu(); // 📌 관리자 메뉴 클릭 시 인증 후 플로팅 팝업 오픈
+        verifyAdminAndOpenMenu();
       } else {
         activeTabLabel = tab.label;
         render();
@@ -206,7 +197,6 @@ function render() {
 
   const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
   
-  // 관리자 메뉴 탭일 때는 파티 시트를 렌더링하지 않음 (플로팅 모달이 대신 뜸)
   if (currentTab.isAdminTab) {
     return;
   }
@@ -219,10 +209,8 @@ function render() {
 
   currentTab.parties.forEach(partyName => {
     const partySlots = parties[partyName] || [];
-
     const partyColumn = document.createElement('div');
 
-    // 📌 빈 파티(isEmptyParty: true) 판별 로직
     const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
     const maxCount = isEmpty ? 0 : partySlots.length;
     const currentCount = isEmpty ? 0 : partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
@@ -259,10 +247,8 @@ function render() {
         const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0');
         const weaponName = slot.weaponName || '';
         const armorName = slot.armorName || '';
-        
         const weaponTextColor = getRoleColor(slot.role);
 
-        // 📌 사용자가 입력 중인 닉네임 필드라면 서버 데이터가 갱신되어도 현재 입력값을 유지
         let currentNickname = slot.nickname;
         if (activeSlotId === slot.id && activeFieldType === 'nickname') {
           const activeInputValue = activeEl ? activeEl.value : slot.nickname;
@@ -325,7 +311,6 @@ function render() {
     gridWrapper.appendChild(partyColumn);
   });
 
-  // 📌 렌더링 직후 포커스 재복구 및 커서 위치 유지
   if (activeSlotId && activeFieldType) {
     const selector = `[data-slot-id="${activeSlotId}"][data-field-type="${activeFieldType}"]`;
     const targetToFocus = document.querySelector(selector);
@@ -347,7 +332,6 @@ function updateSlot(id, key, value) {
   }
 }
 
-// 📌 관리자 인증 후 플로팅 모달 메뉴 오픈
 function verifyAdminAndOpenMenu() {
   const code = prompt('관리자 메뉴를 열려면 [관리자 코드]를 입력하세요:');
   if (code === null) return;
@@ -371,7 +355,7 @@ function verifyAdminAndOpenMenu() {
     }
 
     if (result.success) {
-      openAdminFloatingModal(); // 인증 성공 시 플로팅 팝업 오픈
+      openAdminFloatingModal();
     } else {
       alert('관리자 코드가 일치하지 않습니다.');
     }
@@ -382,7 +366,6 @@ function verifyAdminAndOpenMenu() {
   });
 }
 
-// 📌 화면 정중앙 플로팅 관리자 메뉴 팝업 (초기화 버튼 포함)
 function openAdminFloatingModal() {
   const existingModal = document.getElementById('admin-floating-modal');
   if (existingModal) existingModal.remove();
@@ -413,14 +396,12 @@ function openAdminFloatingModal() {
 
   document.body.appendChild(modal);
 
-  // 닫기 버튼 클릭 시 모달 제거 및 탭을 기본 '1·2파티'로 복원
   document.getElementById('btn-close-modal').onclick = () => {
     modal.remove();
     activeTabLabel = '1·2파티';
     render();
   };
 
-  // 초기화 버튼 클릭 이벤트
   document.getElementById('btn-reset-data').onclick = () => {
     if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
       socket.emit('resetData');
