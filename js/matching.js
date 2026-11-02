@@ -206,6 +206,8 @@ function render() {
   gridWrapper.className = isMulti ? 'side-by-side-grid' : '';
   container.appendChild(gridWrapper);
 
+  const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+
   currentTab.parties.forEach(partyName => {
     const partySlots = parties[partyName] || [];
     const partyColumn = document.createElement('div');
@@ -254,6 +256,20 @@ function render() {
           currentNickname = activeInputValue;
         }
 
+        let currentComment = slot.comment || '';
+        if (activeSlotId === slot.id && activeFieldType === 'comment') {
+          const activeInputValue = activeEl ? activeEl.value : (slot.comment || '');
+          currentComment = activeInputValue;
+        }
+
+        // 📌 관리자 여부에 따라 코멘트 필드 활성화/비활성화 처리
+        let commentHtml = '';
+        if (isAdmin) {
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="updateSlot('${slot.id}', 'comment', this.value)" />`;
+        } else {
+          commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />`;
+        }
+
         tbodyHtml += `
           <tr>
             <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
@@ -270,7 +286,7 @@ function render() {
               </div>
             </td>
             <td style="width: 140px;">
-              <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
+              ${commentHtml}
             </td>
             <td style="width: 75px;">
               <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild">
@@ -333,7 +349,6 @@ function updateSlot(id, key, value) {
 
 // 📌 💡 관리자 인증 및 메뉴 오픈 함수 (세션 기반 권한 검증 추가)
 function verifyAdminAndOpenMenu() {
-  // 이미 세션에 관리자 권한이 있는 경우 비밀번호 입력창 스킵
   if (sessionStorage.getItem('is_admin') === 'true') {
     openAdminFloatingModal();
     return;
@@ -361,8 +376,9 @@ function verifyAdminAndOpenMenu() {
     }
 
     if (result.success) {
-      // 📌 인증 성공 시 세션에 관리자 권한 저장 (이후부터는 패스워드 생략)
       sessionStorage.setItem('is_admin', 'true');
+      // 📌 관리자 권한 획득 시 화면을 다시 렌더링하여 코멘트 입력창 즉시 활성화
+      render();
       openAdminFloatingModal();
     } else {
       alert('관리자 코드가 일치하지 않습니다.');
