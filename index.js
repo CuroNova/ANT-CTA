@@ -11,7 +11,7 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const LOADOUTS_DIR = path.join(__dirname, 'loadouts'); // 📌 로드아웃 폴더 경로 정의
-let currentPartiesFile = path.join(__dirname, 'loadouts', 'brawlClap.txt'); // 📌 현재 활성화된 파티 파일 추적 변수
+let currentPartiesFile = path.join(__dirname, 'loadouts', '브롤클랩.txt'); // 📌 현재 활성화된 파티 파일 추적 변수
 const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
