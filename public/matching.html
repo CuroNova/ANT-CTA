@@ -100,9 +100,8 @@
       render();
     });
 
-    // 📌 역할에 따른 무기명 글자 색상 매핑 함수
     function getRoleColor(role) {
-      if (!role) return '#38bdf8'; // 기본 색상
+      if (!role) return '#38bdf8';
       const trimmed = role.trim();
       switch (trimmed) {
         case '디펜': return '#38bdf8'; // 파랑색
@@ -205,10 +204,14 @@
 
         const partyColumn = document.createElement('div');
 
-        if (isMulti) {
+        // 📌 현재인원(닉네임이 입력된 수) / 최대인원(전체 슬롯 수) 계산
+        const maxCount = partySlots.length;
+        const currentCount = partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
+
+        if (isMulti || currentTab.parties.length === 1) {
           const subTitle = document.createElement('div');
           subTitle.className = 'party-sub-title';
-          subTitle.innerText = `📌 ${partyName}`;
+          subTitle.innerText = `📌 ${partyName} (${currentCount} / ${maxCount})`;
           partyColumn.appendChild(subTitle);
         }
 
@@ -228,7 +231,6 @@
           const weaponName = slot.weaponName || '';
           const armorName = slot.armorName || '';
           
-          // 📌 역할에 따른 무기명 글자 색상 동적 지정
           const weaponTextColor = getRoleColor(slot.role);
 
           tbodyHtml += `
@@ -243,7 +245,7 @@
               <td style="width: 125px;">
                 <div class="gear-cell">
                   <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
-                  <span style="font-size: 0.8rem; font-weight: bold; color: #f43f5e; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
+                  <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
                 </div>
               </td>
               <td style="width: 140px;">
