@@ -137,11 +137,10 @@ function loadInitialState(isParty3Disabled = false) {
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
-        // 📌 3파티 비활성화 상태이고, 파티 이름에 '3'이 포함되어 있거나 'FREE ROLE'인 경우 슬롯을 비워둠 처리
-        const isTargetParty3 = isParty3Disabled && (currentParty.includes('3') || currentParty === 'FREE ROLE');
+        // 📌 Free Role은 제외하고, '3'이 포함된 파티만 비활성화 대상으로 지정
+        const isTargetParty3 = isParty3Disabled && currentParty.includes('3') && currentParty !== 'FREE ROLE';
 
         if (isTargetParty3) {
-          // 비활성화된 파티는 슬롯을 넣지 않거나 빈 파티로 처리
           return;
         }
 
@@ -163,8 +162,8 @@ function loadInitialState(isParty3Disabled = false) {
     });
 
     definedParties.forEach(pName => {
-      // 📌 3파티 비활성화 대상인 경우, 빈 파티 슬롯(isEmptyParty: true)을 강제로 생성하여 "비활성화된 파티입니다" 문구가 뜨게 함
-      const isTargetParty3 = isParty3Disabled && (pName.includes('3') || pName === 'FREE ROLE');
+      // 📌 Free Role은 제외하고, '3'이 포함된 파티만 빈 파티 슬롯 처리
+      const isTargetParty3 = isParty3Disabled && pName.includes('3') && pName !== 'FREE ROLE';
 
       if (isTargetParty3) {
         initialSlots.push({
@@ -326,7 +325,6 @@ io.on('connection', (socket) => {
     const data = getData();
     const nextDisabledState = !(data.isParty3Disabled || false);
     
-    // 현재 조합 파일을 유지한 채 3파티 비활성화 상태만 변경하여 재생성
     const newState = loadInitialState(nextDisabledState);
     saveData(newState);
     io.emit('dataUpdated', newState);
