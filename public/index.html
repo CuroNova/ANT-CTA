@@ -162,7 +162,7 @@
           `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
         ).join('');
 
-        const itemCode = slot.itemCode || 'T8_MAIN_SWORD@4'; 
+        const itemCode = slot.itemCode; 
         const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
 
         const tr = document.createElement('tr');
