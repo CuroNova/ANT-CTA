@@ -43,7 +43,7 @@ function initUtcClock(selector = '[data-utc-clock]') {
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderFloatingButtons();   // 📌 우측 하단 플로팅 버튼들('포스팅 하러가기', '리기어 신청') 동적 생성
+  renderFloatingButtons();   // 📌 우측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -78,16 +78,17 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 우측 최하단에 '포스팅 하러가기' 및 '리기어 신청' 버튼을 세로로 나란히 생성하는 함수
+// 📌 화면 우측 최하단에 평소엔 숨겨져 있다가 마우스를 올리면 나타나는 플로팅 버튼 컨테이너 생성
 function renderFloatingButtons() {
   const existingContainer = document.getElementById('floating-buttons-container');
   if (existingContainer) existingContainer.remove();
 
+  // 1. 전체를 감싸는 컨테이너 (이 영역 또는 버튼에 마우스를 올려야 보임)
   const container = document.createElement('div');
   container.id = 'floating-buttons-container';
   container.style.cssText = `
     position: fixed;
-    bottom: 80px;
+    bottom: 70px; /* 요청하신 15px 낮춘 위치 적용 (85px -> 70px) */
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -95,7 +96,7 @@ function renderFloatingButtons() {
     z-index: 9998;
   `;
 
-  // 공통 버튼 스타일 (가로 길이 동일하게 맞춤)
+  // 공통 버튼 스타일 (가로 길이 동일)
   const buttonStyle = `
     background: #475569;
     color: #f8fafc;
@@ -106,24 +107,25 @@ function renderFloatingButtons() {
     font-size: 0.9rem;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    transition: background 0.2s, transform 0.1s;
     width: 135px;
     text-align: center;
     box-sizing: border-box;
+    opacity: 0;               /* 평소에는 투명하게 숨김 */
+    pointer-events: none;     /* 숨겨져 있을 때 클릭 방지 */
+    transition: opacity 0.3s ease, background 0.2s;
   `;
 
-  // 1. 포스팅 하러가기 버튼
+  // 2. 포스팅 하러가기 버튼
   const postingBtn = document.createElement('button');
   postingBtn.innerText = '포스팅 하러가기';
   postingBtn.style.cssText = buttonStyle;
   postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; };
   postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; };
   postingBtn.onclick = () => {
-    // 📌 추후 포스팅 링크 주소를 이곳에 넣어주시면 됩니다.
     window.open('https://www.naver.com', '_blank');
   };
 
-  // 2. 리기어 신청 버튼
+  // 3. 리기어 신청 버튼
   const regearBtn = document.createElement('button');
   regearBtn.innerText = '리기어 신청';
   regearBtn.style.cssText = buttonStyle;
@@ -135,6 +137,22 @@ function renderFloatingButtons() {
 
   container.appendChild(postingBtn);
   container.appendChild(regearBtn);
+
+  // 📌 우측 하단 구역에 마우스가 올라갔을 때만 버튼들이 나타나도록 이벤트 처리
+  container.onmouseenter = () => {
+    postingBtn.style.opacity = '1';
+    postingBtn.style.pointerEvents = 'auto';
+    regearBtn.style.opacity = '1';
+    regearBtn.style.pointerEvents = 'auto';
+  };
+
+  container.onmouseleave = () => {
+    postingBtn.style.opacity = '0';
+    postingBtn.style.pointerEvents = 'none';
+    regearBtn.style.opacity = '0';
+    regearBtn.style.pointerEvents = 'none';
+  };
+
   document.body.appendChild(container);
 }
 
