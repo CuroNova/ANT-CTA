@@ -3,213 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Another Guild CTA</title>
+  <title>Another Guild CTA - Loading</title>
   <style>
-    * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    
-    /* 🔒 보안: 인증 전까지 메인 콘텐츠 영역 전체 숨김 */
-    #main-content { display: none; }
-
-    /* 로그인 모달 스타일 */
-    #auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .auth-box { background: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .auth-box h2 { margin-top: 0; color: #38bdf8; font-size: 1.3rem; }
-    .auth-box input { width: 100%; padding: 10px; margin: 15px 0; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; text-align: center; font-size: 1rem; }
-    .auth-box button { width: 100%; padding: 10px; background: #38bdf8; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; color: #0f172a; font-size: 1rem; }
-    .auth-box button:hover { background: #0ea5e9; }
-    .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 8px; display: none; }
-
-    /* 헤더 및 탭 스타일 */
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
-    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .btn-reset:hover { background-color: #dc2626; }
-
-    /* 파티 탭 */
-    .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; }
-    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
-    .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
-
-    /* 엑셀 스타일 테이블 */
-    .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
-    table.sheet-table { width: 100%; border-collapse: collapse; min-width: 750px; text-align: left; }
-    table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 12px 14px; font-size: 0.9rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; }
-    table.sheet-table td { padding: 8px 12px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; vertical-align: middle; }
-    table.sheet-table tr:hover { background-color: #273549; }
-
-    /* 알비온 아이템 이미지 스타일 */
-    .weapon-cell { display: flex; align-items: center; gap: 10px; }
-    .item-img { width: 40px; height: 40px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; }
-
-    /* 입력 요소 스타일 */
-    input[type="text"], select { width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 4px; font-size: 0.9rem; }
-    .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; }
-    
-    .chk-center { text-align: center; }
-    .chk-center input { width: 18px; height: 18px; cursor: pointer; }
+    body {
+      background-color: #0f172a;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .logo-container {
+      text-align: center;
+      animation: fadeInOut 2s ease-in-out forwards;
+    }
+    .logo-container img {
+      max-width: 80vw;
+      max-height: 60vh;
+      object-fit: contain;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: scale(0.95); }
+      20% { opacity: 1; transform: scale(1); }
+      80% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.05); }
+    }
   </style>
 </head>
 <body>
 
-  <!-- 🔒 초대코드 입력 모달 -->
-  <div id="auth-modal">
-    <div class="auth-box">
-      <h2>🔒 guildCTA 접속 인증</h2>
-      <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">현황판을 보려면 초대코드를 입력하세요.</p>
-      <input type="password" id="invite-input" placeholder="초대코드 입력" onkeydown="if(event.key==='Enter') verifyCode()" autofocus />
-      <button onclick="verifyCode()">입장하기</button>
-      <div id="error-msg" class="error-msg">초대코드가 올바르지 않습니다.</div>
-    </div>
+  <div class="logo-container">
+    <img src="logo.png" alt="Guild Logo">
   </div>
 
-  <!-- 👁️ 현황판 메인 콘텐츠 -->
-  <div id="main-content">
-    <div class="header">
-      <h1>⚔️ Another Guild CTA ⚔️</h1>
-      <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
-    </div>
-
-    <!-- 파티 선택 탭 -->
-    <div id="party-tabs" class="party-tabs"></div>
-
-    <!-- 엑셀시트 테이블 -->
-    <div class="excel-container">
-      <table class="sheet-table">
-        <thead>
-          <tr>
-            <th style="width: 60px; text-align: center;">순번</th>
-            <th style="width: 180px;">무기</th>
-            <th style="width: 220px;">코멘트</th>
-            <th style="width: 130px;">길드</th>
-            <th style="width: 160px;">닉네임</th>
-            <th style="width: 70px; text-align: center;">출석</th>
-          </tr>
-        </thead>
-        <tbody id="sheet-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
-    let currentData = { slots: [], guilds: [] };
-    let activeParty = '';
-
-    window.onload = function() {
-      if (sessionStorage.getItem('guildCTA_auth') === 'true') {
-        unlockContent();
-      }
-    };
-
-    function unlockContent() {
-      document.getElementById('auth-modal').style.display = 'none';
-      document.getElementById('main-content').style.display = 'block';
-    }
-
-    function verifyCode() {
-      const code = document.getElementById('invite-input').value;
-      socket.emit('verifyCode', code, (res) => {
-        if (res.success) {
-          sessionStorage.setItem('guildCTA_auth', 'true');
-          unlockContent();
-          render();
-        } else {
-          const errDiv = document.getElementById('error-msg');
-          errDiv.style.display = 'block';
-          errDiv.innerText = res.message;
-        }
-      });
-    }
-
-    socket.on('dataUpdated', (data) => {
-      currentData = data;
-      if (sessionStorage.getItem('guildCTA_auth') === 'true') {
-        render();
-      }
-    });
-
-    function render() {
-      const parties = {};
-      currentData.slots.forEach(slot => {
-        if (!parties[slot.party]) parties[slot.party] = [];
-        parties[slot.party].push(slot);
-      });
-
-      const partyNames = Object.keys(parties);
-      if (partyNames.length === 0) return;
-      if (!activeParty || !parties[activeParty]) activeParty = partyNames[0];
-
-      // 1. 파티 탭 그리기
-      const tabsContainer = document.getElementById('party-tabs');
-      tabsContainer.innerHTML = '';
-      partyNames.forEach(pName => {
-        const btn = document.createElement('button');
-        btn.className = `tab-btn ${pName === activeParty ? 'active' : ''}`;
-        btn.innerText = pName;
-        btn.onclick = () => { activeParty = pName; render(); };
-        tabsContainer.appendChild(btn);
-      });
-
-      // 2. 선택된 파티 엑셀 표 그리기 (순번 -> 무기 -> 코멘트 -> 길드 -> 닉네임 -> 출석)
-      const tbody = document.getElementById('sheet-body');
-      tbody.innerHTML = '';
-
-      const currentSlots = parties[activeParty] || [];
-      currentSlots.forEach((slot, idx) => {
-        const guildOptions = currentData.guilds.map(g => 
-          `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
-        ).join('');
-
-        const itemCode = slot.itemCode || ''; 
-        const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="text-align: center; font-weight: bold; color: #94a3b8;">${slot.displayIndex || (idx + 1)}번</td>
-          <td>
-            <div class="weapon-cell">
-              <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
-              <span style="font-size: 0.85rem; font-weight: bold; color: #38bdf8;">${itemCode}</span>
-            </div>
-          </td>
-          <td>
-            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
-          </td>
-          <td>
-            <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
-              ${guildOptions}
-            </select>
-          </td>
-          <td>
-            <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
-          </td>
-          <td class="chk-center">
-            <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function updateSlot(id, key, value) {
-      const slot = currentData.slots.find(s => s.id === id);
-      if (slot) {
-        slot[key] = value;
-        socket.emit('updateSlot', slot);
-      }
-    }
-
-    function resetAll() {
-      if (confirm('모든 데이터를 초기화하시겠습니까?')) {
-        socket.emit('resetData');
-      }
-    }
-
-    function escapeHtml(str) {
-      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
+    // 2초 후 로그인 페이지로 자동 이동
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 2000);
   </script>
 </body>
 </html>
