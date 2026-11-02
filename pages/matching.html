@@ -1,495 +1,975 @@
 <!DOCTYPE html>
+
 <html lang="ko">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Another Guild CTA</title>
+
   <style>
+
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
+
     
+
     /* 📌 body: 인원수와 관계없이 세로 스크롤바 영역을 항상 강제하여 탭 전환 시 레이아웃 덜컹거림 방지 */
+
     body { 
+
       background-color: #0f172a; 
+
       color: #f8fafc; 
+
       margin: 0; 
+
       padding: 20px; 
+
       padding-bottom: 80px; 
+
       overflow-y: scroll;
+
     }
+
+
 
     /* 📌 스크롤바 항시 노출 및 커스텀 스타일 (웹킷 브라우저 및 모바일 연동) */
+
     ::-webkit-scrollbar {
+
       width: 10px;
+
     }
+
     ::-webkit-scrollbar-track {
+
       background: #0f172a;
+
     }
+
     ::-webkit-scrollbar-thumb {
+
       background: #334155;
+
       border-radius: 5px;
+
     }
+
     ::-webkit-scrollbar-thumb:hover {
+
       background: #475569;
+
     }
+
     
+
     /* 📌 헤더 영역: 3등분(1fr auto 1fr) Grid 적용으로 제목 정중앙 고정 */
+
     .header { 
+
       display: grid; 
+
       grid-template-columns: 1fr auto 1fr; 
+
       align-items: center; 
+
       margin-bottom: 20px; 
+
       gap: 15px; 
+
     }
+
     
+
     /* 📌 ⚔️ Another Guild CTA ⚔️ 제목 정중앙 정렬 */
+
     h1 { 
+
       margin: 0; 
+
       font-size: 1.5rem; 
+
       color: #38bdf8; 
+
       text-align: center; 
+
       white-space: nowrap; 
+
     }
+
     
+
     /* 좌측 영역 (필요시 내부 정렬용) */
+
     .header-left { 
+
       display: flex; 
+
       align-items: center; 
+
       justify-content: flex-start; 
+
     }
+
+
 
     /* 우측 요약 박스 정렬 */
+
     .header-right { 
+
       display: flex; 
+
       align-items: center; 
+
       justify-content: flex-end; 
+
       gap: 15px; 
+
       flex-wrap: wrap; 
+
     }
+
+
 
     /* 화면이 좁아질 때(모바일 등) 반응형 처리 */
+
     @media (max-width: 1200px) {
+
       .header { 
+
         display: flex; 
+
         flex-direction: column; 
+
         align-items: center; 
+
         gap: 15px; 
+
       }
+
       .header-right { 
+
         justify-content: center; 
+
         width: 100%; 
+
       }
+
     }
+
+
 
     /* 요약 박스 공통 스타일 */
+
     .summary-box {
+
       display: flex;
+
       background: #1e293b;
+
       border: 1px solid #334155;
+
       border-radius: 6px;
+
       overflow: hidden;
+
       font-size: 0.82rem;
+
     }
+
     .summary-item {
+
       padding: 6px 10px;
+
       border-right: 1px solid #334155;
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       gap: 2px;
+
     }
+
     .summary-item:last-child { border-right: none; }
+
     .summary-label { color: #94a3b8; font-weight: 500; }
+
     
+
     /* 0개/명일 때 공통 붉은색 계열 */
+
     .zero-count { color: #f43f5e; font-weight: bold; font-size: 0.95rem; }
+
     
+
     /* 갑옷 1개 이상일 때 기본 흰색 */
+
     .armor-count-active { color: #f8fafc; font-weight: bold; font-size: 0.95rem; }
 
+
+
     /* 첫 번째 길드 1명 이상일 때 초록색 */
+
     .guild-first-active { color: #22c55e; font-weight: bold; font-size: 0.95rem; }
 
+
+
     /* 두 번째 길드부터 1명 이상일 때 보라색 */
+
     .guild-other-active { color: #a855f7; font-weight: bold; font-size: 0.95rem; }
 
+
+
     /* 📌 화면 오른쪽 최하단 고정 전체 초기화 버튼 */
+
     .btn-reset {
+
       position: fixed;
+
       right: 24px;
+
       bottom: 24px;
+
       z-index: 1000;
+
       background-color: #ef4444;
+
       color: white;
+
       border: none;
+
       padding: 12px 20px;
+
       border-radius: 8px;
+
       cursor: pointer;
+
       font-weight: bold;
+
       font-size: 0.9rem;
+
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
       transition: background-color 0.2s, transform 0.1s;
+
     }
+
     .btn-reset:hover {
+
       background-color: #dc2626;
+
       transform: translateY(-2px);
+
     }
+
+
 
     .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; overflow-x: auto; }
+
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
+
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
+
+
     .side-by-side-grid {
+
       display: grid;
+
       grid-template-columns: repeat(2, minmax(0, 1fr));
+
       gap: 20px;
+
     }
+
     @media (max-width: 1400px) {
+
       .side-by-side-grid {
+
         grid-template-columns: 1fr; 
+
       }
+
     }
+
+
 
     .party-sub-title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; margin: 0 0 8px 2px; }
 
+
+
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px; }
+
     table.sheet-table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; }
+
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 8px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; }
+
     table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
+
     table.sheet-table tr:hover { background-color: #273549; }
 
+
+
     .gear-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; }
+
     .gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
 
+
+
     input[type="text"], select { width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 5px 6px; border-radius: 4px; font-size: 0.85rem; }
+
     select { padding-right: 2px; text-align: center; }
+
     .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; text-align: center; }
+
     
+
     .chk-center { text-align: center; }
+
     .chk-center input { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
+
   </style>
+
 </head>
+
 <body>
 
+
+
   <div class="header">
+
     <div class="header-left"></div>
+
     <!-- 📌 정중앙 배치된 H1 제목 -->
+
     <h1>⚔️ Another Guild CTA ⚔️</h1>
+
     <div class="header-right">
+
       <!-- 📌 길드별 인원 집계 현황판 -->
+
       <div id="guild-summary" class="summary-box"></div>
+
       <!-- 📌 갑옷 종류별 인원 집계 현황판 -->
+
       <div id="armor-summary" class="summary-box"></div>
+
     </div>
+
   </div>
 
+
+
   <div id="party-tabs" class="party-tabs"></div>
+
   <div id="sheet-container"></div>
 
+
+
   <!-- 📌 화면 우측 최하단 고정 버튼 -->
+
   <button class="btn-reset" onclick="requestReset()">초기화</button>
 
+
+
   <script src="/socket.io/socket.io.js"></script>
+
   <script>
+
     if (sessionStorage.getItem('just_logged_in') !== 'true') {
+
       window.location.href = '/login';
+
     } else {
+
       sessionStorage.removeItem('just_logged_in');
+
     }
+
+
 
     const socket = io();
+
     let currentData = { slots: [], guilds: [] };
+
     let activeTabLabel = '';
 
+
+
     socket.on('dataUpdated', (data) => {
+
       currentData = data;
+
       render();
+
     });
 
+
+
     function getRoleColor(role) {
+
       if (!role) return '#38bdf8';
+
       const trimmed = role.trim();
+
       switch (trimmed) {
+
         case '디펜': return '#38bdf8'; // 파랑색
+
         case '오펜': return '#a855f7'; // 보라색
+
         case '서폿': return '#eab308'; // 노란색
+
         case '딜러': return '#ef4444'; // 빨간색
+
         case '힐러': return '#22c55e'; // 초록색
+
         default: return '#38bdf8';
+
       }
+
     }
 
+
+
     function render() {
+
       const parties = {};
+
       currentData.slots.forEach(slot => {
+
         if (!parties[slot.party]) parties[slot.party] = [];
+
         parties[slot.party].push(slot);
+
       });
+
+
 
       const allPartyNames = Object.keys(parties);
+
       if (allPartyNames.length === 0) return;
 
+
+
       // 📌 1. 길드별 참여 인원 집계
+
       const guildCounts = {};
+
       currentData.guilds.forEach(g => guildCounts[g] = 0);
+
       
+
       // 📌 2. 주요 갑옷 종류별 인원 집계
+
       const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
+
       const armorCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
 
+
+
       currentData.slots.forEach(slot => {
+
         if (slot.nickname && slot.nickname.trim() !== '') {
+
           const gName = slot.guild || 'ANT';
+
           if (guildCounts[gName] !== undefined) {
+
             guildCounts[gName]++;
+
           } else {
+
             guildCounts[gName] = 1;
+
           }
 
+
+
           const aName = slot.armorName || '';
+
           armorTargets.forEach(target => {
+
             if (aName.includes(target)) {
+
               armorCounts[target]++;
+
             }
+
           });
+
         }
+
       });
+
+
 
       // 📌 길드 요약 UI 렌더링
+
       const guildSummaryContainer = document.getElementById('guild-summary');
+
       guildSummaryContainer.innerHTML = '';
+
       currentData.guilds.forEach((g, index) => {
+
         const count = guildCounts[g] || 0;
+
         const itemDiv = document.createElement('div');
+
         itemDiv.className = 'summary-item';
+
+
 
         let countClass = 'zero-count';
+
         if (count > 0) {
+
           countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
+
         }
 
+
+
         itemDiv.innerHTML = `
+
           <span class="summary-label">${g}</span>
+
           <span class="${countClass}">${count}명</span>
+
         `;
+
         guildSummaryContainer.appendChild(itemDiv);
+
       });
 
+
+
       // 📌 갑옷 요약 UI 렌더링
+
       const armorSummaryContainer = document.getElementById('armor-summary');
+
       armorSummaryContainer.innerHTML = '';
+
       armorTargets.forEach(a => {
+
         const count = armorCounts[a] || 0;
+
         const itemDiv = document.createElement('div');
+
         itemDiv.className = 'summary-item';
+
+
 
         const countClass = count > 0 ? 'armor-count-active' : 'zero-count';
 
+
+
         itemDiv.innerHTML = `
+
           <span class="summary-label">${a}</span>
+
           <span class="${countClass}">${count}개</span>
+
         `;
+
         armorSummaryContainer.appendChild(itemDiv);
+
       });
+
+
 
       // 📌 탭 설정 및 렌더링
+
       const tabs = [];
+
       const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
+
       if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
 
+
+
       const p3Free = [];
+
       if (parties['3파티']) p3Free.push('3파티');
+
       else {
+
         allPartyNames.forEach(p => {
+
           if (p.includes('3') && p !== 'FREE ROLE') p3Free.push(p);
+
         });
+
       }
+
       if (parties['FREE ROLE']) p3Free.push('FREE ROLE');
+
       if (p3Free.length > 0) tabs.push({ label: '3파티 · FREE ROLE', parties: p3Free });
 
+
+
       allPartyNames.forEach(p => {
+
         if (!p12.includes(p) && !p3Free.includes(p)) {
+
           tabs.push({ label: p, parties: [p] });
+
         }
+
       });
+
+
 
       if (tabs.length === 0) {
+
         allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
+
       }
+
+
 
       if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
+
         activeTabLabel = tabs[0].label;
+
       }
 
+
+
       const tabsContainer = document.getElementById('party-tabs');
+
       tabsContainer.innerHTML = '';
+
       tabs.forEach(tab => {
+
         const btn = document.createElement('button');
+
         btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
+
         btn.innerText = tab.label;
+
         btn.onclick = () => { activeTabLabel = tab.label; render(); };
+
         tabsContainer.appendChild(btn);
+
       });
 
+
+
       const container = document.getElementById('sheet-container');
+
       container.innerHTML = '';
 
+
+
       const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
+
       const isMulti = currentTab.parties.length > 1;
 
+
+
       const gridWrapper = document.createElement('div');
+
       gridWrapper.className = isMulti ? 'side-by-side-grid' : '';
+
       container.appendChild(gridWrapper);
 
+
+
       currentTab.parties.forEach(partyName => {
+
         const partySlots = parties[partyName] || [];
+
+
 
         const partyColumn = document.createElement('div');
 
+
+
         // 📌 빈 파티(isEmptyParty: true) 판별 로직
+
         const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
+
         const maxCount = isEmpty ? 0 : partySlots.length;
+
         const currentCount = isEmpty ? 0 : partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
 
+
+
         if (isMulti || currentTab.parties.length === 1) {
+
           const subTitle = document.createElement('div');
+
           subTitle.className = 'party-sub-title';
+
           subTitle.innerText = `📌 ${partyName} (${currentCount} / ${maxCount})`;
+
           partyColumn.appendChild(subTitle);
+
         }
+
+
 
         const tableWrapper = document.createElement('div');
+
         tableWrapper.className = 'excel-container';
 
+
+
         let tbodyHtml = '';
+
         
+
         if (isEmpty) {
+
           tbodyHtml = `
+
             <tr>
+
               <td colspan="7" style="text-align: center; padding: 30px; color: #64748b; font-weight: bold;">
+
                 비활성화된 파티입니다.
+
               </td>
+
             </tr>
+
           `;
+
         } else {
+
           partySlots.forEach((slot, idx) => {
+
             const guildOptions = currentData.guilds.map(g => 
+
               `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
+
             ).join('');
 
+
+
             const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
+
             const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
+
             
+
             const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0');
+
             const weaponName = slot.weaponName || '';
+
             const armorName = slot.armorName || '';
+
             
+
             const weaponTextColor = getRoleColor(slot.role);
 
+
+
             tbodyHtml += `
+
               <tr>
+
                 <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
+
                 <td style="width: 125px;">
+
                   <div class="gear-cell">
+
                     <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
+
                     <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
+
                   </div>
+
                 </td>
+
                 <td style="width: 125px;">
+
                   <div class="gear-cell">
+
                     <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
+
                     <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
+
                   </div>
+
                 </td>
+
                 <td style="width: 140px;">
+
                   <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
+
                 </td>
+
                 <td style="width: 75px;">
+
                   <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+
                     ${guildOptions}
+
                   </select>
+
                 </td>
+
                 <td style="width: 150px;">
+
                   <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+
                 </td>
+
                 <td style="width: 45px;" class="chk-center">
+
                   <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+
                 </td>
+
               </tr>
+
             `;
+
           });
+
         }
+
+
 
         tableWrapper.innerHTML = `
+
           <table class="sheet-table">
+
             <thead>
+
               <tr>
+
                 <th style="width: 45px; text-align: center;">순번</th>
+
                 <th style="width: 125px; text-align: center;">무기</th>
+
                 <th style="width: 125px; text-align: center;">갑옷</th>
+
                 <th style="width: 140px; text-align: center;">코멘트</th>
+
                 <th style="width: 75px; text-align: center;">길드</th>
+
                 <th style="width: 150px; text-align: center;">닉네임</th>
+
                 <th style="width: 45px; text-align: center;">출석</th>
+
               </tr>
+
             </thead>
+
             <tbody>
+
               ${tbodyHtml}
+
             </tbody>
+
           </table>
+
         `;
+
         partyColumn.appendChild(tableWrapper);
+
         gridWrapper.appendChild(partyColumn);
+
       });
+
     }
+
+
 
     function updateSlot(id, key, value) {
+
       const slot = currentData.slots.find(s => s.id === id);
+
       if (slot) {
+
         slot[key] = value;
+
         socket.emit('updateSlot', slot);
+
       }
+
     }
+
+
 
     function requestReset() {
+
       const code = prompt('전체 초기화를 진행하려면 [관리자 코드]를 입력하세요:');
+
       if (code === null) return;
 
+
+
       if (code.trim() === '') {
+
         alert('코드가 입력되지 않았습니다.');
+
         return;
+
       }
 
+
+
       fetch('/api/admin-auth', {
+
         method: 'POST',
+
         headers: { 'Content-Type': 'application/json' },
+
         body: JSON.stringify({ code: code.trim() })
+
       })
+
       .then(res => res.json())
+
       .then(result => {
-        // 📌 password.json 로드 실패 시 에러 알림 후 로그인 페이지로 리다이렉트
-        if (result.redirectToLogin) {
-          alert(result.message);
-          window.location.href = '/login';
-          return;
-        }
 
         if (result.success) {
+
           if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
+
             socket.emit('resetData');
+
           }
+
         } else {
+
           alert('관리자 코드가 일치하지 않습니다.');
+
         }
+
       })
+
       .catch(err => {
+
         console.error(err);
+
         alert('서버 통신 중 오류가 발생했습니다.');
+
       });
+
     }
 
+
+
     function escapeHtml(str) {
+
       return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
     }
+
   </script>
+
 </body>
-</html>
+
+</html> 
