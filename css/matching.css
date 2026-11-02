@@ -1,6 +1,5 @@
 *, *:before, *:after { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
 
-/* 📌 body: 인원수와 관계없이 세로 스크롤바 영역을 항상 강제하여 탭 전환 시 레이아웃 덜컹거림 방지 */
 body { 
   background-color: #0f172a; 
   color: #f8fafc; 
@@ -10,7 +9,6 @@ body {
   overflow-y: scroll;
 }
 
-/* 📌 스크롤바 항시 노출 및 커스텀 스타일 (웹킷 브라우저 및 모바일 연동) */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -25,7 +23,6 @@ body {
   background: #475569;
 }
 
-/* 📌 헤더 영역: 3등분(1fr auto 1fr) Grid 적용으로 제목 정중앙 고정 */
 .header { 
   display: grid; 
   grid-template-columns: 1fr auto 1fr; 
@@ -34,7 +31,6 @@ body {
   gap: 15px; 
 }
 
-/* 📌 제목과 UTC 시계를 감싸는 중앙 정렬 영역 */
 .header-center {
   display: flex;
   flex-direction: column;
@@ -42,7 +38,6 @@ body {
   gap: 4px;
 }
 
-/* 📌 ⚔️ Another Guild CTA ⚔️ 제목 정중앙 정렬 */
 h1 { 
   margin: 0; 
   font-size: 1.5rem; 
@@ -51,7 +46,6 @@ h1 {
   white-space: nowrap; 
 }
 
-/* 📌 UTC 시계 디자인 */
 .utc-clock {
   font-size: 0.85rem;
   color: #94a3b8;
@@ -59,14 +53,12 @@ h1 {
   letter-spacing: 0.5px;
 }
 
-/* 좌측 영역 (필요시 내부 정렬용) */
 .header-left { 
   display: flex; 
   align-items: center; 
   justify-content: flex-start; 
 }
 
-/* 우측 요약 박스 정렬 (세로 상하 배치) */
 .header-right { 
   display: flex; 
   flex-direction: column; 
@@ -74,7 +66,6 @@ h1 {
   gap: 8px;                 
 }
 
-/* 화면이 좁아질 때(모바일 등) 반응형 처리 */
 @media (max-width: 1200px) {
   .header { 
     display: flex; 
@@ -88,7 +79,6 @@ h1 {
   }
 }
 
-/* 요약 박스 공통 스타일 */
 .summary-box {
   display: flex;
   background: #1e293b;
@@ -105,7 +95,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  width: 58px; /* 4글자 폭 기준 고정 */
+  width: 58px;
   box-sizing: border-box;
   text-align: center;
 }
@@ -119,19 +109,11 @@ h1 {
   width: 100%;
 }
 
-/* 0개/명일 때 공통 붉은색 계열 */
 .zero-count { color: #f43f5e; font-weight: bold; font-size: 0.95rem; }
-
-/* 갑옷 1개 이상일 때 기본 흰색 */
 .armor-count-active { color: #f8fafc; font-weight: bold; font-size: 0.95rem; }
-
-/* 첫 번째 길드 1명 이상일 때 초록색 */
 .guild-first-active { color: #22c55e; font-weight: bold; font-size: 0.95rem; }
-
-/* 두 번째 길드부터 1명 이상일 때 보라색 */
 .guild-other-active { color: #a855f7; font-weight: bold; font-size: 0.95rem; }
 
-/* 📌 화면 오른쪽 최하단 고정 전체 초기화 버튼 (구버전 호환용) */
 .btn-reset {
   position: fixed;
   right: 24px;
@@ -153,10 +135,9 @@ h1 {
   transform: translateY(-2px);
 }
 
-/* 📌 탭 영역: Flexbox 양 끝 정렬(space-between)로 일반 탭은 왼쪽, 관리자 탭은 오른쪽 끝에 배치 */
+/* 📌 탭 영역: 일반 탭은 왼쪽 정렬 유지 */
 .party-tabs { 
   display: flex; 
-  justify-content: space-between; 
   align-items: center; 
   margin-bottom: 16px; 
   border-bottom: 2px solid #334155; 
@@ -178,6 +159,18 @@ h1 {
   flex-shrink: 0;
 }
 .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+
+/* 📌 핵심: 관리자 탭만 margin-left: auto를 주어 오른쪽 끝으로 밀어냄 */
+.admin-tab-btn {
+  margin-left: auto;
+  background: #7f1d1d;
+  border-color: #ef4444;
+  color: #f87171;
+}
+.admin-tab-btn.active {
+  background: #ef4444;
+  color: #ffffff;
+}
 
 .side-by-side-grid {
   display: grid;
@@ -202,7 +195,6 @@ table.sheet-table tr:hover { background-color: #273549; }
 .gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
 .gear-cell span { overflow: hidden; text-overflow: ellipsis; }
 
-/* 📌 입력칸/셀렉트박스가 범위를 벗어나지 않도록 강제 제한 */
 input[type="text"], select { 
   width: 100%; 
   max-width: 100%;
