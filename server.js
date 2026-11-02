@@ -36,7 +36,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// 초기 데이터 로드 함수 (parties.txt 기반 파싱: "기본키","무기명","코멘트","이미지링크")
+// 초기 데이터 로드 함수 (6개 필드 파싱 반영)
 function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
@@ -58,25 +58,29 @@ function loadInitialState() {
         currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
       } else {
-        // 📌 큰따옴표(") 안의 값들을 순서대로 추출
+        // 📌 형식: "기본키", "무기명", "갑옷명", "코멘트", "무기이미지링크", "갑옷이미지링크"
         const matches = line.match(/"([^"]*)"/g);
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
-        const slotId = parts[0] || '';                              // 1. 기본키 (숨겨진 고유 ID)
-        const weaponName = parts[1] || '';                          // 2. 무기명 (이미지 우측 표시)
-        const commentText = parts[2] || '';                         // 3. 코멘트
-        const imgUrl = parts[3] || '';                              // 4. 이미지 링크
+        const slotId = parts[0] || '';                              // 1. 기본키
+        const weaponName = parts[1] || '';                          // 2. 무기명
+        const armorName = parts[2] || '';                           // 3. 갑옷명
+        const commentText = parts[3] || '';                         // 4. 코멘트
+        const weaponImgUrl = parts[4] || '';                        // 5. 무기 이미지 링크
+        const armorImgUrl = parts[5] || '';                         // 6. 갑옷 이미지 링크
 
         initialSlots.push({
-          id: slotId,                                               // 내부 식별용 ID (기본키)
-          weaponName: weaponName,                                   // 무기명 속성
-          itemCode: imgUrl,                                         // 이미지 링크 저장 위치
+          id: slotId,
+          weaponName: weaponName,
+          armorName: armorName,
+          weaponImg: weaponImgUrl,
+          armorImg: armorImgUrl,
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
           guild: 'ANT',
-          comment: commentText,                                     // 코멘트 내용
+          comment: commentText,
           attended: false
         });
       }
@@ -106,7 +110,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 로그인 API (일반 참여자 입장용)
+// 로그인 API
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const data = getData();
@@ -117,7 +121,7 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// 🛡️ 관리자 코드 전용 인증 API
+// 관리자 인증 API
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
   if (code === ADMIN_CODE) {
