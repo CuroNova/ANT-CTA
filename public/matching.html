@@ -8,8 +8,32 @@
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
+    
+    .header-right { display: flex; align-items: center; gap: 15px; }
+
+    /* 길드별 요약 미니 표 스타일 */
+    .guild-summary-box {
+      display: flex;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+    .guild-summary-item {
+      padding: 6px 10px;
+      border-right: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .guild-summary-item:last-child { border-right: none; }
+    .gs-label { color: #94a3b8; font-weight: 500; }
+    .gs-count { color: #38bdf8; font-weight: bold; font-size: 0.95rem; }
+
     .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .btn-reset:hover { background-color: #dc2626; }
 
@@ -18,7 +42,7 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-    /* 📌 좌우 배치용 그리드 레이아웃 (2개 파티 동시 노출 시 좌우로 분할) */
+    /* 좌우 배치용 그리드 레이아웃 */
     .side-by-side-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -33,7 +57,7 @@
     /* 파티별 서브 타이틀 */
     .party-sub-title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; margin: 0 0 8px 2px; }
 
-    /* 엑셀 스타일 테이블 (완벽히 동일한 치수 적용) */
+    /* 엑셀 스타일 테이블 */
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px; }
     table.sheet-table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; }
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 8px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; }
@@ -57,7 +81,11 @@
 
   <div class="header">
     <h1>⚔️ Another Guild CTA ⚔️</h1>
-    <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+    <div class="header-right">
+      <!-- 📌 길드별 출석 현황판 미니 표가 들어갈 자리 -->
+      <div id="guild-summary" class="guild-summary-box"></div>
+      <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+    </div>
   </div>
 
   <!-- 파티 선택 탭 -->
@@ -68,7 +96,6 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // 🔒 새로고침 시 세션이 만료되도록 일회성 플래그 검사
     if (sessionStorage.getItem('just_logged_in') !== 'true') {
       window.location.href = '/login';
     } else {
@@ -94,18 +121,46 @@
       const allPartyNames = Object.keys(parties);
       if (allPartyNames.length === 0) return;
 
-      // 📌 탭 구조 정의: 1·2파티 묶음 / 3파티·FREE ROLE 묶음으로 좌우 쌍 구성
+      // 📌 길드별 출석 인원 계산 (닉네임이 입력되어 있고, 출석이 체크되었거나 슬롯에 인원이 채워진 경우 기준)
+      // 여기서는 닉네임이 입력된 슬롯을 대상으로 길드별 인원을 집계합니다.
+      const guildCounts = {};
+      currentData.guilds.forEach(g => guildCounts[g] = 0);
+      
+      currentData.slots.forEach(slot => {
+        if (slot.nickname && slot.nickname.trim() !== '') {
+          const gName = slot.guild || 'ANT';
+          if (guildCounts[gName] !== undefined) {
+            guildCounts[gName]++;
+          } else {
+            guildCounts[gName] = 1;
+          }
+        }
+      });
+
+      // 우측 상단 길드 요약 미니 표 렌더링
+      const summaryContainer = document.getElementById('guild-summary');
+      summaryContainer.innerHTML = '';
+      currentData.guilds.forEach(g => {
+        const count = guildCounts[g] || 0;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'guild-summary-item';
+        itemDiv.innerHTML = `
+          <span class="gs-label">${g}</span>
+          <span class="gs-count">${count}명</span>
+        `;
+        summaryContainer.appendChild(itemDiv);
+      });
+
+      // 탭 그룹 정의
       const tabs = [];
       const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
       if (p12.length > 0) {
         tabs.push({ label: '1·2파티', parties: p12 });
       }
 
-      // 3파티와 FREE ROLE을 하나의 탭으로 묶기
       const p3Free = [];
       if (parties['3파티']) p3Free.push('3파티');
       else {
-        // 만약 이름이 다를 경우 3파티에 준하는 파티 탐색
         allPartyNames.forEach(p => {
           if (p.includes('3') && p !== 'FREE ROLE') p3Free.push(p);
         });
@@ -116,7 +171,6 @@
         tabs.push({ label: '3파티 · FREE ROLE', parties: p3Free });
       }
 
-      // 그 외 혹시 빠진 파티가 있다면 개별 탭으로 추가
       allPartyNames.forEach(p => {
         if (!p12.includes(p) && !p3Free.includes(p)) {
           tabs.push({ label: p, parties: [p] });
@@ -142,7 +196,7 @@
         tabsContainer.appendChild(btn);
       });
 
-      // 2. 선택된 탭의 파티 표들 그리기 (좌우 2열 그리드 구조)
+      // 2. 선택된 탭의 파티 표들 그리기
       const container = document.getElementById('sheet-container');
       container.innerHTML = '';
 
@@ -159,7 +213,6 @@
 
         const partyColumn = document.createElement('div');
 
-        // 다중 파티 표시일 때 서브 타이틀 표시
         if (isMulti) {
           const subTitle = document.createElement('div');
           subTitle.className = 'party-sub-title';
@@ -179,9 +232,13 @@
           const itemCode = slot.itemCode || ''; 
           const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
 
+          // 📌 순번을 01, 02 형식의 두 자리 문자열로 변환
+          const rawIndex = slot.displayIndex || (idx + 1);
+          const formattedIndex = String(rawIndex).padStart(2, '0') + '번';
+
           tbodyHtml += `
             <tr>
-              <td style="width: 50px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${slot.displayIndex || (idx + 1)}번</td>
+              <td style="width: 50px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
               <td style="width: 110px;">
                 <div class="weapon-cell">
                   <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
