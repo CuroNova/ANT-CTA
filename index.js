@@ -19,7 +19,7 @@ app.use(express.json());
 
 // 📌 페이지 라우팅
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'welcome.html'));
 });
 
 app.get('/login', (req, res) => {
