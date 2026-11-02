@@ -81,7 +81,7 @@
         const data = await res.json();
 
         if (data.success) {
-          // 일회성 로그인 플래그 부여 (새로고침 시 바로 만료됨)
+          // 일회성 로그인 플래그 부여
           sessionStorage.setItem('just_logged_in', 'true');
           window.location.href = '/matching.html';
         } else {
