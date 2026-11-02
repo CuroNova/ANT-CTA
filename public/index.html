@@ -33,7 +33,7 @@
 
     /* 엑셀 스타일 테이블 */
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
-    table.sheet-table { width: 100%; border-collapse: collapse; min-width: 700px; text-align: left; }
+    table.sheet-table { width: 100%; border-collapse: collapse; min-width: 750px; text-align: left; }
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 12px 14px; font-size: 0.9rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; }
     table.sheet-table td { padding: 8px 12px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; vertical-align: middle; }
     table.sheet-table tr:hover { background-color: #273549; }
@@ -52,7 +52,7 @@
 </head>
 <body>
 
-  <!-- 🔒 초대코드 입력 모달 (인증 전까지 화면을 가림) -->
+  <!-- 🔒 초대코드 입력 모달 -->
   <div id="auth-modal">
     <div class="auth-box">
       <h2>🔒 guildCTA 접속 인증</h2>
@@ -63,7 +63,7 @@
     </div>
   </div>
 
-  <!-- 👁️ 현황판 메인 콘텐츠 (초대코드 성공 시에만 display: block으로 노출) -->
+  <!-- 👁️ 현황판 메인 콘텐츠 -->
   <div id="main-content">
     <div class="header">
       <h1>⚔️ guildCTA 실시간 매칭 현황판</h1>
@@ -78,12 +78,12 @@
       <table class="sheet-table">
         <thead>
           <tr>
-            <th style="width: 60px; text-align: center;">번호</th>
-            <th style="width: 70px; text-align: center;">출석</th>
-            <th style="width: 200px;">장비 / 무기</th>
-            <th style="width: 160px;">닉네임</th>
+            <th style="width: 60px; text-align: center;">순번</th>
+            <th style="width: 180px;">무기</th>
+            <th style="width: 220px;">코멘트</th>
             <th style="width: 130px;">길드</th>
-            <th>메모 / 코멘트 (관리자용)</th>
+            <th style="width: 160px;">닉네임</th>
+            <th style="width: 70px; text-align: center;">출석</th>
           </tr>
         </thead>
         <tbody id="sheet-body"></tbody>
@@ -97,7 +97,6 @@
     let currentData = { slots: [], guilds: [] };
     let activeParty = '';
 
-    // 페이지 로드 시 기존 인증 여부 확인
     window.onload = function() {
       if (sessionStorage.getItem('guildCTA_auth') === 'true') {
         unlockContent();
@@ -126,7 +125,6 @@
 
     socket.on('dataUpdated', (data) => {
       currentData = data;
-      // 인증된 사용자에게만 렌더링
       if (sessionStorage.getItem('guildCTA_auth') === 'true') {
         render();
       }
@@ -154,7 +152,7 @@
         tabsContainer.appendChild(btn);
       });
 
-      // 2. 선택된 파티 엑셀 표 그리기
+      // 2. 선택된 파티 엑셀 표 그리기 (순번 -> 무기 -> 코멘트 -> 길드 -> 닉네임 -> 출석)
       const tbody = document.getElementById('sheet-body');
       tbody.innerHTML = '';
 
@@ -170,9 +168,6 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="text-align: center; font-weight: bold; color: #94a3b8;">${slot.displayIndex || (idx + 1)}번</td>
-          <td class="chk-center">
-            <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
-          </td>
           <td>
             <div class="weapon-cell">
               <img src="${itemImgUrl}" alt="Item" class="item-img" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD'" />
@@ -180,7 +175,7 @@
             </div>
           </td>
           <td>
-            <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '코멘트 (읽기 전용)')}" disabled />
           </td>
           <td>
             <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
@@ -188,7 +183,10 @@
             </select>
           </td>
           <td>
-            <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '메모/코멘트 (읽기 전용)')}" disabled />
+            <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+          </td>
+          <td class="chk-center">
+            <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
           </td>
         `;
         tbody.appendChild(tr);
