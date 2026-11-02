@@ -15,14 +15,52 @@
     <h1>Another Guild CTA</h1>
     <p class="cta">접속하려면 초대코드를 입력하세요</p>
     <form id="loginForm">
-      <input type="password" id="inviteCode" placeholder="🔑 초대코드 입력" required autocomplete="current-password" autofocus>
+      <input type="password" id="inviteCode" placeholder="🔑 코드 입력" required autocomplete="current-password" autofocus>
       <button type="submit">접속</button>
-      <div id="error-msg" class="error-msg">초대코드가 올바르지 않습니다.</div>
+      <div id="error-msg" class="error-msg">코드가 올바르지 않습니다.</div>
     </form>
   </div>
 
   <!-- 📌 JS 기능 파일 분리 연동 -->
-  <script src="/js/login.js"></script>
+  <!-- 📌 인라인 스크립트로 로그인 폼 제출 및 관리자 권한 세션 저장 처리 -->
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const codeInput = document.getElementById('inviteCode').value.trim();
+      const errorMsg = document.getElementById('error-msg');
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: codeInput })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // 📌 매칭 페이지 접근 허용을 위한 플래그 설정
+          sessionStorage.setItem('just_logged_in', 'true');
+
+          // 📌 관리자 코드로 로그인한 경우 관리자 권한(is_admin) 즉시 부여 및 유지
+          if (result.isAdmin) {
+            sessionStorage.setItem('is_admin', 'true');
+          } else {
+            sessionStorage.removeItem('is_admin');
+          }
+
+          window.location.href = '/matching';
+        } else {
+          errorMsg.innerText = result.message || '코드가 올바르지 않습니다.';
+          errorMsg.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('로그인 통신 오류:', err);
+        errorMsg.innerText = '서버 통신 중 오류가 발생했습니다.';
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
   <script src="/js/footer.js"></script>
 </body>
 </html>
