@@ -8,7 +8,7 @@ const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
 
-// 📌 주신 정확한 매핑 데이터를 반영한 안전한 DA 매핑 함수 (100명까지 완벽 반영, 초과 시 처리 포함)
+// 📌 새로 주신 정확한 DA 매핑 데이터 반영 함수 (21~100명 및 초과분 계산)
 function calculateDisarray(playerCount) {
   if (playerCount <= 20) return 0;
 
@@ -229,30 +229,32 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-left] 영역에 다른 요약 아이템들과 완벽히 똑같은 규격과 박스 형태(.summary-item)로 DA 주입
+  // 📌 1. [header-left] 영역에 인원현황/갑옷현황 박스와 100% 동일한 구조와 스타일의 .summary-item 박스로 렌더링
   const headerLeft = document.querySelector('.header-left');
   if (headerLeft) {
     let daBox = document.getElementById('header-da-box');
     if (!daBox) {
       daBox = document.createElement('div');
       daBox.id = 'header-da-box';
-      daBox.className = 'summary-item'; // 다른 요약 항목들과 동일한 박스 스타일 클래스 적용
+      daBox.className = 'summary-item'; // 다른 요약 항목들과 완벽히 동일한 클래스
       headerLeft.insertBefore(daBox, headerLeft.firstChild); // 맨 왼쪽에 삽입
     }
 
-    let daColorClass = 'zero-count'; // 기본 회색/기본값 스타일 클래스 (다른 요약창과 통일)
-    let daColorStyle = 'color: #f8fafc;';
+    let countClass = 'zero-count';
+    if (daValue > 0) {
+      countClass = 'armor-count-active'; // 다른 활성 현황 숫자들과 동일한 강조 클래스 활용
+    }
+
+    let daColorStyle = '';
     if (daValue >= 20) {
-      daColorStyle = 'color: #f97316; font-weight: bold;'; // 주황색
+      daColorStyle = 'color: #f97316 !important;'; // 주황색
     } else if (daValue >= 10) {
-      daColorStyle = 'color: #eab308; font-weight: bold;'; // 노란색
-    } else if (daValue > 0) {
-      daColorStyle = 'color: #f8fafc; font-weight: bold;';
+      daColorStyle = 'color: #eab308 !important;'; // 노란색
     }
 
     daBox.innerHTML = `
       <span class="summary-label">DA</span>
-      <span style="${daColorStyle} font-size: 1.05rem;">${daValue}</span>
+      <span class="${countClass}" style="${daColorStyle}">${daValue}</span>
     `;
   }
 
