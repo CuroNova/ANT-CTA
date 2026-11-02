@@ -43,7 +43,7 @@ function initUtcClock(selector = '[data-utc-clock]') {
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderFloatingButtons();   // 📌 우측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
+  renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -78,25 +78,23 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 우측 최하단에 평소엔 숨겨져 있다가 마우스를 올리면 나타나는 플로팅 버튼 컨테이너 생성
+// 📌 화면 좌측 하단에 평소엔 숨겨져 있다가 마우스를 올리면 나타나는 플로팅 버튼 컨테이너 생성
 function renderFloatingButtons() {
   const existingContainer = document.getElementById('floating-buttons-container');
   if (existingContainer) existingContainer.remove();
 
-  // 1. 전체를 감싸는 컨테이너 (이 영역 또는 버튼에 마우스를 올려야 보임)
   const container = document.createElement('div');
   container.id = 'floating-buttons-container';
   container.style.cssText = `
     position: fixed;
-    bottom: 70px; /* 요청하신 15px 낮춘 위치 적용 (85px -> 70px) */
-    right: 20px;
+    bottom: 70px;
+    left: 20px; /* 📌 좌측 하단으로 위치 변경 */
     display: flex;
     flex-direction: column;
     gap: 8px;
     z-index: 9998;
   `;
 
-  // 공통 버튼 스타일 (가로 길이 동일)
   const buttonStyle = `
     background: #475569;
     color: #f8fafc;
@@ -110,12 +108,11 @@ function renderFloatingButtons() {
     width: 135px;
     text-align: center;
     box-sizing: border-box;
-    opacity: 0;               /* 평소에는 투명하게 숨김 */
-    pointer-events: none;     /* 숨겨져 있을 때 클릭 방지 */
+    opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s ease, background 0.2s;
   `;
 
-  // 2. 포스팅 하러가기 버튼
   const postingBtn = document.createElement('button');
   postingBtn.innerText = '포스팅 하러가기';
   postingBtn.style.cssText = buttonStyle;
@@ -125,7 +122,6 @@ function renderFloatingButtons() {
     window.open('https://www.naver.com', '_blank');
   };
 
-  // 3. 리기어 신청 버튼
   const regearBtn = document.createElement('button');
   regearBtn.innerText = '리기어 신청';
   regearBtn.style.cssText = buttonStyle;
@@ -138,7 +134,6 @@ function renderFloatingButtons() {
   container.appendChild(postingBtn);
   container.appendChild(regearBtn);
 
-  // 📌 우측 하단 구역에 마우스가 올라갔을 때만 버튼들이 나타나도록 이벤트 처리
   container.onmouseenter = () => {
     postingBtn.style.opacity = '1';
     postingBtn.style.pointerEvents = 'auto';
@@ -224,41 +219,82 @@ function render() {
     }
   });
 
-  const guildSummaryContainer = document.getElementById('guild-summary');
-  guildSummaryContainer.innerHTML = '';
-  currentData.guilds.forEach((g, index) => {
-    const count = guildCounts[g] || 0;
+  const daValue = currentData.daValue !== undefined ? currentData.daValue : 0;
+
+  let daSummaryContainer = document.getElementById('da-summary');
+  if (!daSummaryContainer) {
+    const summaryParent = document.getElementById('guild-summary')?.parentNode;
+    if (summaryParent) {
+      const daDiv = document.createElement('div');
+      daDiv.id = 'da-summary-wrapper';
+      daDiv.innerHTML = `
+        <div class="summary-box" style="margin-bottom: 10px;">
+          <div class="summary-item" id="da-summary"></div>
+        </div>
+      `;
+      summaryParent.insertBefore(daDiv, summaryParent.firstChild);
+      daSummaryContainer = document.getElementById('da-summary');
+    }
+  }
+
+  if (daSummaryContainer) {
+    daSummaryContainer.innerHTML = '';
     const itemDiv = document.createElement('div');
     itemDiv.className = 'summary-item';
 
-    let countClass = 'zero-count';
-    if (count > 0) {
-      countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
+    let daColorHex = '#f8fafc';
+    if (daValue >= 20) {
+      daColorHex = '#f97316';
+    } else if (daValue >= 10) {
+      daColorHex = '#eab308';
     }
 
     itemDiv.innerHTML = `
-      <span class="summary-label">${g}</span>
-      <span class="${countClass}">${count}</span>
+      <span class="summary-label">DA</span>
+      <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
     `;
-    guildSummaryContainer.appendChild(itemDiv);
-  });
+    daSummaryContainer.appendChild(itemDiv);
+  }
+
+  const guildSummaryContainer = document.getElementById('guild-summary');
+  if (guildSummaryContainer) {
+    guildSummaryContainer.innerHTML = '';
+    currentData.guilds.forEach((g, index) => {
+      const count = guildCounts[g] || 0;
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
+
+      let countClass = 'zero-count';
+      if (count > 0) {
+        countClass = (index === 0) ? 'guild-first-active' : 'guild-other-active';
+      }
+
+      itemDiv.innerHTML = `
+        <span class="summary-label">${g}</span>
+        <span class="${countClass}">${count}</span>
+      `;
+      guildSummaryContainer.appendChild(itemDiv);
+    });
+  }
 
   const armorSummaryContainer = document.getElementById('armor-summary');
-  armorSummaryContainer.innerHTML = '';
-  armorTargets.forEach(a => {
-    const current = armorCurrentCounts[a] || 0;
-    const total = armorTotalCounts[a] || 0;
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'summary-item';
+  if (armorSummaryContainer) {
+    armorSummaryContainer.innerHTML = '';
+    armorTargets.forEach(a => {
+      const current = armorCurrentCounts[a] || 0;
+      const total = armorTotalCounts[a] || 0;
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
 
-    const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
+      const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
 
-    itemDiv.innerHTML = `
-      <span class="summary-label">${a}</span>
-      <span><span class="${currentClass}">${current}</span>/${total}</span>
-    `;
-    armorSummaryContainer.appendChild(itemDiv);
-  });
+      itemDiv.innerHTML = `
+        <span class="summary-label">${a}</span>
+        <span><span class="${currentClass}">${current}</span>/${total}</span>
+      `;
+      armorSummaryContainer.appendChild(itemDiv);
+    });
+  }
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
