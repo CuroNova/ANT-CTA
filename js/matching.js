@@ -139,7 +139,7 @@ function render() {
 
   const tabs = [];
   const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
-  if (p12.length > 0) tabs.push({ label: '1파티&2파티', parties: p12 });
+  if (p12.length > 0) tabs.push({ label: '1PT & 2PT', parties: p12 });
 
   const p3Free = [];
   if (parties['3파티']) p3Free.push('3파티');
@@ -149,7 +149,7 @@ function render() {
     });
   }
   if (parties['FREE ROLE']) p3Free.push('FREE ROLE');
-  if (p3Free.length > 0) tabs.push({ label: '3파티 · FREE ROLE', parties: p3Free });
+  if (p3Free.length > 0) tabs.push({ label: '3PT & FREE ROLE', parties: p3Free });
 
   allPartyNames.forEach(p => {
     if (!p12.includes(p) && !p3Free.includes(p)) {
