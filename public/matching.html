@@ -68,7 +68,7 @@
   <script>
     // 🔒 새로고침 시 세션이 만료되도록 일회성 플래그 검사
     if (sessionStorage.getItem('just_logged_in') !== 'true') {
-      window.location.href = 'login.html';
+      window.location.href = '/login';
     } else {
       sessionStorage.removeItem('just_logged_in');
     }
