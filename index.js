@@ -34,6 +34,8 @@ app.get('/matching', (req, res) => {
 app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+// 📌 💡 CSS 폴더 서빙 경로 추가 (welcome.css 등을 읽어오기 위함)
+app.use('/css', express.static(path.join(__dirname, 'css')));
 
 // 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
 function loadPasswords() {
