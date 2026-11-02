@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Another Guild - 매칭현황</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 15px;
+    }
+    h1 { font-size: 20px; margin: 0; color: #38bdf8; }
+    .ip-display { font-size: 14px; color: #94a3b8; }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .tab-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+    }
+
+    .table-container {
+      background: #1e293b;
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+      min-width: 800px;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #334155;
+    }
+    th {
+      background: #0f172a;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 6px 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: white;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .weapon-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .weapon-cell img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      background: #0f172a;
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .party-content { display: none; }
+    .party-content.active { display: block; }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; }
+    .footer-credit {
+      text-align: right;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Another Guild - 매칭현황</h1>
+    <div class="ip-display" id="clientIp">현재 접속한 IP: 확인 중...</div>
+  </header>
+
+  <div class="tabs" id="partyTabs"></div>
+  <div id="partyTablesContainer"></div>
+
+  <div class="footer-credit">mady by CuroNova</div>
+  <div id="toast">알림 메시지</div>
+
+  <script>
+    const socket = io();
+    let guildsList = [];
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/matching-data');
+        if (res.status === 403) {
+          window.location.href = '/login.html';
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('clientIp').textContent = `현재 접속한 IP: ${data.clientIp}`;
+          guildsList = data.guilds;
+          renderUI(data.parties);
+        }
+      } catch (err) {
+        showToast('데이터를 불러오는 중 오류가 발생했습니다.');
+      }
+    }
+
+    function renderUI(parties) {
+      const tabsContainer = document.getElementById('partyTabs');
+      const tablesContainer = document.getElementById('partyTablesContainer');
+
+      const activeTabBtn = document.querySelector('.tab-btn.active');
+      let activePartyNum = activeTabBtn ? activeTabBtn.dataset.party : (parties[0] ? parties[0].partyNum : 1);
+
+      tabsContainer.innerHTML = '';
+      tablesContainer.innerHTML = '';
+
+      parties.forEach((party, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${party.partyNum == activePartyNum ? 'active' : ''}`;
+        btn.dataset.party = party.partyNum;
+        btn.textContent = `${party.partyNum}파티 (${party.filledCount}명)`;
+        btn.onclick = () => switchTab(party.partyNum);
+        tabsContainer.appendChild(btn);
+
+        const div = document.createElement('div');
+        div.className = `party-content ${party.partyNum == activePartyNum ? 'active' : ''}`;
+        div.id = `party-content-${party.partyNum}`;
+
+        let tableHtml = `
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 50px;">No</th>
+                  <th>무기</th>
+                  <th>갑옷</th>
+                  <th style="width: 120px;">길드</th>
+                  <th style="width: 180px;">닉네임 (최대 30자)</th>
+                  <th>코멘트</th>
+                  <th style="width: 60px; text-align: center;">출결</th>
+                  <th style="width: 100px;">수정시간</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        party.slots.forEach((slot, sIdx) => {
+          let guildOptions = guildsList.map(g => `<option value="${g}" ${slot.guild === g ? 'selected' : ''}>${g}</option>`).join('');
+
+          tableHtml += `
+            <tr>
+              <td>${sIdx + 1}</td>
+              <td>
+                <div class="weapon-cell">
+                  <img src="${slot.imageUrl}" alt="weapon" onerror="this.src='https://render.albiononline.com/v1/item/T8_MAIN_SWORD@4'">
+                  <span>${slot.weaponName}</span>
+                </div>
+              </td>
+              <td>${slot.armorName}</td>
+              <td>
+                <select onchange="updateField('${slot.slotId}', 'guild', this.value)">
+                  ${guildOptions}
+                </select>
+              </td>
+              <td>
+                <input type="text" maxlength="30" value="${slot.nickname || ''}" 
+                  onchange="updateField('${slot.slotId}', 'nickname', this.value)" 
+                  placeholder="닉네임 입력">
+              </td>
+              <td>
+                <input type="text" value="${slot.comment || ''}" 
+                  onchange="updateField('${slot.slotId}', 'comment', this.value)" 
+                  placeholder="코멘트">
+              </td>
+              <td style="text-align: center;">
+                <input type="checkbox" ${slot.attendance ? 'checked' : ''} 
+                  onchange="updateField('${slot.slotId}', 'attendance', this.checked ? 1 : 0)">
+              </td>
+              <td style="font-size: 12px; color: #94a3b8;">${formatTime(slot.updated_at)}</td>
+            </tr>
+          `;
+        });
+
+        tableHtml += `</tbody></table></div>`;
+        div.innerHTML = tableHtml;
+        tablesContainer.appendChild(div);
+      });
+    }
+
+    function switchTab(partyNum) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.party == partyNum);
+      });
+      document.querySelectorAll('.party-content').forEach(c => {
+        c.classList.toggle('active', c.id === `party-content-${partyNum}`);
+      });
+    }
+
+    function updateField(slotId, field, value) {
+      socket.emit('update-slot', { slotId, field, value });
+    }
+
+    function formatTime(isoString) {
+      if (!isoString || isoString === '-') return '-';
+      const date = new Date(isoString);
+      return date.toTimeString().split(' ')[0];
+    }
+
+    socket.on('refresh-data', () => {
+      loadData();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
