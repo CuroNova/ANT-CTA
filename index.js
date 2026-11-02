@@ -34,6 +34,9 @@ app.get('/matching', (req, res) => {
 app.use(express.static('pages'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+// 📌 [추가됨] 루트에 위치한 js 폴더 서빙 설정 (footer.js 등 공통 스크립트 로드용)
+app.use('/js', express.static(path.join(__dirname, 'js')));
+
 // 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
 function loadPasswords() {
   try {
@@ -127,13 +130,13 @@ function loadInitialState() {
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
-        const slotId = parts[0] || '';         // 1. 기본키
-        const roleName = parts[1] || '';       // 2. 역할명
-        const weaponName = parts[2] || '';     // 3. 무기명
-        const armorName = parts[3] || '';      // 4. 갑옷명
-        const commentText = parts[4] || '';    // 5. 코멘트
-        const rawWeaponImg = parts[5] || '';   // 6. 무기 이미지 링크
-        const rawArmorImg = parts[6] || '';    // 7. 갑옷 이미지 링크
+        const slotId = parts[0] || '';       // 1. 기본키
+        const roleName = parts[1] || '';     // 2. 역할명
+        const weaponName = parts[2] || '';   // 3. 무기명
+        const armorName = parts[3] || '';    // 4. 갑옷명
+        const commentText = parts[4] || '';  // 5. 코멘트
+        const rawWeaponImg = parts[5] || ''; // 6. 무기 이미지 링크
+        const rawArmorImg = parts[6] || '';  // 7. 갑옷 이미지 링크
 
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
@@ -255,7 +258,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.emit('dataUpdated', data);
+      io.io.emit('dataUpdated', data);
     }
   });
 
