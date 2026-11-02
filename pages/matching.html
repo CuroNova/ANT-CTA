@@ -8,10 +8,18 @@
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-    h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
+    /* 📌 상단 헤더 영역 (중앙 제목, 좌측 길드현황, 우측 갑옷현황) */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; position: relative; }
+    h1 { margin: 0 auto; font-size: 1.5rem; color: #38bdf8; position: absolute; left: 50%; transform: translateX(-50%); text-align: center; }
+    @media (max-width: 1200px) {
+      h1 { position: static; transform: none; margin: 0 auto; width: 100%; order: -1; }
+    }
     
-    .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-left: auto; }
+    @media (max-width: 1200px) {
+      .header-right { margin-left: 0; }
+    }
 
     /* 요약 박스 공통 스타일 */
     .summary-box {
@@ -45,10 +53,12 @@
     /* 두 번째 길드부터 1명 이상일 때 보라색 */
     .guild-other-active { color: #a855f7; font-weight: bold; font-size: 0.95rem; }
 
-    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; height: 35px; white-space: nowrap; }
     .btn-reset:hover { background-color: #dc2626; }
 
-    .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; overflow-x: auto; }
+    /* 📌 탭 영역과 전체 초기화 버튼을 한 줄에 배치 */
+    .nav-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; padding-bottom: 4px; }
+    .party-tabs { display: flex; gap: 8px; overflow-x: auto; border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
@@ -85,17 +95,26 @@
 <body>
 
   <div class="header">
-    <h1>⚔️ Another Guild CTA ⚔️</h1>
-    <div class="header-right">
-      <!-- 📌 길드별 인원 집계 현황판 -->
+    <!-- 📌 좌측 맨끝: 길드별 인원 집계 현황판 -->
+    <div class="header-left">
       <div id="guild-summary" class="summary-box"></div>
-      <!-- 📌 갑옷 종류별 인원 집계 현황판 -->
+    </div>
+
+    <!-- 📌 정중앙: 제목 -->
+    <h1>⚔️ Another Guild CTA ⚔️</h1>
+
+    <!-- 📌 우측: 갑옷 종류별 인원 집계 현황판 -->
+    <div class="header-right">
       <div id="armor-summary" class="summary-box"></div>
-      <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
     </div>
   </div>
 
-  <div id="party-tabs" class="party-tabs"></div>
+  <!-- 📌 탭 영역과 전체 초기화 버튼을 감싸는 바 (탭 맨 오른쪽에 초기화 버튼 위치) -->
+  <div class="nav-container">
+    <div id="party-tabs" class="party-tabs"></div>
+    <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
+  </div>
+
   <div id="sheet-container"></div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -138,11 +157,9 @@
       const allPartyNames = Object.keys(parties);
       if (allPartyNames.length === 0) return;
 
-      // 📌 1. 길드별 참여 인원 집계
       const guildCounts = {};
       currentData.guilds.forEach(g => guildCounts[g] = 0);
       
-      // 📌 2. 주요 갑옷 종류별 인원 집계
       const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
       const armorCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
 
@@ -164,7 +181,7 @@
         }
       });
 
-      // 📌 길드 요약 UI 렌더링 (첫번째: 0이면 빨강/1이상이면 초록, 두번째부터: 0이면 빨강/1이상이면 보라)
+      // 길드 요약 UI 렌더링
       const guildSummaryContainer = document.getElementById('guild-summary');
       guildSummaryContainer.innerHTML = '';
       currentData.guilds.forEach((g, index) => {
@@ -184,7 +201,7 @@
         guildSummaryContainer.appendChild(itemDiv);
       });
 
-      // 📌 갑옷 요약 UI 렌더링 (0이면 빨강, 1이상이면 기본 흰색)
+      // 갑옷 요약 UI 렌더링
       const armorSummaryContainer = document.getElementById('armor-summary');
       armorSummaryContainer.innerHTML = '';
       armorTargets.forEach(a => {
@@ -201,7 +218,6 @@
         armorSummaryContainer.appendChild(itemDiv);
       });
 
-      // 📌 탭 설정 및 렌더링
       const tabs = [];
       const p12 = allPartyNames.filter(p => p === '1파티' || p === '2파티' || p === '1' || p === '2');
       if (p12.length > 0) tabs.push({ label: '1·2파티', parties: p12 });
@@ -234,35 +250,7 @@
       tabsContainer.innerHTML = '';
       tabs.forEach(tab => {
         const btn = document.createElement('button');
-        btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
-        btn.innerText = tab.label;
-        btn.onclick = () => { activeTabLabel = tab.label; render(); };
-        tabsContainer.appendChild(btn);
-      });
-
-      const container = document.getElementById('sheet-container');
-      container.innerHTML = '';
-
-      const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
-      const isMulti = currentTab.parties.length > 1;
-
-      const gridWrapper = document.createElement('div');
-      gridWrapper.className = isMulti ? 'side-by-side-grid' : '';
-      container.appendChild(gridWrapper);
-
-      currentTab.parties.forEach(partyName => {
-        const partySlots = parties[partyName] || [];
-        if (partySlots.length === 0) return;
-
-        const partyColumn = document.createElement('div');
-
-        const maxCount = partySlots.length;
-        const currentCount = partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
-
-        if (isMulti || currentTab.parties.length === 1) {
-          const subTitle = document.createElement('div');
-          subTitle.className = 'party-sub-title';
-          subTitle.innerText = `📌 ${partyName} (${currentCount} / ${maxCount})`;
+        btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`; btn.innerText = tab.label; btn.onclick = () => { activeTabLabel = tab.label; render(); }; tabsContainer.appendChild(btn); });  const container = document.getElementById('sheet-container'); container.innerHTML = '';  const currentTab = tabs.find(t => t.label === activeTabLabel) \vert{}\vert{} tabs[0]; const isMulti = currentTab.parties.length > 1;  const gridWrapper = document.createElement('div'); gridWrapper.className = isMulti ? 'side-by-side-grid' : ''; container.appendChild(gridWrapper);  currentTab.parties.forEach(partyName => { const partySlots = parties[partyName] \vert{}\vert{} []; if (partySlots.length === 0) return;  const partyColumn = document.createElement('div');  const maxCount = partySlots.length; const currentCount = partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;  if (isMulti \vert{}\vert{} currentTab.parties.length === 1) { const subTitle = document.createElement('div'); subTitle.className = 'party-sub-title'; subTitle.innerText = `📌 ${partyName} (${currentCount} /${maxCount})`;
           partyColumn.appendChild(subTitle);
         }
 
@@ -272,7 +260,7 @@
         let tbodyHtml = '';
         partySlots.forEach((slot, idx) => {
           const guildOptions = currentData.guilds.map(g => 
-            `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
+            `<option value="${g}" ${(slot.guild \vert{}\vert{} 'ANT') === g ? 'selected' : ''}>${g}</option>`
           ).join('');
 
           const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
@@ -286,101 +274,4 @@
 
           tbodyHtml += `
             <tr>
-              <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
-              <td style="width: 125px;">
-                <div class="gear-cell">
-                  <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
-                  <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
-                </div>
-              </td>
-              <td style="width: 125px;">
-                <div class="gear-cell">
-                  <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
-                  <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
-                </div>
-              </td>
-              <td style="width: 140px;">
-                <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
-              </td>
-              <td style="width: 75px;">
-                <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
-                  ${guildOptions}
-                </select>
-              </td>
-              <td style="width: 150px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
-              </td>
-              <td style="width: 45px;" class="chk-center">
-                <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
-              </td>
-            </tr>
-          `;
-        });
-
-        tableWrapper.innerHTML = `
-          <table class="sheet-table">
-            <thead>
-              <tr>
-                <th style="width: 45px; text-align: center;">순번</th>
-                <th style="width: 125px; text-align: center;">무기</th>
-                <th style="width: 125px; text-align: center;">갑옷</th>
-                <th style="width: 140px; text-align: center;">코멘트</th>
-                <th style="width: 75px; text-align: center;">길드</th>
-                <th style="width: 150px; text-align: center;">닉네임</th>
-                <th style="width: 45px; text-align: center;">출석</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tbodyHtml}
-            </tbody>
-          </table>
-        `;
-        partyColumn.appendChild(tableWrapper);
-        gridWrapper.appendChild(partyColumn);
-      });
-    }
-
-    function updateSlot(id, key, value) {
-      const slot = currentData.slots.find(s => s.id === id);
-      if (slot) {
-        slot[key] = value;
-        socket.emit('updateSlot', slot);
-      }
-    }
-
-    function requestReset() {
-      const code = prompt('전체 초기화를 진행하려면 [관리자 코드]를 입력하세요:');
-      if (code === null) return;
-
-      if (code.trim() === '') {
-        alert('코드가 입력되지 않았습니다.');
-        return;
-      }
-
-      fetch('/api/admin-auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() })
-      })
-      .then(res => res.json())
-      .then(result => {
-        if (result.success) {
-          if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
-            socket.emit('resetData');
-          }
-        } else {
-          alert('관리자 코드가 일치하지 않습니다.');
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert('서버 통신 중 오류가 발생했습니다.');
-      });
-    }
-
-    function escapeHtml(str) {
-      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-  </script>
-</body>
-</html>
+              <td style="width: 45px; text-align:
