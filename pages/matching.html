@@ -114,9 +114,10 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
+    /* 📌 minmax(0, 1fr) 적용으로 내용량에 상관없이 탭 간 컬럼 크기와 비율을 완전히 동일하게 맞춤 */
     .side-by-side-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 20px;
     }
     @media (max-width: 1400px) {
@@ -321,7 +322,7 @@
 
         const partyColumn = document.createElement('div');
 
-        // 📌 빈 파티(isEmptyParty: true) 판별 로직 추가
+        // 📌 빈 파티(isEmptyParty: true) 판별 로직
         const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
         const maxCount = isEmpty ? 0 : partySlots.length;
         const currentCount = isEmpty ? 0 : partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
