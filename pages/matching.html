@@ -6,7 +6,7 @@
   <title>Another Guild CTA</title>
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; padding-bottom: 80px; }
     
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
@@ -45,8 +45,27 @@
     /* 두 번째 길드부터 1명 이상일 때 보라색 */
     .guild-other-active { color: #a855f7; font-weight: bold; font-size: 0.95rem; }
 
-    .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .btn-reset:hover { background-color: #dc2626; }
+    /* 📌 화면 오른쪽 최하단 고정 전체 초기화 버튼 */
+    .btn-reset {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1000;
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .btn-reset:hover {
+      background-color: #dc2626;
+      transform: translateY(-2px);
+    }
 
     .party-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 4px; overflow-x: auto; }
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; white-space: nowrap; }
@@ -91,12 +110,14 @@
       <div id="guild-summary" class="summary-box"></div>
       <!-- 📌 갑옷 종류별 인원 집계 현황판 -->
       <div id="armor-summary" class="summary-box"></div>
-      <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
     </div>
   </div>
 
   <div id="party-tabs" class="party-tabs"></div>
   <div id="sheet-container"></div>
+
+  <!-- 📌 화면 우측 최하단 고정 버튼 -->
+  <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -164,7 +185,7 @@
         }
       });
 
-      // 📌 길드 요약 UI 렌더링 (첫번째: 0이면 빨강/1이상이면 초록, 두번째부터: 0이면 빨강/1이상이면 보라)
+      // 📌 길드 요약 UI 렌더링
       const guildSummaryContainer = document.getElementById('guild-summary');
       guildSummaryContainer.innerHTML = '';
       currentData.guilds.forEach((g, index) => {
@@ -184,7 +205,7 @@
         guildSummaryContainer.appendChild(itemDiv);
       });
 
-      // 📌 갑옷 요약 UI 렌더링 (0이면 빨강, 1이상이면 기본 흰색)
+      // 📌 갑옷 요약 UI 렌더링
       const armorSummaryContainer = document.getElementById('armor-summary');
       armorSummaryContainer.innerHTML = '';
       armorTargets.forEach(a => {
