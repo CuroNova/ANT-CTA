@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Another Guild CTA - 현황판</title>
+  <title>Another Guild CTA</title>
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
@@ -82,9 +82,8 @@
   <div class="header">
     <h1>⚔️ Another Guild CTA ⚔️</h1>
     <div class="header-right">
-      <!-- 📌 길드별 출석 현황판 미니 표가 들어갈 자리 -->
       <div id="guild-summary" class="guild-summary-box"></div>
-      <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+      <button class="btn-reset" onclick="requestReset()">전체 초기화</button>
     </div>
   </div>
 
@@ -121,8 +120,7 @@
       const allPartyNames = Object.keys(parties);
       if (allPartyNames.length === 0) return;
 
-      // 📌 길드별 출석 인원 계산 (닉네임이 입력되어 있고, 출석이 체크되었거나 슬롯에 인원이 채워진 경우 기준)
-      // 여기서는 닉네임이 입력된 슬롯을 대상으로 길드별 인원을 집계합니다.
+      // 길드별 출석 인원 계산
       const guildCounts = {};
       currentData.guilds.forEach(g => guildCounts[g] = 0);
       
@@ -231,10 +229,7 @@
 
           const itemCode = slot.itemCode || ''; 
           const itemImgUrl = `https://render.albiononline.com/v1/item/${itemCode}`;
-
-          // 📌 순번을 01, 02 형식의 두 자리 문자열로 변환
-          const rawIndex = slot.displayIndex || (idx + 1);
-          const formattedIndex = String(rawIndex).padStart(2, '0') + '번';
+          const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0') + '번';
 
           tbodyHtml += `
             <tr>
@@ -293,10 +288,36 @@
       }
     }
 
-    function resetAll() {
-      if (confirm('모든 데이터를 초기화하시겠습니까?')) {
-        socket.emit('resetData');
+    // 📌 관리자 코드 입력 검증 후 초기화 실행 (분리된 /api/admin-auth 호출)
+    function requestReset() {
+      const code = prompt('전체 초기화를 진행하려면 [관리자 코드]를 입력하세요:');
+      if (code === null) return; // 취소 버튼 누른 경우
+
+      if (code.trim() === '') {
+        alert('코드가 입력되지 않았습니다.');
+        return;
       }
+
+      // 서버의 관리자 전용 인증 API 호출
+      fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim() })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
+            socket.emit('resetData');
+          }
+        } else {
+          alert('관리자 코드가 일치하지 않습니다.');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('서버 통신 중 오류가 발생했습니다.');
+      });
     }
 
     function escapeHtml(str) {
