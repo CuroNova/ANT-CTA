@@ -18,8 +18,20 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
+    /* 📌 좌우 배치용 그리드 레이아웃 (1·2파티 동시 노출 시 좌우로 분할) */
+    .side-by-side-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 1400px) {
+      .side-by-side-grid {
+        grid-template-columns: 1fr; /* 화면이 좁아지면 세로로 자동 전환 */
+      }
+    }
+
     /* 파티별 서브 타이틀 */
-    .party-sub-title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; margin: 15px 0 8px 5px; }
+    .party-sub-title { color: #38bdf8; font-weight: bold; font-size: 1.1rem; margin: 0 0 8px 2px; }
 
     /* 엑셀 스타일 테이블 */
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px; }
@@ -97,7 +109,6 @@
         }
       });
 
-      // 만약 1,2파티 명칭이 다를 경우의 대비책
       if (tabs.length === 0) {
         allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
       }
@@ -117,23 +128,28 @@
         tabsContainer.appendChild(btn);
       });
 
-      // 2. 선택된 탭의 파티 표들 그리기 (1·2파티 선택 시 두 파티가 모두 화면에 출력됨)
+      // 2. 선택된 탭의 파티 표들 그리기 (1·2파티 선택 시 좌우 2열 그리드 구조 적용)
       const container = document.getElementById('sheet-container');
       container.innerHTML = '';
 
       const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
+      const isMulti = currentTab.parties.length > 1;
+
+      const gridWrapper = document.createElement('div');
+      gridWrapper.className = isMulti ? 'side-by-side-grid' : '';
+      container.appendChild(gridWrapper);
 
       currentTab.parties.forEach(partyName => {
         const partySlots = parties[partyName] || [];
         if (partySlots.length === 0) return;
 
-        // 탭 안에 여러 파티가 표시될 때 구분용 서브 타이틀 표시
-        if (currentTab.parties.length > 1) {
-          const subTitle = document.createElement('div');
-          subTitle.className = 'party-sub-title';
-          subTitle.innerText = `📌 ${partyName}`;
-          container.appendChild(subTitle);
-        }
+        const partyColumn = document.createElement('div');
+
+        // 파티 구분용 서브 타이틀
+        const subTitle = document.createElement('div');
+        subTitle.className = 'party-sub-title';
+        subTitle.innerText = `📌 ${partyName}`;
+        partyColumn.appendChild(subTitle);
 
         const tableWrapper = document.createElement('div');
         tableWrapper.className = 'excel-container';
@@ -191,7 +207,8 @@
             </tbody>
           </table>
         `;
-        container.appendChild(tableWrapper);
+        partyColumn.appendChild(tableWrapper);
+        gridWrapper.appendChild(partyColumn);
       });
     }
 
