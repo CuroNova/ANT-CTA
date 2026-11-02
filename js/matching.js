@@ -7,12 +7,15 @@ if (sessionStorage.getItem('just_logged_in') !== 'true') {
 const socket = io();
 let currentData = { slots: [], guilds: [], isParty3Disabled: false };
 let activeTabLabel = '';
-let isComposing = false; // 📌 한글 조합(IME) 중인지 확인하는 플래그 변수
 
-// 📌 소켓 데이터 수신 시 조합 중이면 리렌더링을 차단하여 한글 깨짐 방지
+// 📌 소켓 데이터 수신 시, 현재 입력 중인(포커스된) 상태라면 리렌더링을 아예 차단하여 입력 끊김 원천 차단
 socket.on('dataUpdated', (data) => {
   currentData = data;
-  if (isComposing) return; 
+  const activeEl = document.activeElement;
+  // 사용자가 인풋창이나 셀렉트박스 등 어딘가에 포커스를 두고 입력/조작 중이라면 리렌더링 스킵!
+  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
+    return; 
+  }
   render();
 });
 
@@ -68,10 +71,16 @@ function render() {
   const activeEl = document.activeElement;
   let activeSlotId = null;
   let activeFieldType = null;
+  let activeSelectionStart = null;
+  let activeSelectionEnd = null;
 
   if (activeEl && activeEl.dataset.slotId) {
     activeSlotId = activeEl.dataset.slotId;
     activeFieldType = activeEl.dataset.fieldType;
+    if (typeof activeEl.selectionStart === 'number') {
+      activeSelectionStart = activeEl.selectionStart;
+      activeSelectionEnd = activeEl.selectionEnd;
+    }
   }
 
   const parties = {};
@@ -274,8 +283,7 @@ function render() {
         let commentHtml = '';
         if (canEditComment) {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
-          // 📌 oncompositionstart / oncompositionend 추가로 한글 조합 중 렌더링 방지
-          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
           commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
@@ -297,7 +305,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -335,7 +343,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oncompositionstart="isComposing=true" oncompositionend="isComposing=false; render();" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -393,7 +401,9 @@ function render() {
     const targetToFocus = document.querySelector(selector);
     if (targetToFocus) {
       targetToFocus.focus();
-      if (targetToFocus.tagName === 'INPUT' && typeof targetToFocus.selectionStart === 'number') {
+      if (typeof activeSelectionStart === 'number' && typeof targetToFocus.setSelectionRange === 'function') {
+        targetToFocus.setSelectionRange(activeSelectionStart, activeSelectionEnd);
+      } else if (targetToFocus.tagName === 'INPUT') {
         const len = targetToFocus.value.length;
         targetToFocus.setSelectionRange(len, len);
       }
