@@ -7,6 +7,16 @@
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    
+    /* 초대코드 모달 스타일 */
+    #auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .auth-box { background: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; text-align: center; width: 320px; }
+    .auth-box h2 { margin-top: 0; color: #38bdf8; font-size: 1.3rem; }
+    .auth-box input { width: 100%; padding: 10px; margin: 15px 0; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; font-size: 1rem; text-align: center; }
+    .auth-box button { width: 100%; padding: 10px; background: #38bdf8; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; color: #0f172a; }
+    .auth-box button:hover { background: #0ea5e9; }
+    .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 5px; display: none; }
+
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     h1 { margin: 0; font-size: 1.5rem; color: #38bdf8; }
     .btn-reset { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -19,16 +29,29 @@
     .slot-row { display: flex; flex-direction: column; gap: 6px; background-color: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #334155; }
     .slot-row input, .slot-row select { background-color: #1e293b; color: #f8fafc; border: 1px solid #475569; padding: 6px; border-radius: 4px; font-size: 0.9rem; }
     .slot-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #94a3b8; }
+    
+    /* 출결 체크박스 스타일 */
+    .checkbox-label { display: flex; align-items: center; gap: 4px; color: #4ade80; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+    .checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+
     .slot-inputs { display: flex; gap: 6px; }
     .slot-inputs input[type="text"] { flex: 1; }
-    
-    .status-select { font-weight: bold; }
-    .status-pending { color: #cbd5e1; }
-    .status-joined { color: #4ade80; }
-    .status-absent { color: #f87171; }
+    .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; }
   </style>
 </head>
 <body>
+
+  <!-- 초대코드 입력 모달 -->
+  <div id="auth-modal">
+    <div class="auth-box">
+      <h2>🔒 초대코드 입력</h2>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">접속하려면 초대코드를 입력하세요.</p>
+      <input type="password" id="invite-input" placeholder="초대코드 입력" onkeydown="if(event.key==='Enter') verifyCode()" />
+      <button onclick="verifyCode()">입장하기</button>
+      <div id="error-msg" class="error-msg">초대코드가 틀렸습니다.</div>
+    </div>
+  </div>
+
   <div class="header">
     <h1>⚔️ guildCTA 실시간 매칭 현황판</h1>
     <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
@@ -41,6 +64,27 @@
     const socket = io();
     let currentData = { slots: [], guilds: [] };
 
+    // 접속 시 세션 체크
+    window.onload = function() {
+      if (sessionStorage.getItem('guildCTA_auth') === 'true') {
+        document.getElementById('auth-modal').style.display = 'none';
+      }
+    };
+
+    function verifyCode() {
+      const code = document.getElementById('invite-input').value;
+      socket.emit('verifyCode', code, (res) => {
+        if (res.success) {
+          sessionStorage.setItem('guildCTA_auth', 'true');
+          document.getElementById('auth-modal').style.display = 'none';
+        } else {
+          const errDiv = document.getElementById('error-msg');
+          errDiv.style.display = 'block';
+          errDiv.innerText = res.message;
+        }
+      });
+    }
+
     socket.on('dataUpdated', (data) => {
       currentData = data;
       render();
@@ -50,7 +94,6 @@
       const container = document.getElementById('app');
       container.innerHTML = '';
 
-      // Group by party
       const parties = {};
       currentData.slots.forEach(slot => {
         if (!parties[slot.party]) parties[slot.party] = [];
@@ -70,21 +113,19 @@
           html += `
             <div class="slot-row">
               <div class="slot-header">
-                <span>슬롯 ${slot.id}</span>
-                <select class="status-select status-${slot.status}" onchange="updateSlot('${slot.id}', 'status', this.value)">
-                  <option value="pending" ${slot.status === 'pending' ? 'selected' : ''}>대기중</option>
-                  <option value="joined" ${slot.status === 'joined' ? 'selected' : ''}>참여완료</option>
-                  <option value="absent" ${slot.status === 'absent' ? 'selected' : ''}>불참</option>
-                </select>
+                <span><strong>${slot.displayIndex}번</strong></span>
+                <label class="checkbox-label">
+                  <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)">
+                  출석체크
+                </label>
               </div>
               <div class="slot-inputs">
                 <input type="text" placeholder="닉네임" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
                 <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
-                  <option value="">길드 선택</option>
                   ${guildOptions}
                 </select>
               </div>
-              <input type="text" placeholder="메모 / 코멘트" value="${escapeHtml(slot.comment)}" onchange="updateSlot('${slot.id}', 'comment', this.value)" />
+              <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '메모/코멘트 (읽기 전용)')}" disabled />
             </div>
           `;
         });
