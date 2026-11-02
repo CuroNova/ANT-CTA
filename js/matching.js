@@ -89,7 +89,7 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링 (형태: 현재인원/총량, 예: 0/5)
+  // 📌 갑옷 요약 UI 렌더링 (현재 인원 부분만 색상 적용, 뒤의 /총량은 흰색)
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
@@ -98,11 +98,12 @@ function render() {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'summary-item';
 
-    const countClass = current > 0 ? 'armor-count-active' : 'zero-count';
+    // current가 0일 때와 0보다 클 때(색상 분기)
+    const currentClass = current === 0 ? 'zero-count' : 'armor-count-active';
 
     itemDiv.innerHTML = `
       <span class="summary-label">${a}</span>
-      <span class="${countClass}">${current}/${total}</span>
+      <span><span class="${currentClass}">${current}</span>/${total}</span>
     `;
     armorSummaryContainer.appendChild(itemDiv);
   });
@@ -156,7 +157,7 @@ function render() {
   gridWrapper.className = isMulti ? 'side-by-side-grid' : '';
   container.appendChild(gridWrapper);
 
-  currentTab.parties.forEach(partyName => {
+    currentTab.parties.forEach(partyName => {
     const partySlots = parties[partyName] || [];
 
     const partyColumn = document.createElement('div');
