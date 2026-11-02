@@ -229,33 +229,38 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-left] 영역에 인원현황/갑옷현황 박스와 100% 동일한 구조와 스타일의 .summary-item 박스로 렌더링
+  // 📌 1. [header-left] 영역에 다른 요약판들과 100% 동일한 `.summary-box` + `.summary-item` 구조로 DA 박스 주입
   const headerLeft = document.querySelector('.header-left');
   if (headerLeft) {
-    let daBox = document.getElementById('header-da-box');
-    if (!daBox) {
-      daBox = document.createElement('div');
-      daBox.id = 'header-da-box';
-      daBox.className = 'summary-item'; // 다른 요약 항목들과 완벽히 동일한 클래스
-      headerLeft.insertBefore(daBox, headerLeft.firstChild); // 맨 왼쪽에 삽입
+    let daBoxContainer = document.getElementById('header-da-summary-box');
+    if (!daBoxContainer) {
+      daBoxContainer = document.createElement('div');
+      daBoxContainer.id = 'header-da-summary-box';
+      daBoxContainer.className = 'summary-box'; // CSS에 정의된 박스 테두리/배경 적용
+      daBoxContainer.innerHTML = `
+        <div class="summary-item">
+          <span class="summary-label">DA</span>
+          <span id="header-da-value" class="zero-count">0</span>
+        </div>
+      `;
+      headerLeft.insertBefore(daBoxContainer, headerLeft.firstChild); // 맨 왼쪽에 삽입
     }
 
-    let countClass = 'zero-count';
-    if (daValue > 0) {
-      countClass = 'armor-count-active'; // 다른 활성 현황 숫자들과 동일한 강조 클래스 활용
+    const daValueSpan = document.getElementById('header-da-value');
+    if (daValueSpan) {
+      daValueSpan.innerText = daValue;
+      
+      // 수치별 색상 가시성 부여
+      if (daValue >= 20) {
+        daValueSpan.style.cssText = 'color: #f97316 !important; font-weight: bold; font-size: 0.95rem;'; // 주황색
+      } else if (daValue >= 10) {
+        daValueSpan.style.cssText = 'color: #eab308 !important; font-weight: bold; font-size: 0.95rem;'; // 노란색
+      } else if (daValue > 0) {
+        daValueSpan.style.cssText = 'color: #22c55e !important; font-weight: bold; font-size: 0.95rem;'; // 초록색(1~9)
+      } else {
+        daValueSpan.style.cssText = 'color: #f43f5e !important; font-weight: bold; font-size: 0.95rem;'; // 0일 때 zero-count 색상
+      }
     }
-
-    let daColorStyle = '';
-    if (daValue >= 20) {
-      daColorStyle = 'color: #f97316 !important;'; // 주황색
-    } else if (daValue >= 10) {
-      daColorStyle = 'color: #eab308 !important;'; // 노란색
-    }
-
-    daBox.innerHTML = `
-      <span class="summary-label">DA</span>
-      <span class="${countClass}" style="${daColorStyle}">${daValue}</span>
-    `;
   }
 
   // 📌 2. 길드 현황 업데이트
