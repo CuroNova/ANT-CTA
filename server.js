@@ -20,21 +20,21 @@ const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코�
 
 app.use(express.json());
 
-// 페이지 라우팅
+// 📌 페이지 라우팅 (public -> pages 폴더 경로 적용)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'login.html'));
 });
 
 app.get('/matching', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'matching.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'matching.html'));
 });
 
-// 정적 파일 및 이미지 서빙
-app.use(express.static('public'));
+// 📌 정적 파일 및 이미지 서빙 폴더 설정 (HTML 파일은 pages 폴더, 이미지는 images 폴더)
+app.use(express.static('pages'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // 📌 JSON 매핑 파일 로드 함수 (추가 설치 없음)
@@ -107,7 +107,7 @@ function loadInitialState() {
         const rawWeaponImg = parts[5] || '';                        // 6. 무기 이미지 링크
         const rawArmorImg = parts[6] || '';                         // 7. 갑옷 이미지 링크
 
-        // 📌 3단계 우선순위 적용
+        // 📌 3단계 우선순위 적용 (직접 입력 -> JSON 매핑 -> 기본 이미지)
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
 
