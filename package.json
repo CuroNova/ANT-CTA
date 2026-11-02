@@ -1,10 +1,10 @@
 {
-  "name": "guildcta",
+  "name": "Another Guild CTA",
   "version": "1.0.0",
-  "description": "guildCTA - Real-time Guild Matching System",
-  "main": "server.js",
+  "description": "Another Guild CTA",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
