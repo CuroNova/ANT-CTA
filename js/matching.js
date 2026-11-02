@@ -262,42 +262,45 @@ function render() {
           currentComment = activeInputValue;
         }
 
-        // 📌 관리자 여부에 따라 코멘트 필드 활성화/비활성화 처리
+        // 📌 관리자 여부에 따라 코멘트 입력창 활성화/비활성화 처리
         let commentHtml = '';
         if (isAdmin) {
-          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="updateSlot('${slot.id}', 'comment', this.value)" />`;
+          commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box;" />`;
         } else {
-          commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />`;
+          commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box;" />`;
         }
+
+        // 📌 일반 유저는 출석 체크박스 클릭 불가(disabled) 처리
+        const attendanceAttr = isAdmin ? '' : 'disabled';
 
         tbodyHtml += `
           <tr>
-            <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
-            <td style="width: 125px;">
+            <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
+            <td style="width: 110px;">
               <div class="gear-cell">
                 <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
                 <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
               </div>
             </td>
-            <td style="width: 125px;">
+            <td style="width: 95px;">
               <div class="gear-cell">
                 <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
                 <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
               </div>
             </td>
-            <td style="width: 140px;">
+            <td style="width: 250px;">
               ${commentHtml}
             </td>
-            <td style="width: 75px;">
-              <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild">
+            <td style="width: 65px;">
+              <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
                 ${guildOptions}
               </select>
             </td>
-            <td style="width: 150px;">
-              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" />
+            <td style="width: 115px;">
+              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
             </td>
-            <td style="width: 45px;" class="chk-center">
-              <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+            <td style="width: 35px;" class="chk-center">
+              <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
             </td>
           </tr>
         `;
@@ -308,13 +311,13 @@ function render() {
       <table class="sheet-table">
         <thead>
           <tr>
-            <th style="width: 45px; text-align: center;">순번</th>
-            <th style="width: 125px; text-align: center;">무기</th>
-            <th style="width: 125px; text-align: center;">갑옷</th>
-            <th style="width: 140px; text-align: center;">코멘트</th>
-            <th style="width: 75px; text-align: center;">길드</th>
-            <th style="width: 150px; text-align: center;">닉네임</th>
-            <th style="width: 45px; text-align: center;">출석</th>
+            <th style="width: 35px; text-align: center;">순번</th>
+            <th style="width: 110px; text-align: center;">무기</th>
+            <th style="width: 95px; text-align: center;">갑옷</th>
+            <th style="width: 250px; text-align: center;">코멘트</th>
+            <th style="width: 65px; text-align: center;">길드</th>
+            <th style="width: 115px; text-align: center;">닉네임</th>
+            <th style="width: 35px; text-align: center;">출석</th>
           </tr>
         </thead>
         <tbody>
@@ -347,7 +350,6 @@ function updateSlot(id, key, value) {
   }
 }
 
-// 📌 💡 관리자 인증 및 메뉴 오픈 함수 (세션 기반 권한 검증 추가)
 function verifyAdminAndOpenMenu() {
   if (sessionStorage.getItem('is_admin') === 'true') {
     openAdminFloatingModal();
@@ -377,7 +379,6 @@ function verifyAdminAndOpenMenu() {
 
     if (result.success) {
       sessionStorage.setItem('is_admin', 'true');
-      // 📌 관리자 권한 획득 시 화면을 다시 렌더링하여 코멘트 입력창 즉시 활성화
       render();
       openAdminFloatingModal();
     } else {
