@@ -88,7 +88,7 @@ function render() {
       }
     }
 
-    if (!slot.isEmptyParty) {
+    if (!slot.isEmptyParty && !slot.party.includes('FREE ROLE')) {
       const aName = slot.armorName || '';
       armorTargets.forEach(target => {
         if (aName.includes(target)) {
@@ -226,12 +226,14 @@ function render() {
     const tableWrapper = document.createElement('div');
     tableWrapper.className = 'excel-container';
 
+    const isFreeRole = partyName.includes('FREE ROLE');
     let tbodyHtml = '';
     
     if (isEmpty) {
+      const colspanVal = isFreeRole ? 5 : 7;
       tbodyHtml = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 30px; color: #64748b; font-weight: bold;">
+          <td colspan="${colspanVal}" style="text-align: center; padding: 30px; color: #64748b; font-weight: bold;">
             비활성화된 파티입니다.
           </td>
         </tr>
@@ -242,13 +244,7 @@ function render() {
           `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
         ).join('');
 
-        const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
-        const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
-        
         const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0');
-        const weaponName = slot.weaponName || '';
-        const armorName = slot.armorName || '';
-        const weaponTextColor = getRoleColor(slot.role);
 
         let currentNickname = slot.nickname;
         if (activeSlotId === slot.id && activeFieldType === 'nickname') {
@@ -262,69 +258,121 @@ function render() {
           currentComment = activeInputValue;
         }
 
-        // 📌 관리자 여부에 따라 코멘트 입력창 활성화/비활성화 처리
+        // 📌 관리자이거나 FREE ROLE인 경우 코멘트 입력창 활성화
+        const canEditComment = isAdmin || isFreeRole;
         let commentHtml = '';
-        if (isAdmin) {
+        if (canEditComment) {
           commentHtml = `<input type="text" placeholder="코멘트 입력" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box;" />`;
         } else {
           commentHtml = `<input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled style="width: 100%; box-sizing: border-box;" />`;
         }
 
-        // 📌 일반 유저는 출석 체크박스 클릭 불가(disabled) 처리
         const attendanceAttr = isAdmin ? '' : 'disabled';
 
-        tbodyHtml += `
-          <tr>
-            <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
-            <td style="width: 110px;">
-              <div class="gear-cell">
-                <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
-                <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
-              </div>
-            </td>
-            <td style="width: 95px;">
-              <div class="gear-cell">
-                <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
-                <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
-              </div>
-            </td>
-            <td style="width: 250px;">
-              ${commentHtml}
-            </td>
-            <td style="width: 65px;">
-              <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
-                ${guildOptions}
-              </select>
-            </td>
-            <td style="width: 115px;">
-              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
-            </td>
-            <td style="width: 35px;" class="chk-center">
-              <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
-            </td>
-          </tr>
-        `;
+        if (isFreeRole) {
+          // 📌 FREE ROLE용 테이블 행 (무기, 갑옷 제외 및 코멘트 칸 확장: 폭 455px)
+          tbodyHtml += `
+            <tr>
+              <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
+              <td style="width: 455px;">
+                ${commentHtml}
+              </td>
+              <td style="width: 65px;">
+                <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
+                  ${guildOptions}
+                </select>
+              </td>
+              <td style="width: 115px;">
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
+              </td>
+              <td style="width: 35px;" class="chk-center">
+                <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+              </td>
+            </tr>
+          `;
+        } else {
+          // 📌 일반 파티용 테이블 행
+          const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
+          const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
+          const weaponName = slot.weaponName || '';
+          const armorName = slot.armorName || '';
+          const weaponTextColor = getRoleColor(slot.role);
+
+          tbodyHtml += `
+            <tr>
+              <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
+              <td style="width: 110px;">
+                <div class="gear-cell">
+                  <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
+                  <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
+                </div>
+              </td>
+              <td style="width: 95px;">
+                <div class="gear-cell">
+                  <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
+                  <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
+                </div>
+              </td>
+              <td style="width: 250px;">
+                ${commentHtml}
+              </td>
+              <td style="width: 65px;">
+                <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild" style="width: 100%; box-sizing: border-box;">
+                  ${guildOptions}
+                </select>
+              </td>
+              <td style="width: 115px;">
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box;" />
+              </td>
+              <td style="width: 35px;" class="chk-center">
+                <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
+              </td>
+            </tr>
+          `;
+        }
       });
     }
 
-    tableWrapper.innerHTML = `
-      <table class="sheet-table">
-        <thead>
-          <tr>
-            <th style="width: 35px; text-align: center;">순번</th>
-            <th style="width: 110px; text-align: center;">무기</th>
-            <th style="width: 95px; text-align: center;">갑옷</th>
-            <th style="width: 250px; text-align: center;">코멘트</th>
-            <th style="width: 65px; text-align: center;">길드</th>
-            <th style="width: 115px; text-align: center;">닉네임</th>
-            <th style="width: 35px; text-align: center;">출석</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tbodyHtml}
-        </tbody>
-      </table>
-    `;
+    if (isFreeRole) {
+      // 📌 FREE ROLE 전용 테이블 헤더 (무기, 갑옷 제외 및 코멘트 폭 대폭 확장)
+      tableWrapper.innerHTML = `
+        <table class="sheet-table">
+          <thead>
+            <tr>
+              <th style="width: 35px; text-align: center;">순번</th>
+              <th style="width: 455px; text-align: center;">코멘트</th>
+              <th style="width: 65px; text-align: center;">길드</th>
+              <th style="width: 115px; text-align: center;">닉네임</th>
+              <th style="width: 35px; text-align: center;">출석</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tbodyHtml}
+          </tbody>
+        </table>
+      `;
+    } else {
+      // 📌 일반 파티 전용 테이블 헤더
+      tableWrapper.innerHTML = `
+        <table class="sheet-table">
+          <thead>
+            <tr>
+              <th style="width: 35px; text-align: center;">순번</th>
+              <th style="width: 110px; text-align: center;">무기</th>
+              <th style="width: 95px; text-align: center;">갑옷</th>
+              <th style="width: 250px; text-align: center;">코멘트</th>
+              <th style="width: 65px; text-align: center;">길드</th>
+              <th style="width: 115px; text-align: center;">닉네임</th>
+              <th style="width: 35px; text-align: center;">출석</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tbodyHtml}
+          </tbody>
+        </table>
+      `;
+    }
+
     partyColumn.appendChild(tableWrapper);
     gridWrapper.appendChild(partyColumn);
   });
