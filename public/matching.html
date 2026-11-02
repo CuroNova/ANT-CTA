@@ -227,8 +227,8 @@
             `<option value="${g}" ${(slot.guild || 'ANT') === g ? 'selected' : ''}>${g}</option>`
           ).join('');
 
-          // 📌 이미지 링크가 비어있으면 로컬 기본 이미지(/images/default_weapon) 적용, 깨질 경우에도 폴백 처리
-          const itemImgUrl = (slot.itemCode && slot.itemCode.trim() !== '') ? slot.itemCode : '/images/default_weapon';
+          // 📌 이미지 링크가 비어있으면 로컬 기본 이미지(/images/default_weapon.png) 적용, 깨질 경우에도 폴백 처리
+          const itemImgUrl = (slot.itemCode && slot.itemCode.trim() !== '') ? slot.itemCode : '/images/default_weapon.png';
           const formattedIndex = String(slot.displayIndex || (idx + 1)).padStart(2, '0') + '번';
           const weaponName = slot.weaponName || '';
 
@@ -237,7 +237,7 @@
               <td style="width: 50px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
               <td style="width: 130px;">
                 <div class="weapon-cell">
-                  <img src="${itemImgUrl}" alt="Weapon" class="item-img" onerror="this.src='/images/default_weapon'" />
+                  <img src="${itemImgUrl}" alt="Weapon" class="item-img" onerror="this.src='/images/default_weapon.png'" />
                   <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
                 </div>
               </td>
