@@ -1,20 +1,20 @@
 {
   "armor": {
-    "데몬": "/images/armor_demon.png",
-    "심판관": "/images/armor_judicator.png",
-    "기사": "/images/armor_knight.png",
-    "가디언": "/images/armor_guardian.png",
-    "더스크": "/images/armor_duskweaver.png",
-    "왕실아머": "/images/armor_royalarmor.png",
-    "왕실재킷": "/images/armor_royaljacket.png",
-    "재킷": "/images/armor_mercenary.png",
-    "로브": "/images/armor_robe.png",
-    "판금": "/images/armor_plate.png"
+    "데몬": "armor/armor_demon.png",
+    "심판관": "armor/armor_judicator.png",
+    "기사": "armor/armor_knight.png",
+    "가디언": "armor/armor_guardian.png",
+    "더스크": "armor/armor_duskweaver.png",
+    "왕실아머": "armor/armor_royalarmor.png",
+    "왕실재킷": "armor/armor_royaljacket.png",
+    "재킷": "armor/armor_mercenary.png",
+    "로브": "armor/armor_robe.png",
+    "판금": "armor/armor_plate.png"
   },
   "weapon": {
-    "자유무기": "/images/weapon_free.png",
-    "저거넛": "/images/battlemount_juggernaut.png",
-    "체리엇": "/images/battlemount_chariot.png",
-    "어스룬": "/images/weapon_earthrune.png"
+    "자유무기": "weapon/weapon_free.png",
+    "저거넛": "battlemount/battlemount_juggernaut.png",
+    "체리엇": "battlemount/battlemount_chariot.png",
+    "어스룬": "weapon/weapon_earthrune.png"
   }
 }
