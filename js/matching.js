@@ -524,7 +524,7 @@ function renderPartyTables() {
         <thead>
           <tr>
             <th style="width: 35px; text-align: center;">순번</th>
-            ${isFreeRole ? '<th style="width: 455px; text-align: center;">희망 포지션</th>' : '<th style="width: 110px; text-align: center;">무기</th><th style="width: 95px; text-align: center;">갑옷</th><th style="width: 250px; text-align: center;">권고사항</th>'}
+            ${isFreeRole ? '<th style="width: 455px; text-align: center;">희망 포지션</th>' : '<th style="width: 110px; text-align: center;">무기</th><th style="width: 95px; text-align: center;">갑옷</th><th style="width: 250px; text-align: center;">코멘트</th>'}
             <th style="width: 65px; text-align: center;">길드</th>
             <th style="width: 115px; text-align: center;">닉네임</th>
             <th style="width: 35px; text-align: center;">출석</th>
