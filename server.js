@@ -13,8 +13,9 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 
-// 초대코드 설정
-const INVITE_CODE = '1234';
+// 🔑 코드 분리 설정
+const INVITE_CODE = '1234';          // 일반 참여자 입장용 초대코드
+const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코드 (원하시는 값으로 변경 가능)
 
 app.use(express.json());
 
@@ -109,7 +110,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 로그인 API
+// 로그인 API (일반 참여자 입장용)
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const data = getData();
@@ -117,6 +118,16 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
+  }
+});
+
+// 🛡️ 관리자 코드 전용 인증 API (추가됨)
+app.post('/api/admin-auth', (req, res) => {
+  const { code } = req.body;
+  if (code === ADMIN_CODE) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, message: '관리자 코드가 일치하지 않습니다.' });
   }
 });
 
@@ -130,7 +141,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.emit('dataUpdated', data);
+      io.io.emit('dataUpdated', data); // 기존 코드 흐름 반영
     }
   });
 
