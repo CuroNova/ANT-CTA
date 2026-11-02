@@ -1,15 +1,15 @@
 {
   "armor": {
-    "데몬": "armor/armor_demon.png",
-    "심판관": "armor/armor_judicator.png",
-    "기사": "armor/armor_knight.png",
-    "가디언": "armor/armor_guardian.png",
-    "더스크": "armor/armor_duskweaver.png",
-    "왕실아머": "armor/armor_royalarmor.png",
-    "왕실재킷": "armor/armor_royaljacket.png",
-    "재킷": "armor/armor_mercenary.png",
-    "로브": "armor/armor_robe.png",
-    "판금": "armor/armor_plate.png"
+    "데몬": "armor/armor_Demon.png",
+    "심판관": "armor/armor_Judicator.png",
+    "기사": "armor/armor_Knight.png",
+    "가디언": "armor/armor_Guardian.png",
+    "더스크": "armor/armor_Duskweaver.png",
+    "왕실아머": "armor/armor_Royalarmor.png",
+    "왕실재킷": "armor/armor_Royaljacket.png",
+    "재킷": "armor/armor_Mercenary.png",
+    "로브": "armor/armor_Robe.png",
+    "판금": "armor/armor_Plate.png"
   },
   "weapon": {
     "자유무기": "weapon/weapon_Free.png",
