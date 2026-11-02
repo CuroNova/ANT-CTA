@@ -378,8 +378,10 @@ function openAdminFloatingModal() {
     z-index: 9999; backdrop-filter: blur(4px);
   `;
 
-  modal.innerHTML = `
-    <div style="background: #1e293b; padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 1px solid #334155; text-align: center; color: #f8fafc;">
+  // 1. 관리자 메인 메뉴 렌더링 함수
+  const renderMainMenu = () => {
+    const contentDiv = modal.querySelector('.modal-content');
+    contentDiv.innerHTML = `
       <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -395,38 +397,68 @@ function openAdminFloatingModal() {
       <button id="btn-close-modal" style="margin-top: 20px; padding: 8px 16px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
         닫기
       </button>
-    </div>
-  `;
+    `;
 
-  document.body.appendChild(modal);
+    contentDiv.querySelector('#btn-close-modal').onclick = () => {
+      modal.remove();
+      activeTabLabel = '1·2파티';
+      render();
+    };
 
-  document.getElementById('btn-close-modal').onclick = () => {
-    modal.remove();
-    activeTabLabel = '1·2파티';
-    render();
+    contentDiv.querySelector('#btn-loadout-change').onclick = () => {
+      fetch('/api/admin/loadouts')
+        .then(res => res.json())
+        .then(resData => {
+          if (!resData.success || resData.files.length === 0) {
+            alert('loadouts 폴더에 사용 가능한 .txt 파일이 없습니다.');
+            return;
+          }
+          renderLoadoutSelection(resData.files);
+        })
+        .catch(err => {
+          console.error(err);
+          alert('서버 통신 중 오류가 발생했습니다.');
+        });
+    };
+
+    contentDiv.querySelector('#btn-reset-data').onclick = () => {
+      if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
+        socket.emit('resetData');
+        modal.remove();
+        activeTabLabel = '1·2파티';
+        render();
+        alert('데이터가 초기화되었습니다.');
+      }
+    };
   };
 
-  // 📌 조합 변경 버튼 클릭 이벤트 (.txt 제외한 이름 리스트 연동)
-  document.getElementById('btn-loadout-change').onclick = () => {
-    fetch('/api/admin/loadouts')
-      .then(res => res.json())
-      .then(resData => {
-        if (!resData.success || resData.files.length === 0) {
-          alert('loadouts 폴더에 사용 가능한 .txt 파일이 없습니다.');
-          return;
-        }
+  // 2. 조합 선택 버튼 목록 렌더링 함수
+  const renderLoadoutSelection = (files) => {
+    const contentDiv = modal.querySelector('.modal-content');
+    
+    let buttonsHtml = files.map(filename => `
+      <button class="loadout-select-btn" data-filename="${filename}" style="padding: 10px 12px; background: #334155; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: left; transition: background 0.2s; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #38bdf8;">📄</span> ${filename}
+      </button>
+    `).join('');
 
-        let fileListStr = resData.files.map((name, i) => `${i + 1}. ${name}`).join('\n');
-        let selectedIdxStr = prompt(`변경할 조합 번호를 입력하세요:\n\n${fileListStr}`);
-        if (!selectedIdxStr) return;
+    contentDiv.innerHTML = `
+      <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.15rem; color: #38bdf8;">📂 변경할 조합 선택</h3>
+      
+      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-bottom: 15px; padding-right: 4px;">
+        ${buttonsHtml}
+      </div>
 
-        let idx = parseInt(selectedIdxStr.trim()) - 1;
-        if (isNaN(idx) || !resData.files[idx]) {
-          alert('올바른 번호를 입력해주세요.');
-          return;
-        }
+      <button id="btn-back-menu" style="padding: 8px 16px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+        🔙 뒤로 가기
+      </button>
+    `;
 
-        let chosenFileName = resData.files[idx];
+    contentDiv.querySelector('#btn-back-menu').onclick = renderMainMenu;
+
+    contentDiv.querySelectorAll('.loadout-select-btn').forEach(btn => {
+      btn.onclick = () => {
+        const chosenFileName = btn.dataset.filename;
         fetch('/api/admin/change-loadout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -443,22 +475,17 @@ function openAdminFloatingModal() {
             alert(rRes.message || '변경 실패');
           }
         });
-      })
-      .catch(err => {
-        console.error(err);
-        alert('서버 통신 중 오류가 발생했습니다.');
-      });
+      };
+    });
   };
 
-  document.getElementById('btn-reset-data').onclick = () => {
-    if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
-      socket.emit('resetData');
-      modal.remove();
-      activeTabLabel = '1·2파티';
-      render();
-      alert('데이터가 초기화되었습니다.');
-    }
-  };
+  modal.innerHTML = `
+    <div class="modal-content" style="background: #1e293b; padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 1px solid #334155; text-align: center; color: #f8fafc;">
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  renderMainMenu();
 }
 
 function escapeHtml(str) {
