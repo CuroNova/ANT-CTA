@@ -71,6 +71,21 @@ function loadInitialState() {
     });
   }
 
+  // 📌 "FREE ROLE" 파티 및 기본 빈 슬롯 5개 생성
+  const freeRoleSlotsCount = 5;
+  for (let i = 1; i <= freeRoleSlotsCount; i++) {
+    initialSlots.push({
+      id: `FREEROLE_${i}`,
+      itemCode: 'T8_MAIN_SWORD', // 기본 아이템 코드
+      displayIndex: i,
+      party: 'FREE ROLE',
+      nickname: '',
+      guild: 'ANT',
+      comment: '자유 롤',
+      attended: false
+    });
+  }
+
   return { slots: initialSlots, guilds, inviteCode: INVITE_CODE };
 }
 
