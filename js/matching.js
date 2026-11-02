@@ -31,14 +31,12 @@ function initUtcClock(selector = '[data-utc-clock]') {
     });
   }
 
-  // 즉시 실행 및 1초 간격 갱신
   update();
   setInterval(update, 1000);
 }
 
-// 페이지가 로드되면 언제든 실행
 document.addEventListener('DOMContentLoaded', () => {
-  initUtcClock('[data-utc-clock]'); // 이 셀렉터를 가진 모든 요소에 시계 기능 주입
+  initUtcClock('[data-utc-clock]');
 });
 
 function getRoleColor(role) {
@@ -55,6 +53,16 @@ function getRoleColor(role) {
 }
 
 function render() {
+  // 📌 1. 현재 사용자가 포커스 중인 요소(입력 중인 인풋 등)의 정보 파악 (포커스 유실 방지 핵심)
+  const activeEl = document.activeElement;
+  let activeSlotId = null;
+  let activeFieldType = null; // 'nickname' 또는 'guild' 등
+
+  if (activeEl && activeEl.dataset.slotId) {
+    activeSlotId = activeEl.dataset.slotId;
+    activeFieldType = activeEl.dataset.fieldType;
+  }
+
   const parties = {};
   currentData.slots.forEach(slot => {
     if (!parties[slot.party]) parties[slot.party] = [];
@@ -64,11 +72,11 @@ function render() {
   const allPartyNames = Object.keys(parties);
   if (allPartyNames.length === 0) return;
 
-  // 📌 1. 길드별 참여 인원 집계
+  // 📌 2. 길드별 참여 인원 집계
   const guildCounts = {};
   currentData.guilds.forEach(g => guildCounts[g] = 0);
   
-  // 📌 2. 주요 갑옷 종류별 인원 집계 (현재 착용 인원 / 전체 지정 총량)
+  // 📌 3. 주요 갑옷 종류별 인원 집계
   const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
   const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
   const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
@@ -83,21 +91,20 @@ function render() {
       }
     }
 
-    // 비어있는 파티 슬롯은 갑옷 총량 집계에서 제외
     if (!slot.isEmptyParty) {
       const aName = slot.armorName || '';
       armorTargets.forEach(target => {
         if (aName.includes(target)) {
-          armorTotalCounts[target]++; // 전체 지정된 총량 증가
+          armorTotalCounts[target]++;
           if (slot.nickname && slot.nickname.trim() !== '') {
-            armorCurrentCounts[target]++; // 실제 착용 중인 인원 증가
+            armorCurrentCounts[target]++;
           }
         }
       });
     }
   });
 
-  // 📌 길드 요약 UI 렌더링 ("명" 단위 제거 및 고정 폭 적용)
+  // 📌 길드 요약 UI 렌더링
   const guildSummaryContainer = document.getElementById('guild-summary');
   guildSummaryContainer.innerHTML = '';
   currentData.guilds.forEach((g, index) => {
@@ -117,7 +124,7 @@ function render() {
     guildSummaryContainer.appendChild(itemDiv);
   });
 
-  // 📌 갑옷 요약 UI 렌더링 (0만 빨간색, 뒤의 /총량은 흰색)
+  // 📌 갑옷 요약 UI 렌더링
   const armorSummaryContainer = document.getElementById('armor-summary');
   armorSummaryContainer.innerHTML = '';
   armorTargets.forEach(a => {
@@ -189,7 +196,6 @@ function render() {
 
     const partyColumn = document.createElement('div');
 
-    // 📌 빈 파티(isEmptyParty: true) 판별 로직
     const isEmpty = partySlots.length === 0 || (partySlots.length === 1 && partySlots[0].isEmptyParty);
     const maxCount = isEmpty ? 0 : partySlots.length;
     const currentCount = isEmpty ? 0 : partySlots.filter(s => s.nickname && s.nickname.trim() !== '').length;
@@ -229,6 +235,13 @@ function render() {
         
         const weaponTextColor = getRoleColor(slot.role);
 
+        // 📌 사용자가 입력 중인 필드라면 서버 데이터가 새로 들어와도 현재 입력값을 우선 유지 (커서 튐 방지)
+        let currentNickname = slot.nickname;
+        if (activeSlotId === slot.id && activeFieldType === 'nickname') {
+          const activeInputValue = activeEl ? activeEl.value : slot.nickname;
+          currentNickname = activeInputValue;
+        }
+
         tbodyHtml += `
           <tr>
             <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
@@ -248,12 +261,12 @@ function render() {
               <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
             </td>
             <td style="width: 75px;">
-              <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+              <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild">
                 ${guildOptions}
               </select>
             </td>
             <td style="width: 150px;">
-              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" />
             </td>
             <td style="width: 45px;" class="chk-center">
               <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -284,6 +297,20 @@ function render() {
     partyColumn.appendChild(tableWrapper);
     gridWrapper.appendChild(partyColumn);
   });
+
+  // 📌 4. 렌더링 직후 사용자가 포커스 중이던 요소가 있었다면 포커스를 정확히 재복구
+  if (activeSlotId && activeFieldType) {
+    const selector = `[data-slot-id="${activeSlotId}"][data-field-type="${activeFieldType}"]`;
+    const targetToFocus = document.querySelector(selector);
+    if (targetToFocus) {
+      targetToFocus.focus();
+      // 텍스트 인풋인 경우 커서가 맨 앞으로 튀는 현상을 막기 위해 맨 뒤로 이동
+      if (targetToFocus.tagName === 'INPUT' && typeof targetToFocus.selectionStart === 'number') {
+        const len = targetToFocus.value.length;
+        targetToFocus.setSelectionRange(len, len);
+      }
+    }
+  }
 }
 
 function updateSlot(id, key, value) {
