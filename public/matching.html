@@ -18,21 +18,21 @@
     .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-    /* 엑셀 스타일 테이블 (타이트한 맞춤 너비 설정) */
+    /* 엑셀 스타일 테이블 */
     .excel-container { overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; }
     table.sheet-table { width: 100%; border-collapse: collapse; table-layout: auto; text-align: left; }
     table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 8px; font-size: 0.88rem; border-bottom: 2px solid #334155; border-right: 1px solid #1e293b; white-space: nowrap; }
-    table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; vertical-align: middle; }
+    table.sheet-table td { padding: 6px 8px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; }
     table.sheet-table tr:hover { background-color: #273549; }
 
     /* 알비온 아이템 이미지 스타일 */
-    .weapon-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .weapon-cell { display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
     .item-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
 
-    /* 입력 요소 스타일 (여백 및 너비 최적화) */
+    /* 입력 요소 스타일 */
     input[type="text"], select { width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 5px 6px; border-radius: 4px; font-size: 0.85rem; }
-    select { padding-right: 2px; } /* 길드 선택창 축소 */
-    .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; }
+    select { padding-right: 2px; text-align: center; }
+    .readonly-comment { background-color: #090d16 !important; color: #64748b !important; cursor: not-allowed; border-color: #1e293b !important; text-align: center; }
     
     .chk-center { text-align: center; }
     .chk-center input { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
@@ -54,10 +54,10 @@
       <thead>
         <tr>
           <th style="width: 50px; text-align: center;">순번</th>
-          <th style="width: 110px;">무기</th>
-          <th>코멘트</th>
-          <th style="width: 75px;">길드</th>
-          <th style="width: 180px;">닉네임</th>
+          <th style="width: 110px; text-align: center;">무기</th>
+          <th style="width: 150px; text-align: center;">코멘트</th>
+          <th style="width: 75px; text-align: center;">길드</th>
+          <th style="width: 160px; text-align: center;">닉네임</th>
           <th style="width: 50px; text-align: center;">출석</th>
         </tr>
       </thead>
