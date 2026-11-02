@@ -91,7 +91,7 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
-// 📌 💡 기존 슬롯 데이터에서 사용자 입력값(닉네임, 출석, 코멘트, 길드)을 백업하는 함수
+// 📌 💡 닉네임, 길드, 출석 상태(그리고 Free Role의 희망 포지션 역할인 코멘트 등 개인 입력값)만 백업
 function getExistingUserDataMap() {
   const map = new Map();
   if (fs.existsSync(DATA_FILE)) {
@@ -103,8 +103,9 @@ function getExistingUserDataMap() {
             map.set(slot.id, {
               nickname: slot.nickname || '',
               attended: slot.attended || false,
-              comment: slot.comment || '',
-              guild: slot.guild || ''
+              guild: slot.guild || '',
+              // Free Role 파티의 경우 코멘트 칸이 '희망 포지션' 입력란이므로 이 값도 개인 입력 데이터로 보존함
+              comment: slot.party && slot.party.includes('FREE ROLE') ? (slot.comment || '') : ''
             });
           }
         });
@@ -116,12 +117,14 @@ function getExistingUserDataMap() {
   return map;
 }
 
-// 📌 초기 데이터 로드 함수 (기존 입력 데이터 병합 로직 추가)
-function loadInitialState(isParty3Disabled = false) {
+// 📌 초기 데이터 로드 함수
+function loadInitialState(isParty3Disabled = false, isReset = false) {
   let initialSlots = [];
   const mappingConfig = loadMappingConfig();
   const config = loadConfig();
-  const savedUserDataMap = getExistingUserDataMap(); // 💡 이전에 입력되었던 유저 데이터 확보
+  
+  // 💡 초기화(reset) 시에는 백업본을 비워 길드/닉네임/출석/희망포지션이 싹 비워지게 함
+  const savedUserDataMap = isReset ? new Map() : getExistingUserDataMap();
 
   const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
@@ -155,7 +158,7 @@ function loadInitialState(isParty3Disabled = false) {
         const roleName = parts[1] || '';     // 2. 역할명
         const weaponName = parts[2] || '';   // 3. 무기명
         const armorName = parts[3] || '';    // 4. 갑옷명
-        const commentText = parts[4] || '';  // 5. 코멘트
+        const commentText = parts[4] || '';  // 5. 코멘트 (txt 원본 값)
         const rawWeaponImg = parts[5] || ''; // 6. 무기 이미지 링크
         const rawArmorImg = parts[6] || '';  // 7. 갑옷 이미지 링크
 
@@ -165,18 +168,22 @@ function loadInitialState(isParty3Disabled = false) {
         const isTargetParty3 = isParty3Disabled && currentParty.includes('3') && currentParty !== 'FREE ROLE';
         if (isTargetParty3) return;
 
-        // 💡 만약 이 slotId에 대해 이전에 입력된 데이터가 있다면 복원, 없으면 기본값 사용
+        // 💡 기본적으로 코멘트는 txt 파일 원본(commentText)을 따름
         let userNickname = '';
         let userAttended = false;
-        let userComment = commentText;
         let userGuild = guilds[0] || 'ANT';
+        let finalComment = commentText; 
 
+        // 💡 조합표 변경 시 닉네임, 길드, 출석은 유지하되 일반 파티 코멘트는 txt 원본을 따름 (Free Role은 희망포지션 유지)
         if (savedUserDataMap.has(slotId)) {
           const saved = savedUserDataMap.get(slotId);
           userNickname = saved.nickname;
           userAttended = saved.attended;
-          userComment = saved.comment !== '' ? saved.comment : commentText; // 사용자가 수정한 코멘트 우선 적용
           if (saved.guild) userGuild = saved.guild;
+
+          if (currentParty.includes('FREE ROLE') && saved.comment) {
+            finalComment = saved.comment; // Free Role의 희망 포지션은 유지
+          }
         }
 
         slotsByParty[currentParty].push({
@@ -190,14 +197,14 @@ function loadInitialState(isParty3Disabled = false) {
           party: currentParty,
           nickname: userNickname,
           guild: userGuild,
-          comment: userComment,
+          comment: finalComment,
           attended: userAttended
         });
       }
     });
 
     definedParties.forEach(pName => {
-      const isTargetParty3 = isParty3Disabled && pName.includes('3' ) && pName !== 'FREE ROLE';
+      const isTargetParty3 = isParty3Disabled && pName.includes('3') && pName !== 'FREE ROLE';
 
       if (isTargetParty3) {
         initialSlots.push({
@@ -246,28 +253,23 @@ function loadInitialState(isParty3Disabled = false) {
   };
 }
 
-// 📌 💡 슬롯 코멘트 변경 시 활성화된 .txt 파일의 해당 줄을 실시간으로 수정하는 함수
+// 📌 슬롯 코멘트 변경 시 활성화된 .txt 파일의 해당 줄을 실시간으로 수정하여 파일에 반영
 function updateTxtFileLine(slotId, newComment) {
   try {
     if (!fs.existsSync(currentPartiesFile)) return;
     const content = fs.readFileSync(currentPartiesFile, 'utf8');
     const lines = content.split('\n');
-    let updated = false;
 
     const newLines = lines.map(line => {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('[') || trimmed.startsWith(';')) {
         return line;
       }
-      // 해당 줄이 "slotId"로 시작하는지 확인
       if (trimmed.startsWith(`"${slotId}"`)) {
         const matches = trimmed.match(/"([^"]*)"/g);
         if (matches && matches.length >= 5) {
-          // 파싱된 부분 중 5번째 요소(인덱스 4)가 코멘트 영역임
           const parts = matches.map(m => m);
-          parts[4] = `"${newComment}"`; // 코멘트 내용 교체
-          
-          // 기존 라인의 구조 형태를 유지하면서 재조립 (예: "id","role","weapon","armor","comment","weaponImg","armorImg")
+          parts[4] = `"${newComment}"`;
           let reconstructed = parts.join(',');
           return reconstructed;
         }
@@ -275,9 +277,7 @@ function updateTxtFileLine(slotId, newComment) {
       return line;
     });
 
-    if (updated || true) {
-      fs.writeFileSync(currentPartiesFile, newLines.join('\n'), 'utf8');
-    }
+    fs.writeFileSync(currentPartiesFile, newLines.join('\n'), 'utf8');
   } catch (err) {
     console.error('❌ .txt 파일 코멘트 업데이트 실패:', err);
   }
@@ -390,7 +390,6 @@ io.on('connection', (socket) => {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
 
-      // 💡 만약 코멘트(또는 희망 포지션)가 수정되었다면 현재 활성화된 .txt 파일에도 실시간 반영
       if (updatedSlot.comment !== undefined) {
         updateTxtFileLine(updatedSlot.id, updatedSlot.comment);
       }
@@ -409,7 +408,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('resetData', () => {
-    const resetData = loadInitialState(false);
+    // 💡 초기화 시에는 isReset을 true로 주어 닉네임, 길드, 출석, 희망포지션만 싹 비우고 txt 원본 코멘트 상태로 돌림
+    const resetData = loadInitialState(false, true); 
     saveData(resetData);
     io.emit('dataUpdated', resetData);
   });
