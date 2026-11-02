@@ -259,34 +259,32 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 기존 HTML 내에 인원현황/갑옷현황과 나란히 위치할 DA 박스 자동 동적 주입 (인원/갑옷현황처럼 스크롤 시 제자리에 머묌)
-  const guildSummaryContainer = document.getElementById('guild-summary');
-  if (guildSummaryContainer) {
-    const summaryBox = guildSummaryContainer.closest('.summary-box') || guildSummaryContainer.parentElement;
-    if (summaryBox) {
-      let daWrapper = document.getElementById('da-summary-wrapper');
-      if (!daWrapper) {
-        daWrapper = document.createElement('div');
-        daWrapper.id = 'da-summary-wrapper';
-        daWrapper.className = 'summary-item';
-        summaryBox.insertBefore(daWrapper, summaryBox.firstChild);
-      }
-
-      let daColorHex = '#f8fafc'; // 기본 흰색 (0)
-      if (daValue >= 20) {
-        daColorHex = '#f97316'; // 20 이상: 주황색
-      } else if (daValue >= 10) {
-        daColorHex = '#eab308'; // 10 이상: 노란색
-      }
-
-      daWrapper.innerHTML = `
-        <span class="summary-label">DA</span>
-        <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
-      `;
+  // 📌 1. [header-left] 영역에 DA 박스 자동 주입 및 렌더링
+  const headerLeft = document.querySelector('.header-left');
+  if (headerLeft) {
+    let daBox = document.getElementById('header-da-box');
+    if (!daBox) {
+      daBox = document.createElement('div');
+      daBox.id = 'header-da-box';
+      daBox.className = 'summary-item'; // 기존 스타일 호환
+      headerLeft.insertBefore(daBox, headerLeft.firstChild); // 맨 왼쪽에 삽입
     }
+
+    let daColorHex = '#f8fafc'; // 기본 흰색 (0)
+    if (daValue >= 20) {
+      daColorHex = '#f97316'; // 주황색
+    } else if (daValue >= 10) {
+      daColorHex = '#eab308'; // 노란색
+    }
+
+    daBox.innerHTML = `
+      <span class="summary-label">DA</span>
+      <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
+    `;
   }
 
-  // 📌 길드 현황 업데이트
+  // 📌 2. 길드 현황 업데이트
+  const guildSummaryContainer = document.getElementById('guild-summary');
   if (guildSummaryContainer && currentData.guilds) {
     guildSummaryContainer.innerHTML = '';
     currentData.guilds.forEach((g, index) => {
@@ -307,7 +305,7 @@ function renderSummaryPanels() {
     });
   }
 
-  // 📌 갑옷 현황 업데이트
+  // 📌 3. 갑옷 현황 업데이트
   const armorSummaryContainer = document.getElementById('armor-summary');
   if (armorSummaryContainer) {
     armorSummaryContainer.innerHTML = '';
