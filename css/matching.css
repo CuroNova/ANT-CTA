@@ -109,7 +109,7 @@ h1 {
 .btn-reset {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 34px;
   z-index: 1000;
   background-color: #ef4444;
   color: white;
