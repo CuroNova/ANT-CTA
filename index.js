@@ -114,7 +114,7 @@ function loadInitialState() {
       if (!line) return;
       
       if (line.startsWith('[') && line.endsWith(']')) {
-        currentParty = line.replace(/[[\]]/g, '');
+        currentParty = line.replace(/[\[\]]/g, '');
         partySlotCounter = 1; 
         if (!definedParties.includes(currentParty)) {
           definedParties.push(currentParty);
