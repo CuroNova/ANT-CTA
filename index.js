@@ -13,10 +13,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'settings', 'guilds.txt');
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
-
-// 🔑 코드 설정 (필요시 여기서 수정 가능)
-const INVITE_CODE = '1234';         // 일반 참여자 입장용 초대코드
-const ADMIN_CODE = 'admin9999';     // 🛡️ 관리자 초기화 전용 코드
+const PASSWORD_FILE = path.join(__dirname, 'settings', 'password.json'); // 🔑 비밀번호 설정 파일 경로
 
 app.use(express.json());
 
@@ -37,6 +34,26 @@ app.get('/matching', (req, res) => {
 app.use(express.static('pages'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+// 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
+function loadPasswords() {
+  try {
+    if (fs.existsSync(PASSWORD_FILE)) {
+      const fileContents = fs.readFileSync(PASSWORD_FILE, 'utf8');
+      const passwords = JSON.parse(fileContents);
+      
+      if (!passwords.inviteCode || !passwords.adminCode) {
+        throw new Error('password.json 내부 키값이 누락되었습니다.');
+      }
+      return passwords;
+    } else {
+      throw new Error('password.json 파일이 존재하지 않습니다.');
+    }
+  } catch (e) {
+    console.error('❌ 암호화 설정 로드 실패:', e.message);
+    return null; // 실패 시 null 반환
+  }
+}
+
 // 📌 JSON 매핑 파일 로드 함수
 function loadMappingConfig() {
   try {
@@ -52,12 +69,10 @@ function loadMappingConfig() {
 
 // 📌 이미지 경로 결정 함수
 function resolveImagePath(name, directUrl, type, mappingConfig) {
-  // 1순위: 직접 입력된 웹 이미지 링크
   if (directUrl && directUrl.trim() !== '') {
     return directUrl.trim();
   }
 
-  // 2순위: mapping_image.json 키워드 매핑 확인
   const mapRules = mappingConfig[type] || {};
   if (name && name.trim() !== '') {
     const trimmedName = name.trim();
@@ -71,7 +86,6 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
     }
   }
 
-  // 3순위: 기본 폴백 이미지
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
@@ -80,6 +94,7 @@ function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
   const mappingConfig = loadMappingConfig();
+  const passwords = loadPasswords();
 
   if (fs.existsSync(GUILDS_FILE)) {
     const rawGuilds = fs.readFileSync(GUILDS_FILE, 'utf8');
@@ -140,7 +155,6 @@ function loadInitialState() {
       }
     });
 
-    // 빈 파티 플레이스홀더 처리
     definedParties.forEach(pName => {
       if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
         initialSlots.push(...slotsByParty[pName]);
@@ -164,7 +178,11 @@ function loadInitialState() {
     });
   }
 
-  return { slots: initialSlots, guilds, inviteCode: INVITE_CODE };
+  return { 
+    slots: initialSlots, 
+    guilds, 
+    inviteCode: passwords ? passwords.inviteCode : '1234' 
+  };
 }
 
 function getData() {
@@ -187,21 +205,40 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 📌 로그인 API
+// 📌 로그인 API (비밀번호 파일 검증 및 예외 처리 추가)
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
-  const data = getData();
-  if (code === (data.inviteCode || INVITE_CODE)) {
+  const passwords = loadPasswords();
+
+  if (!passwords) {
+    return res.json({ 
+      success: false, 
+      message: '암호화 로직에 문제가 생겼습니다!', 
+      redirectToLogin: true 
+    });
+  }
+
+  if (code === passwords.inviteCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
   }
 });
 
-// 📌 관리자 인증 API
+// 📌 관리자 인증 API (비밀번호 파일 검증 및 예외 처리 추가)
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
-  if (code === ADMIN_CODE) {
+  const passwords = loadPasswords();
+
+  if (!passwords) {
+    return res.json({ 
+      success: false, 
+      message: '암호화 로직에 문제가 생겼습니다!', 
+      redirectToLogin: true 
+    });
+  }
+
+  if (code === passwords.adminCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '관리자 코드가 일치하지 않습니다.' });
@@ -218,7 +255,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.emit('dataUpdated', data); // 중복 삼항 연산자 정리 완료
+      io.emit('dataUpdated', data);
     }
   });
 
