@@ -466,6 +466,13 @@
       })
       .then(res => res.json())
       .then(result => {
+        // 📌 password.json 로드 실패 시 에러 알림 후 로그인 페이지로 리다이렉트
+        if (result.redirectToLogin) {
+          alert(result.message);
+          window.location.href = '/login';
+          return;
+        }
+
         if (result.success) {
           if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
             socket.emit('resetData');
