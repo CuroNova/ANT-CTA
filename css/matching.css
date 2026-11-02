@@ -50,12 +50,12 @@ h1 {
   justify-content: flex-start; 
 }
 
-/* 우측 요약 박스 정렬 (세로 상하 배치로 수정 완료) */
+/* 우측 요약 박스 정렬 (세로 상하 배치) */
 .header-right { 
   display: flex; 
-  flex-direction: column; /* 📌 인원현황 아래에 갑옷현황이 오도록 세로 정렬 */
-  align-items: flex-end;    /* 우측 정렬 맞춤 */
-  gap: 8px;                 /* 위·아래 요약 박스 간격 */
+  flex-direction: column; 
+  align-items: flex-end;    
+  gap: 8px;                 
 }
 
 /* 화면이 좁아질 때(모바일 등) 반응형 처리 */
@@ -67,7 +67,7 @@ h1 {
     gap: 15px; 
   }
   .header-right { 
-    align-items: center;    /* 모바일에서는 가운데 정렬 */
+    align-items: center;    
     width: 100%; 
   }
 }
@@ -82,15 +82,26 @@ h1 {
   font-size: 0.82rem;
 }
 .summary-item {
-  padding: 6px 10px;
+  padding: 6px 4px;
   border-right: 1px solid #334155;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
+  width: 58px; /* 📌 4글자("VAGA") 폭 기준으로 각 항목의 가로길이를 일정하게 고정 */
+  box-sizing: border-box;
+  text-align: center;
 }
 .summary-item:last-child { border-right: none; }
-.summary-label { color: #94a3b8; font-weight: 500; }
+.summary-label { 
+  color: #94a3b8; 
+  font-weight: 500; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  width: 100%;
+}
 
 /* 0개/명일 때 공통 붉은색 계열 */
 .zero-count { color: #f43f5e; font-weight: bold; font-size: 0.95rem; }
