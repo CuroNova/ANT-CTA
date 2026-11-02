@@ -10,13 +10,15 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const PARTIES_FILE = path.join(__dirname, 'loadouts', 'brawlClap.txt');
-const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
+const LOADOUTS_DIR = path.join(__dirname, 'loadouts');
+const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); 
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
 
 app.use(express.json());
 
-// 📌 페이지 라우팅 (새로 개편된 views 폴더 기준)
+// 현재 활성화된 파티 파일 경로를 관리하는 변수 (기본값: brawlClap.txt)
+let currentPartiesFile = path.join(LOADOUTS_DIR, 'brawlClap.txt');
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'welcome.html'));
 });
@@ -29,13 +31,11 @@ app.get('/matching', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'matching.html'));
 });
 
-// 📌 정적 파일 및 에셋 폴더 서빙 설정 (루트 기준 폴더별 매핑)
 app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 
-// 📌 💡 통합 설정 파일(config.json) 로드 함수
 function loadConfig() {
   try {
     if (fs.existsSync(CONFIG_FILE)) {
@@ -51,11 +51,10 @@ function loadConfig() {
     }
   } catch (e) {
     console.error('❌ 설정 파일 로드 실패:', e.message);
-    return null; // 실패 시 null 반환
+    return null;
   }
 }
 
-// 📌 JSON 매핑 파일 로드 함수
 function loadMappingConfig() {
   try {
     if (fs.existsSync(JSON_MAPPING_FILE)) {
@@ -68,7 +67,6 @@ function loadMappingConfig() {
   return { weapon: {}, armor: {} };
 }
 
-// 📌 이미지 경로 결정 함수
 function resolveImagePath(name, directUrl, type, mappingConfig) {
   if (directUrl && directUrl.trim() !== '') {
     return directUrl.trim();
@@ -90,17 +88,15 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
 }
 
-// 📌 초기 데이터 로드 함수
-function loadInitialState() {
+function loadInitialState(disableParty3 = false) {
   let initialSlots = [];
   const mappingConfig = loadMappingConfig();
   const config = loadConfig();
 
-  // config.json에서 길드 목록과 초대코드 불러오기 (실패 시 기본값 적용)
   const guilds = config ? config.guilds : ['ANT', '드래곤길드', '크라운길드', '무소속'];
 
-  if (fs.existsSync(PARTIES_FILE)) {
-    const lines = fs.readFileSync(PARTIES_FILE, 'utf8').split('\n');
+  if (fs.existsSync(currentPartiesFile)) {
+    const lines = fs.readFileSync(currentPartiesFile, 'utf8').split('\n');
     let currentParty = '';
     let partySlotCounter = 1;
     let definedParties = [];
@@ -125,13 +121,13 @@ function loadInitialState() {
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
-        const slotId = parts[0] || '';       // 1. 기본키
-        const roleName = parts[1] || '';     // 2. 역할명
-        const weaponName = parts[2] || '';   // 3. 무기명
-        const armorName = parts[3] || '';    // 4. 갑옷명
-        const commentText = parts[4] || '';  // 5. 코멘트
-        const rawWeaponImg = parts[5] || ''; // 6. 무기 이미지 링크
-        const rawArmorImg = parts[6] || '';  // 7. 갑옷 이미지 링크
+        const slotId = parts[0] || '';       
+        const roleName = parts[1] || '';     
+        const weaponName = parts[2] || '';   
+        const armorName = parts[3] || '';    
+        const commentText = parts[4] || '';  
+        const rawWeaponImg = parts[5] || ''; 
+        const rawArmorImg = parts[6] || '';  
 
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
         const finalArmorImg = resolveImagePath(armorName, rawArmorImg, 'armor', mappingConfig);
@@ -146,7 +142,7 @@ function loadInitialState() {
           displayIndex: partySlotCounter++,
           party: currentParty,
           nickname: '',
-          guild: guilds[0] || 'ANT', // 첫 번째 길드를 기본값으로 설정
+          guild: guilds[0] || 'ANT',
           comment: commentText,
           attended: false
         });
@@ -154,7 +150,10 @@ function loadInitialState() {
     });
 
     definedParties.forEach(pName => {
-      if (slotsByParty[pName] && slotsByParty[pName].length > 0) {
+      // 📌 3파티 비활성화가 켜져 있고 파티 이름에 '3'이 포함되어 있다면 슬롯을 비움(isEmptyParty: true) 처리
+      const isTargetParty3 = disableParty3 && (pName.includes('3') || pName === '3파티');
+
+      if (!isTargetParty3 && slotsByParty[pName] && slotsByParty[pName].length > 0) {
         initialSlots.push(...slotsByParty[pName]);
       } else {
         initialSlots.push({
@@ -179,7 +178,9 @@ function loadInitialState() {
   return { 
     slots: initialSlots, 
     guilds, 
-    inviteCode: config ? config.inviteCode : '1234' 
+    inviteCode: config ? config.inviteCode : '1234',
+    isParty3Disabled: disableParty3,
+    currentLoadout: path.basename(currentPartiesFile)
   };
 }
 
@@ -203,17 +204,13 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 📌 로그인 API (통합 config.json 검증)
+// 로그인 API
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const config = loadConfig();
 
   if (!config) {
-    return res.json({ 
-      success: false, 
-      message: '설정 파일 로드에 문제가 생겼습니다!', 
-      redirectToLogin: true 
-    });
+    return res.json({ success: false, message: '설정 파일 로드에 문제가 생겼습니다!', redirectToLogin: true });
   }
 
   if (code === config.inviteCode) {
@@ -223,17 +220,13 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// 📌 관리자 인증 API (통합 config.json 검증)
+// 관리자 인증 API
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
   const config = loadConfig();
 
   if (!config) {
-    return res.json({ 
-      success: false, 
-      message: '설정 파일 로드에 문제가 생겼습니다!', 
-      redirectToLogin: true 
-    });
+    return res.json({ success: false, message: '설정 파일 로드에 문제가 생겼습니다!', redirectToLogin: true });
   }
 
   if (code === config.adminCode) {
@@ -243,7 +236,54 @@ app.post('/api/admin-auth', (req, res) => {
   }
 });
 
-// 📌 Socket.io 실시간 동기화
+// 📌 관리자 API: loadouts 폴더 내 .txt 파일 목록 조회
+app.get('/api/admin/loadouts', (req, res) => {
+  try {
+    if (!fs.existsSync(LOADOUTS_DIR)) {
+      return res.json({ success: true, files: [] });
+    }
+    const files = fs.readdirSync(LOADOUTS_DIR).filter(f => f.endsWith('.txt'));
+    res.json({ success: true, files });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '파일 목록을 불러오는 중 오류가 발생했습니다.' });
+  }
+});
+
+// 📌 관리자 API: 조합(.txt) 변경
+app.post('/api/admin/change-loadout', (req, res) => {
+  const { filename } = req.body;
+  const targetPath = path.join(LOADOUTS_DIR, filename);
+
+  if (!fs.existsSync(targetPath)) {
+    return.json({ success: false, message: '존재하지 않는 파일입니다.' });
+  }
+
+  currentPartiesFile = targetPath;
+  const currentData = getData();
+  const newState = loadInitialState(currentData.isParty3Disabled || false);
+  newState.currentLoadout = filename;
+  
+  saveData(newState);
+  io.emit('dataUpdated', newState);
+  res.json({ success: true });
+});
+
+// 📌 관리자 API: 3파티 비활성화/활성화 토글
+app.post('/api/admin/toggle-party3', (req, res) => {
+  const data = getData();
+  const nextState = !data.isParty3Disabled;
+
+  const newState = loadInitialState(nextState);
+  // 기존 입력된 닉네임이나 길드 선택 상태를 최대한 유지하고 싶다면 슬롯 머징 가능하지만, 
+  // 요구사항에 맞춰 토글 시 파티 영역을 비활성화/활성화합니다.
+  newState.currentLoadout = data.currentLoadout || 'brawlClap.txt';
+  
+  saveData(newState);
+  io.emit('dataUpdated', newState);
+  res.json({ success: true, isParty3Disabled: nextState });
+});
+
+// Socket.io 실시간 동기화
 io.on('connection', (socket) => {
   socket.emit('dataUpdated', getData());
 
@@ -258,7 +298,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('resetData', () => {
-    const resetData = loadInitialState();
+    const data = getData();
+    const resetData = loadInitialState(data.isParty3Disabled || false);
     saveData(resetData);
     io.emit('dataUpdated', resetData);
   });
