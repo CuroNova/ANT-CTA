@@ -17,6 +17,7 @@ const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 const INVITE_CODE = '1234';
 
 app.use(express.static('public'));
+app.use('/images', express.static(path.join(__dirname, 'images'))); // 👈 images 폴더 정적 서빙 추가
 app.use(express.json());
 
 // 초기 데이터 로드
@@ -78,7 +79,7 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// 🔑 login.html에서 보내는 POST 요청을 처리하는 API 라우트 추가
+// 🔑 로그인 API 라우트
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
   const data = getData();
