@@ -12,7 +12,6 @@ let activeTabLabel = '';
 socket.on('dataUpdated', (data) => {
   currentData = data;
   const activeEl = document.activeElement;
-  // 사용자가 인풋창이나 셀렉트박스 등 어딘가에 포커스를 두고 입력/조작 중이라면 리렌더링 스킵!
   if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
     return; 
   }
@@ -43,15 +42,62 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
+  renderRegearButton(); // 📌 우측 하단 리기어 버튼 동적 생성
 });
 
-// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (중앙 ↔ 좌측)
+// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용: 입력중/값있음=좌측, 빈칸=중앙)
 function handleTextAlign(inputEl) {
   if (inputEl.value && inputEl.value.length > 0) {
     inputEl.style.textAlign = 'left';
   } else {
     inputEl.style.textAlign = 'center';
   }
+}
+
+// 📌 닉네임 전용 정렬 함수 (포커스 중이거나 값 있으면 좌측, 포커스 해제되고 비어있으면 가운데)
+function handleNicknameFocus(inputEl) {
+  inputEl.style.textAlign = 'left';
+}
+
+function handleNicknameBlur(inputEl) {
+  if (!inputEl.value || inputEl.value.trim() === '') {
+    inputEl.style.textAlign = 'center';
+  }
+}
+
+// 📌 화면 우측 최하단에 '리기어' 회색 버튼을 생성 및 고정하는 함수
+function renderRegearButton() {
+  const existingBtn = document.getElementById('floating-regear-btn');
+  if (existingBtn) existingBtn.remove();
+
+  const regearBtn = document.createElement('button');
+  regearBtn.id = 'floating-regear-btn';
+  regearBtn.innerText = '🛡️ 리기어';
+  regearBtn.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #475569;
+    color: #f8fafc;
+    border: 1px solid #64748b;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    z-index: 9998;
+    transition: background 0.2s, transform 0.1s;
+  `;
+
+  regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
+  regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
+  regearBtn.onclick = () => {
+    // 📌 지정하신 링크로 이동 (새 창)
+    window.open('https://www.naver.com', '_blank');
+  };
+
+  document.body.appendChild(regearBtn);
 }
 
 function getRoleColor(role) {
@@ -290,7 +336,9 @@ function render() {
         }
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
-        const nicknameAlign = (currentNickname && currentNickname.length > 0) ? 'left' : 'center';
+        
+        // 📌 닉네임 정렬 제어: 값이 있거나 포커스 중이면 좌측, 비어있으면 가운데
+        const nicknameAlign = (currentNickname && currentNickname.trim() !== '') ? 'left' : 'center';
 
         if (isFreeRole) {
           tbodyHtml += `
@@ -305,7 +353,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" onfocus="handleNicknameFocus(this)" onblur="handleNicknameBlur(this)" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -343,7 +391,7 @@ function render() {
                 </select>
               </td>
               <td style="width: 115px;">
-                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
+                <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" onfocus="handleNicknameFocus(this)" onblur="handleNicknameBlur(this)" oninput="updateSlot('${slot.id}', 'nickname', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${nicknameAlign};" />
               </td>
               <td style="width: 35px;" class="chk-center">
                 <input type="checkbox" ${slot.attended ? 'checked' : ''} ${attendanceAttr} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
