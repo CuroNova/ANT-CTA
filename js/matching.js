@@ -55,6 +55,16 @@ function getRoleColor(role) {
 }
 
 function render() {
+  // 📌 1. 현재 사용자가 포커스 중인 요소(입력 중인 인풋 등)의 정보 파악 (포커스 유실 및 커서 튐 방지)
+  const activeEl = document.activeElement;
+  let activeSlotId = null;
+  let activeFieldType = null;
+
+  if (activeEl && activeEl.dataset.slotId) {
+    activeSlotId = activeEl.dataset.slotId;
+    activeFieldType = activeEl.dataset.fieldType;
+  }
+
   const parties = {};
   currentData.slots.forEach(slot => {
     if (!parties[slot.party]) parties[slot.party] = [];
@@ -64,11 +74,11 @@ function render() {
   const allPartyNames = Object.keys(parties);
   if (allPartyNames.length === 0) return;
 
-  // 📌 1. 길드별 참여 인원 집계
+  // 📌 2. 길드별 참여 인원 집계
   const guildCounts = {};
   currentData.guilds.forEach(g => guildCounts[g] = 0);
   
-  // 📌 2. 주요 갑옷 종류별 인원 집계 (현재 착용 인원 / 전체 지정 총량)
+  // 📌 3. 주요 갑옷 종류별 인원 집계 (현재 착용 인원 / 전체 지정 총량)
   const armorTargets = ['심판관', '데몬', '기사', '가디언', '더스크'];
   const armorCurrentCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
   const armorTotalCounts = { '심판관': 0, '데몬': 0, '기사': 0, '가디언': 0, '더스크': 0 };
@@ -160,6 +170,9 @@ function render() {
     allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
   }
 
+  // 📌 탭 목록 맨 우측에 '관리자 메뉴' 추가
+  tabs.push({ label: '관리자 메뉴', isAdminTab: true });
+
   if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
     activeTabLabel = tabs[0].label;
   }
@@ -169,8 +182,22 @@ function render() {
   tabs.forEach(tab => {
     const btn = document.createElement('button');
     btn.className = `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
+    
+    // 관리자 메뉴 탭은 테두리와 글자를 붉은색 계열로 강조
+    if (tab.isAdminTab) {
+      btn.style.borderColor = '#ef4444';
+      btn.style.color = '#f87171';
+    }
+
     btn.innerText = tab.label;
-    btn.onclick = () => { activeTabLabel = tab.label; render(); };
+    btn.onclick = () => {
+      if (tab.isAdminTab) {
+        verifyAdminAndOpenMenu(); // 📌 관리자 메뉴 클릭 시 인증 후 플로팅 팝업 오픈
+      } else {
+        activeTabLabel = tab.label;
+        render();
+      }
+    };
     tabsContainer.appendChild(btn);
   });
 
@@ -178,6 +205,12 @@ function render() {
   container.innerHTML = '';
 
   const currentTab = tabs.find(t => t.label === activeTabLabel) || tabs[0];
+  
+  // 관리자 메뉴 탭일 때는 파티 시트를 렌더링하지 않음 (플로팅 모달이 대신 뜸)
+  if (currentTab.isAdminTab) {
+    return;
+  }
+
   const isMulti = currentTab.parties.length > 1;
 
   const gridWrapper = document.createElement('div');
@@ -229,6 +262,13 @@ function render() {
         
         const weaponTextColor = getRoleColor(slot.role);
 
+        // 📌 사용자가 입력 중인 닉네임 필드라면 서버 데이터가 갱신되어도 현재 입력값을 유지
+        let currentNickname = slot.nickname;
+        if (activeSlotId === slot.id && activeFieldType === 'nickname') {
+          const activeInputValue = activeEl ? activeEl.value : slot.nickname;
+          currentNickname = activeInputValue;
+        }
+
         tbodyHtml += `
           <tr>
             <td style="width: 45px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
@@ -248,12 +288,12 @@ function render() {
               <input type="text" class="readonly-comment" value="${escapeHtml(slot.comment || '')}" disabled />
             </td>
             <td style="width: 75px;">
-              <select onchange="updateSlot('${slot.id}', 'guild', this.value)">
+              <select onchange="updateSlot('${slot.id}', 'guild', this.value)" data-slot-id="${slot.id}" data-field-type="guild">
                 ${guildOptions}
               </select>
             </td>
             <td style="width: 150px;">
-              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(slot.nickname)}" onchange="updateSlot('${slot.id}', 'nickname', this.value)" />
+              <input type="text" placeholder="닉네임 입력" value="${escapeHtml(currentNickname)}" data-slot-id="${slot.id}" data-field-type="nickname" oninput="updateSlot('${slot.id}', 'nickname', this.value)" />
             </td>
             <td style="width: 45px;" class="chk-center">
               <input type="checkbox" ${slot.attended ? 'checked' : ''} onchange="updateSlot('${slot.id}', 'attended', this.checked)" />
@@ -284,6 +324,19 @@ function render() {
     partyColumn.appendChild(tableWrapper);
     gridWrapper.appendChild(partyColumn);
   });
+
+  // 📌 렌더링 직후 포커스 재복구 및 커서 위치 유지
+  if (activeSlotId && activeFieldType) {
+    const selector = `[data-slot-id="${activeSlotId}"][data-field-type="${activeFieldType}"]`;
+    const targetToFocus = document.querySelector(selector);
+    if (targetToFocus) {
+      targetToFocus.focus();
+      if (targetToFocus.tagName === 'INPUT' && typeof targetToFocus.selectionStart === 'number') {
+        const len = targetToFocus.value.length;
+        targetToFocus.setSelectionRange(len, len);
+      }
+    }
+  }
 }
 
 function updateSlot(id, key, value) {
@@ -294,8 +347,9 @@ function updateSlot(id, key, value) {
   }
 }
 
-function requestReset() {
-  const code = prompt('전체 초기화를 진행하려면 [관리자 코드]를 입력하세요:');
+// 📌 관리자 인증 후 플로팅 모달 메뉴 오픈
+function verifyAdminAndOpenMenu() {
+  const code = prompt('관리자 메뉴를 열려면 [관리자 코드]를 입력하세요:');
   if (code === null) return;
 
   if (code.trim() === '') {
@@ -317,9 +371,7 @@ function requestReset() {
     }
 
     if (result.success) {
-      if (confirm('관리자 인증 완료! 모든 데이터를 초기화하시겠습니까?')) {
-        socket.emit('resetData');
-      }
+      openAdminFloatingModal(); // 인증 성공 시 플로팅 팝업 오픈
     } else {
       alert('관리자 코드가 일치하지 않습니다.');
     }
@@ -328,6 +380,56 @@ function requestReset() {
     console.error(err);
     alert('서버 통신 중 오류가 발생했습니다.');
   });
+}
+
+// 📌 화면 정중앙 플로팅 관리자 메뉴 팝업 (초기화 버튼 포함)
+function openAdminFloatingModal() {
+  const existingModal = document.getElementById('admin-floating-modal');
+  if (existingModal) existingModal.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'admin-floating-modal';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
+    z-index: 9999; backdrop-filter: blur(4px);
+  `;
+
+  modal.innerHTML = `
+    <div style="background: #1e293b; padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 1px solid #334155; text-align: center; color: #f8fafc;">
+      <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="btn-reset-data" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+          🔄 전체 초기화
+        </button>
+      </div>
+
+      <button id="btn-close-modal" style="margin-top: 20px; padding: 8px 16px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+        닫기
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // 닫기 버튼 클릭 시 모달 제거 및 탭을 기본 '1·2파티'로 복원
+  document.getElementById('btn-close-modal').onclick = () => {
+    modal.remove();
+    activeTabLabel = '1·2파티';
+    render();
+  };
+
+  // 초기화 버튼 클릭 이벤트
+  document.getElementById('btn-reset-data').onclick = () => {
+    if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
+      socket.emit('resetData');
+      modal.remove();
+      activeTabLabel = '1·2파티';
+      render();
+      alert('데이터가 초기화되었습니다.');
+    }
+  };
 }
 
 function escapeHtml(str) {
