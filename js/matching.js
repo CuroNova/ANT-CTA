@@ -451,7 +451,7 @@ function renderPartyTables() {
         let commentHtml = '';
         if (canEditComment) {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
-          const placeholderText = isFreeRole ? '희망 포지션 입력' : '코멘트 입력';
+          const placeholderText = isFreeRole ? '희망 포지션 입력' : '내용 입력';
           commentHtml = `<input type="text" placeholder="${placeholderText}" value="${escapeHtml(currentComment)}" data-slot-id="${slot.id}" data-field-type="comment" oninput="handleTextAlign(this); updateSlot('${slot.id}', 'comment', this.value)" style="width: 100%; box-sizing: border-box; text-align: ${commentAlign};" />`;
         } else {
           const commentAlign = (currentComment && currentComment.length > 0) ? 'left' : 'center';
@@ -524,7 +524,7 @@ function renderPartyTables() {
         <thead>
           <tr>
             <th style="width: 35px; text-align: center;">순번</th>
-            ${isFreeRole ? '<th style="width: 455px; text-align: center;">희망 포지션</th>' : '<th style="width: 110px; text-align: center;">무기</th><th style="width: 95px; text-align: center;">갑옷</th><th style="width: 250px; text-align: center;">코멘트</th>'}
+            ${isFreeRole ? '<th style="width: 455px; text-align: center;">희망 포지션</th>' : '<th style="width: 110px; text-align: center;">무기</th><th style="width: 95px; text-align: center;">갑옷</th><th style="width: 250px; text-align: center;">권고사항</th>'}
             <th style="width: 65px; text-align: center;">길드</th>
             <th style="width: 115px; text-align: center;">닉네임</th>
             <th style="width: 35px; text-align: center;">출석</th>
