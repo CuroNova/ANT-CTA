@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
   renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
-  renderDaSummaryBox();      // 📌 화면 최좌측 상단에 고정될 DA 현황 박스 초기 생성
+  ensureDaSummaryElement();  // 📌 기존 상단 요약 박스 영역 내 최좌측에 DA 박스 DOM 안전 주입
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -79,20 +79,26 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 상단에 독립적으로 고정될 DA 현황 박스 생성 함수
-function renderDaSummaryBox() {
-  let daContainer = document.getElementById('fixed-da-summary-container');
-  if (!daContainer) {
-    daContainer = document.createElement('div');
-    daContainer.id = 'fixed-da-summary-container';
-    // 인원현황 박스와 수직 높이를 맞추고, 화면 최좌측(left: 20px)에 고정 배치
-    daContainer.style.cssText = `
-      position: fixed;
-      top: 20px; /* 상단 여백 (다른 상단 메뉴들과 나란히 보이도록 조정 가능) */
-      left: 20px; /* 화면 최좌측 고정 */
-      z-index: 9997;
-    `;
-    document.body.appendChild(daContainer);
+// 📌 기존 상단 요약 영역의 HTML 구조를 건드리지 않고, 최좌측에 DA 박스 요소가 안전하게 존재하도록 생성
+function ensureDaSummaryElement() {
+  const guildSummaryContainer = document.getElementById('guild-summary');
+  if (guildSummaryContainer) {
+    // 부모 요약 박스(summary-box) 또는 길드 요약 상단에 DA 전용 래퍼가 없다면 생성
+    let daWrapper = document.getElementById('da-summary-wrapper');
+    if (!daWrapper) {
+      const summaryBox = guildSummaryContainer.closest('.summary-box') || guildSummaryContainer.parentElement;
+      if (summaryBox) {
+        daWrapper = document.createElement('div');
+        daWrapper.id = 'da-summary-wrapper';
+        daWrapper.className = 'summary-item'; // 다른 요약 아이템들과 동일한 클래스 유지
+        daWrapper.innerHTML = `
+          <span class="summary-label">DA</span>
+          <span id="da-value-span" style="font-weight: bold; font-size: 1.05rem;">0</span>
+        `;
+        // 길드 요약 박스보다 앞에(최좌측에) 삽입
+        summaryBox.insertBefore(daWrapper, summaryBox.firstChild);
+      }
+    }
   }
 }
 
@@ -239,26 +245,21 @@ function render() {
 
   const daValue = currentData.daValue !== undefined ? currentData.daValue : 0;
 
-  // 📌 최좌측 상단에 고정된 컨테이너 내부에 인원현황과 똑같은 디자인(summary-box)으로 DA 현황판 렌더링
-  const daContainer = document.getElementById('fixed-da-summary-container');
-  if (daContainer) {
-    let daColorHex = '#f8fafc'; // 기본 흰색 (0일 때)
+  // 📌 1. DA 수치 및 색상 업데이트 (0: 흰색, 10이상: 노란색, 20이상: 주황색)
+  ensureDaSummaryElement();
+  const daValueSpan = document.getElementById('da-value-span');
+  if (daValueSpan) {
+    daValueSpan.innerText = daValue;
     if (daValue >= 20) {
-      daColorHex = '#f97316'; // 20 이상: 주황색
+      daValueSpan.style.color = '#f97316'; // 주황색
     } else if (daValue >= 10) {
-      daColorHex = '#eab308'; // 10 이상: 노란색
+      daValueSpan.style.color = '#eab308'; // 노란색
+    } else {
+      daValueSpan.style.color = '#f8fafc'; // 흰색
     }
-
-    daContainer.innerHTML = `
-      <div class="summary-box">
-        <div class="summary-item">
-          <span class="summary-label">DA</span>
-          <span style="color: ${daColorHex}; font-weight: bold; font-size: 1.05rem;">${daValue}</span>
-        </div>
-      </div>
-    `;
   }
 
+  // 📌 2. 길드 현황 렌더링 (기존 로직 보존)
   const guildSummaryContainer = document.getElementById('guild-summary');
   if (guildSummaryContainer) {
     guildSummaryContainer.innerHTML = '';
@@ -280,6 +281,7 @@ function render() {
     });
   }
 
+  // 📌 3. 갑옷 현황 렌더링 (기존 로직 보존)
   const armorSummaryContainer = document.getElementById('armor-summary');
   if (armorSummaryContainer) {
     armorSummaryContainer.innerHTML = '';
