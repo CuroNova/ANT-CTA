@@ -42,25 +42,10 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  removeOldResetButtons();   // 📌 기존에 남아있던 초기화 버튼들 제거
-  renderRegearButton();     // 📌 우측 하단 리기어 버튼 생성
+  renderRegearButton(); // 📌 우측 하단 리기어 버튼 동적 생성
 });
 
-// 📌 기존 HTML나 다른 곳에 남아있는 초기화 관련 버튼들을 찾아 제거하는 함수
-function removeOldResetButtons() {
-  // ID나 클래스, 혹은 텍스트 내용이 '초기화'인 버튼/요소들을 모두 색출하여 제거
-  const allButtons = document.querySelectorAll('button, a, div');
-  allButtons.forEach(el => {
-    if (el.innerText && (el.innerText.includes('초기화') || el.innerText.includes('Reset'))) {
-      // 관리자 모달 내의 초기화 버튼은 제외하고 화면 하단/사이드에 있는 것만 타겟팅하거나 안전하게 제거
-      if (!el.closest('#admin-floating-modal')) {
-        el.remove();
-      }
-    }
-  });
-}
-
-// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용)
+// 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트용: 입력중/값있음=좌측, 빈칸=중앙)
 function handleTextAlign(inputEl) {
   if (inputEl.value && inputEl.value.length > 0) {
     inputEl.style.textAlign = 'left';
@@ -69,7 +54,7 @@ function handleTextAlign(inputEl) {
   }
 }
 
-// 📌 닉네임 전용 정렬 함수
+// 📌 닉네임 전용 정렬 함수 (포커스 중이거나 값 있으면 좌측, 포커스 해제되고 비어있으면 가운데)
 function handleNicknameFocus(inputEl) {
   inputEl.style.textAlign = 'left';
 }
@@ -108,6 +93,7 @@ function renderRegearButton() {
   regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
   regearBtn.onclick = () => {
+    // 📌 지정하신 링크로 이동 (새 창)
     window.open('https://www.naver.com', '_blank');
   };
 
@@ -350,6 +336,8 @@ function render() {
         }
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
+        
+        // 📌 닉네임 정렬 제어: 값이 있거나 포커스 중이면 좌측, 비어있으면 가운데
         const nicknameAlign = (currentNickname && currentNickname.trim() !== '') ? 'left' : 'center';
 
         if (isFreeRole) {
