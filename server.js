@@ -13,10 +13,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const PARTIES_FILE = path.join(__dirname, 'parties.txt');
 const GUILDS_FILE = path.join(__dirname, 'guilds.txt');
 const JSON_MAPPING_FILE = path.join(__dirname, 'settings', 'mapping_image.json');
-
-// 🔑 코드 설정
-const INVITE_CODE = '1234';         // 일반 참여자 입장용 초대코드
-const ADMIN_CODE = 'admin9999';      // 🛡️ 관리자 초기화 전용 코드
+const PASSWORD_FILE = path.join(__dirname, 'settings', 'password.json'); // 📌 비밀번호 설정 파일 경로
 
 app.use(express.json());
 
@@ -36,6 +33,27 @@ app.get('/matching', (req, res) => {
 // 📌 정적 파일 및 이미지 서빙 폴더 설정 (HTML 파일은 pages 폴더, 이미지는 images 폴더)
 app.use(express.static('pages'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// 📌 비밀번호 설정 파일 로드 함수 (실패 시 에러 처리 포함)
+function loadPasswords() {
+  try {
+    if (fs.existsSync(PASSWORD_FILE)) {
+      const fileContents = fs.readFileSync(PASSWORD_FILE, 'utf8');
+      const passwords = JSON.parse(fileContents);
+      
+      // 필수 키값이 존재하는지 확인
+      if (!passwords.inviteCode || !passwords.adminCode) {
+        throw new Error('password.json 내부 키값이 누락되었습니다.');
+      }
+      return passwords;
+    } else {
+      throw new Error('password.json 파일이 존재하지 않습니다.');
+    }
+  } catch (e) {
+    console.error('❌ 암호화 설정 로드 실패:', e.message);
+    return null; // 실패 시 null 반환
+  }
+}
 
 // 📌 JSON 매핑 파일 로드 함수 (추가 설치 없음)
 function loadMappingConfig() {
@@ -81,6 +99,7 @@ function loadInitialState() {
   let initialSlots = [];
   let guilds = ['ANT', '드래곤길드', '크라운길드', '무소속'];
   const mappingConfig = loadMappingConfig();
+  const passwords = loadPasswords();
 
   if (fs.existsSync(GUILDS_FILE)) {
     const rawGuilds = fs.readFileSync(GUILDS_FILE, 'utf8');
@@ -112,13 +131,13 @@ function loadInitialState() {
         if (!matches || matches.length < 1) return;
 
         const parts = matches.map(m => m.replace(/"/g, '').trim());
-        const slotId = parts[0] || '';                         // 1. 기본키
-        const roleName = parts[1] || '';                       // 2. 역할명
-        const weaponName = parts[2] || '';                       // 3. 무기명
-        const armorName = parts[3] || '';                        // 4. 갑옷명
-        const commentText = parts[4] || '';                      // 5. 코멘트
-        const rawWeaponImg = parts[5] || '';                     // 6. 무기 이미지 링크
-        const rawArmorImg = parts[6] || '';                      // 7. 갑옷 이미지 링크
+        const slotId = parts[id] || parts[0] || '';       // 1. 기본키
+        const roleName = parts[1] || '';                     // 2. 역할명
+        const weaponName = parts[2] || '';                   // 3. 무기명
+        const armorName = parts[3] || '';                    // 4. 갑옷명
+        const commentText = parts[4] || '';                  // 5. 코멘트
+        const rawWeaponImg = parts[5] || '';                 // 6. 무기 이미지 링크
+        const rawArmorImg = parts[6] || '';                  // 7. 갑옷 이미지 링크
 
         // 📌 3단계 우선순위 적용 (직접 입력 -> JSON 매핑 -> 기본 이미지)
         const finalWeaponImg = resolveImagePath(weaponName, rawWeaponImg, 'weapon', mappingConfig);
@@ -165,7 +184,11 @@ function loadInitialState() {
     });
   }
 
-  return { slots: initialSlots, guilds, inviteCode: INVITE_CODE };
+  return { 
+    slots: initialSlots, 
+    guilds, 
+    inviteCode: passwords ? passwords.inviteCode : '1234' 
+  };
 }
 
 function getData() {
@@ -191,8 +214,18 @@ function saveData(data) {
 // 로그인 API
 app.post('/api/login', (req, res) => {
   const { code } = req.body;
-  const data = getData();
-  if (code === (data.inviteCode || INVITE_CODE)) {
+  const passwords = loadPasswords();
+
+  // 📌 password.json 로드 실패 시 에러 처리 및 로그인 페이지 리다이렉트 안내
+  if (!passwords) {
+    return res.json({ 
+      success: false, 
+      message: '암호화 로직에 문제가 생겼습니다!', 
+      redirectToLogin: true 
+    });
+  }
+
+  if (code === passwords.inviteCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '초대코드가 일치하지 않습니다.' });
@@ -202,7 +235,18 @@ app.post('/api/login', (req, res) => {
 // 관리자 인증 API
 app.post('/api/admin-auth', (req, res) => {
   const { code } = req.body;
-  if (code === ADMIN_CODE) {
+  const passwords = loadPasswords();
+
+  // 📌 password.json 로드 실패 시 에러 처리
+  if (!passwords) {
+    return res.json({ 
+      success: false, 
+      message: '암호화 로직에 문제가 생겼습니다!', 
+      redirectToLogin: true 
+    });
+  }
+
+  if (code === passwords.adminCode) {
     res.json({ success: true });
   } else {
     res.json({ success: false, message: '관리자 코드가 일치하지 않습니다.' });
@@ -219,7 +263,7 @@ io.on('connection', (socket) => {
     if (index !== -1) {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
-      io.io ? io.emit('dataUpdated', data) : io.emit('dataUpdated', data);
+      io.emit('dataUpdated', data);
     }
   });
 
