@@ -174,7 +174,7 @@ h1 {
   color: #ffffff;
 }
 
-/* 📌 조합표 이름 정중앙 상하 배치 배너 스타일 (관리자 메뉴 버튼 크기감 일치) */
+/* 📌 조합표 이름 정중앙 상하 배치 배너 스타일 */
 .current-loadout-indicator {
   position: absolute;
   left: 50%;
@@ -236,12 +236,33 @@ select { padding-right: 2px; text-align: center; }
 .chk-center { text-align: center; }
 .chk-center input { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
 
-/* 📌 모바일 화면 반응형 대응: DA 박스가 인원 현황 왼쪽에 딱 붙도록 설정 */
+/* 📌 모바일 화면 반응형 최적화 (768px 이하) */
 @media (max-width: 768px) {
+  /* 1. DA 박스와 인원 현황 영역 정렬 */
   .header-left {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     width: 100%;
+  }
+
+  /* 2. 모바일에서 DA 및 조합명 숨김 */
+  #header-da-summary-box {
+    display: none !important;
+  }
+  .current-loadout-indicator {
+    display: none !important;
+  }
+
+  /* 3. 모바일에서 순번(1), 갑옷(3), 코멘트(4), 출석(7) 컬럼 숨김 */
+  table.sheet-table th:nth-child(1),
+  table.sheet-table td:nth-child(1),
+  table.sheet-table th:nth-child(3),
+  table.sheet-table td:nth-child(3),
+  table.sheet-table th:nth-child(4),
+  table.sheet-table td:nth-child(4),
+  table.sheet-table th:nth-child(7),
+  table.sheet-table td:nth-child(7) {
+    display: none !important;
   }
 }
