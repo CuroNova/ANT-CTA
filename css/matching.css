@@ -23,9 +23,10 @@ body {
   background: #475569;
 }
 
+/* 📌 상단 3분할 헤더 구조 (좌측 버튼 / 중앙 타이틀+시계 / 우측 DA+인원현황) */
 .header { 
-  display: flex; 
-  justify-content: space-between; 
+  display: grid; 
+  grid-template-columns: 1fr auto 1fr; 
   align-items: center; 
   margin-bottom: 20px; 
   gap: 15px; 
@@ -53,11 +54,12 @@ h1 {
   letter-spacing: 0.5px;
 }
 
+/* 📌 좌측 상단으로 이동한 CTA 버튼 컨테이너 */
 .header-left { 
   display: flex; 
   align-items: center; 
   justify-content: flex-start; 
-  gap: 10px;
+  gap: 8px;
 }
 
 /* 📌 우측 영역: 상하 2단 구조 정렬 */
@@ -89,6 +91,10 @@ h1 {
   }
   .header-right-top {
     justify-content: center;
+  }
+  .header-left {
+    justify-content: center;
+    width: 100%;
   }
 }
 
