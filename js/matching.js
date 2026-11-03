@@ -363,10 +363,14 @@ function renderPartyTables() {
 
   const tabsContainer = document.getElementById('party-tabs');
   tabsContainer.innerHTML = '';
+  // 📌 모바일 화면 너비에 맞춰 꽉 차게 확장하고 상하 여백 확보
   tabsContainer.style.display = 'flex';
   tabsContainer.style.justifyContent = 'space-between';
   tabsContainer.style.alignItems = 'center';
-  tabsContainer.style.position = 'relative'; // 💡 정중앙 배치를 위한 부모 relative 설정
+  tabsContainer.style.position = 'relative';
+  tabsContainer.style.width = '100%';
+  tabsContainer.style.boxSizing = 'border-box';
+  tabsContainer.style.padding = '8px 12px'; // 상하 좁았던 여백 확장
 
   // 1) 좌측 파티 탭들을 담을 래퍼
   const leftTabsWrapper = document.createElement('div');
@@ -374,7 +378,7 @@ function renderPartyTables() {
   leftTabsWrapper.style.gap = '8px';
   leftTabsWrapper.style.alignItems = 'center';
 
-  // 2) 💡 정중앙에 상하 배치할 현재 조합표 이름 표시 배너
+  // 2) 💡 관리자 메뉴 버튼 크기감에 맞춘 정중앙 상하 배치 조합명 배너
   const loadoutTitleIndicator = document.createElement('div');
   loadoutTitleIndicator.className = 'current-loadout-indicator';
   loadoutTitleIndicator.style.cssText = `
@@ -383,7 +387,7 @@ function renderPartyTables() {
     transform: translateX(-50%);
     background: #1e293b;
     color: #38bdf8;
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.8rem;
@@ -392,16 +396,17 @@ function renderPartyTables() {
     pointer-events: none;
     white-space: nowrap;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.15;
     display: flex;
     flex-direction: column;
     gap: 1px;
+    min-width: 110px;
   `;
   
   const currentLoadoutName = currentData.currentLoadout || '기본 조합';
   loadoutTitleIndicator.innerHTML = `
-    <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 500;">조합명</span>
-    <span style="font-size: 0.85rem; color: #38bdf8; font-weight: bold;">[${currentLoadoutName}]</span>
+    <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 500; letter-spacing: -0.3px;">조합명</span>
+    <span style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">[${currentLoadoutName}]</span>
   `;
 
   // 3) 우측 관리자 메뉴 버튼 분리 보관용 변수
@@ -428,7 +433,7 @@ function renderPartyTables() {
   });
 
   tabsContainer.appendChild(leftTabsWrapper);
-  tabsContainer.appendChild(loadoutTitleIndicator); // 💡 정중앙 상하 배치 타이틀 주입
+  tabsContainer.appendChild(loadoutTitleIndicator);
   if (adminTabBtn) {
     tabsContainer.appendChild(adminTabBtn);
   }
@@ -680,7 +685,7 @@ function openAdminFloatingModal() {
       <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: nil; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
           📂 조합 변경
         </button>
 
