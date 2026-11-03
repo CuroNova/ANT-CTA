@@ -355,7 +355,7 @@ function renderPartyTables() {
     allPartyNames.forEach(p => tabs.push({ label: p, parties: [p] }));
   }
 
-  tabs.push({ label: '관리자 메뉴', isAdminTab: true });
+  tabs.push({ label: '관리메뉴', isAdminTab: true });
 
   if (!activeTabLabel || !tabs.find(t => t.label === activeTabLabel)) {
     activeTabLabel = tabs[0].label;
