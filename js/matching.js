@@ -493,8 +493,8 @@ function renderPartyTables() {
             </tr>
           `;
         } else {
-          const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/default_weapon.png';
-          const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/default_armor.png';
+          const weaponImgUrl = (slot.weaponImg && slot.weaponImg.trim() !== '') ? slot.weaponImg : '/images/nolink.webp';
+          const armorImgUrl = (slot.armorImg && slot.armorImg.trim() !== '') ? slot.armorImg : '/images/nolink.webp';
           const weaponName = slot.weaponName || '';
           const armorName = slot.armorName || '';
           const weaponTextColor = getRoleColor(slot.role);
@@ -504,13 +504,13 @@ function renderPartyTables() {
               <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
               <td style="width: 110px;">
                 <div class="gear-cell">
-                  <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/default_weapon.png'" />
+                  <img src="${weaponImgUrl}" alt="Weapon" class="gear-img" onerror="this.src='/images/nolink.webp'" />
                   <span style="font-size: 0.8rem; font-weight: bold; color: ${weaponTextColor}; overflow: hidden; text-overflow: ellipsis;" title="${weaponName}">${escapeHtml(weaponName)}</span>
                 </div>
               </td>
               <td style="width: 95px;">
                 <div class="gear-cell">
-                  <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/default_armor.png'" />
+                  <img src="${armorImgUrl}" alt="Armor" class="gear-img" onerror="this.src='/images/nolink.webp'" />
                   <span style="font-size: 0.8rem; font-weight: bold; color: #f8fafc; overflow: hidden; text-overflow: ellipsis;" title="${armorName}">${escapeHtml(armorName)}</span>
                 </div>
               </td>
