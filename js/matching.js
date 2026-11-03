@@ -343,7 +343,7 @@ function renderPartyTables() {
     });
   }
   if (parties['FREE ROLE']) p3Free.push('FREE ROLE');
-  if (p3Free.length > 0) tabs.push({ label: '3PT & FREE ROLE', parties: p3Free });
+  if (p3Free.length > 0) tabs.push({ label: '3PT & FREE', parties: p3Free });
 
   allPartyNames.forEach(p => {
     if (!p12.includes(p) && !p3Free.includes(p)) {
