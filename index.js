@@ -34,7 +34,7 @@ app.get('/matching', (req, res) => {
 app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 
-// 💡 [적용 완료] 이미지 폴더 브라우저 캐시(7일) 적용으로 중복 트래픽 및 낭비 차단
+// 💡 이미지 폴더 브라우저 캐시(7일) 적용으로 중복 트래픽 및 낭비 차단
 app.use('/images', express.static(path.join(__dirname, 'images'), {
   maxAge: '7d', // 7일 동안 브라우저에 캐시 저장
   etag: true,
@@ -76,7 +76,7 @@ function loadMappingConfig() {
   return { weapon: {}, armor: {} };
 }
 
-// 📌 이미지 경로 결정 함수
+// 📌 이미지 경로 결정 함수 (확장자가 없으면 자동으로 .webp를 붙여주도록 업그레이드!)
 function resolveImagePath(name, directUrl, type, mappingConfig) {
   if (directUrl && directUrl.trim() !== '') {
     return directUrl.trim();
@@ -90,12 +90,14 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('/')) {
           return imagePath;
         }
-        return `/images/${imagePath}`;
+        // 💡 확장자가 생략되어 있다면 자동으로 .webp를 붙여줌
+        const finalPath = imagePath.includes('.') ? imagePath : `${imagePath}.webp`;
+        return `/images/${finalPath}`;
       }
     }
   }
 
-  return type === 'weapon' ? '/images/default_weapon.png' : '/images/default_armor.png';
+  return type === 'weapon' ? '/images/default_weapon.webp' : '/images/default_armor.webp';
 }
 
 // 📌 닉네임, 길드, 출석 상태 백업 (조합표 변경 시 Free Role의 희망 포지션도 유지되도록 백업)
