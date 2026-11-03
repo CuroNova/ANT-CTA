@@ -67,7 +67,7 @@ h1 {
   display: flex; 
   flex-direction: column; 
   align-items: flex-end;     
-  gap: 6px;                     
+  gap: 6px;                        
 }
 
 /* 📌 우측 상단 줄: [DA 박스] + [길드(인원현황) 박스] 가로 나란히 배치 */
@@ -190,18 +190,15 @@ h1 {
   color: #ffffff;
 }
 
-/* 📌 조합표 이름 정중앙 상하 배치 배너 스타일 */
+/* 📌 조합표 이름 정중앙 상하 배치 배너 스타일 (상자 틀 제거 및 글씨 키움) */
 .current-loadout-indicator {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  background: #1e293b;
-  color: #38bdf8;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: 1px solid #334155;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
   pointer-events: none;
   white-space: nowrap;
   text-align: center;
@@ -210,6 +207,19 @@ h1 {
   flex-direction: column;
   gap: 2px;
   min-width: 130px;
+}
+
+.current-loadout-indicator span {
+  font-size: 1.15rem !important;
+  color: #38bdf8;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 .side-by-side-grid {
