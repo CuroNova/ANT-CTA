@@ -66,7 +66,7 @@ function initUtcClock(selector = '[data-utc-clock]') {
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderFloatingButtons();   // 📌 좌측 하단 항상 노출되는 플로팅 버튼들 동적 생성
+  renderHeaderButtons();     // 📌 좌측 상단 헤더 영역에 버튼들 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -101,43 +101,31 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 하단 플로팅 버튼 생성 (마우스 오버 없이 항시 노출)
-function renderFloatingButtons() {
-  const existingContainer = document.getElementById('floating-buttons-container');
-  if (existingContainer) existingContainer.remove();
+// 📌 좌측 상단 헤더 영역(`.header-left`)에 버튼들 생성 및 항상 노출
+function renderHeaderButtons() {
+  const headerLeft = document.querySelector('.header-left');
+  if (!headerLeft) return;
 
-  const container = document.createElement('div');
-  container.id = 'floating-buttons-container';
-  container.style.cssText = `
-    position: fixed;
-    bottom: 34px;
-    left: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 1000;
-  `;
+  headerLeft.innerHTML = ''; // 기존 내용 초기화
 
   const buttonStyle = `
     background: #475569;
     color: #f8fafc;
     border: 1px solid #64748b;
-    padding: 10px 18px;
-    border-radius: 8px;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    width: 135px;
-    text-align: center;
-    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
     transition: background 0.2s, transform 0.1s;
   `;
 
   const postingBtn = document.createElement('button');
   postingBtn.innerText = '포스팅 하러가기';
   postingBtn.style.cssText = buttonStyle;
-  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; postingBtn.style.transform = 'translateY(-2px)'; };
+  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; postingBtn.style.transform = 'translateY(-1px)'; };
   postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; postingBtn.style.transform = 'translateY(0)'; };
   postingBtn.onclick = () => {
     window.open('https://www.naver.com', '_blank');
@@ -146,16 +134,14 @@ function renderFloatingButtons() {
   const regearBtn = document.createElement('button');
   regearBtn.innerText = '리기어 신청';
   regearBtn.style.cssText = buttonStyle;
-  regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; regearBtn.style.transform = 'translateY(-2px)'; };
+  regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; regearBtn.style.transform = 'translateY(-1px)'; };
   regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; regearBtn.style.transform = 'translateY(0)'; };
   regearBtn.onclick = () => {
     window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
   };
 
-  container.appendChild(postingBtn);
-  container.appendChild(regearBtn);
-
-  document.body.appendChild(container);
+  headerLeft.appendChild(postingBtn);
+  headerLeft.appendChild(regearBtn);
 }
 
 function getRoleColor(role) {
