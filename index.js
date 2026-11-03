@@ -10,6 +10,7 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
+const GEARSET_FILE = path.join(__dirname, 'settings', 'gearset.json'); // 📌 기어세트 데이터 파일 경로 정의
 const LOADOUTS_DIR = path.join(__dirname, 'loadouts'); // 📌 로드아웃 폴더 경로 정의
 let currentPartiesFile = path.join(__dirname, 'loadouts', '브롤클랩.txt'); // 📌 현재 활성화된 파티 파일 추적 변수
 const CONFIG_FILE = path.join(__dirname, 'settings', 'config.json'); // 📌 통합 설정 파일 경로 (guilds + passwords)
@@ -28,6 +29,11 @@ app.get('/login', (req, res) => {
 
 app.get('/matching', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'matching.html'));
+});
+
+// 📌 기어세트 페이지 라우팅 추가
+app.get('/gearset', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'gearset.html'));
 });
 
 // 📌 정적 파일 및 에셋 폴더 서빙 설정 (루트 기준 폴더별 매핑)
@@ -100,6 +106,23 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
   }
 
   return type === 'weapon' ? '/images/default_weapon.webp' : '/images/default_armor.webp';
+}
+
+// 📌 기어세트 데이터 로드 함수
+function loadGearsets() {
+  try {
+    if (fs.existsSync(GEARSET_FILE)) {
+      return JSON.parse(fs.readFileSync(GEARSET_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.error('gearset.json 로드 실패:', e);
+  }
+  return [];
+}
+
+// 📌 기어세트 데이터 저장 함수
+function saveGearsets(data) {
+  fs.writeFileSync(GEARSET_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
 // 📌 닉네임, 길드, 출석 상태 백업 (조합표 변경 시 Free Role의 희망 포지션도 유지되도록 백업)
@@ -354,6 +377,38 @@ app.post('/api/admin-auth', (req, res) => {
   }
 });
 
+// 📌 기어세트 조회 API (한글 이름을 이미지 경로로 변환하여 전달)
+app.get('/api/gearsets', (req, res) => {
+  const gearsets = loadGearsets();
+  const mappingConfig = loadMappingConfig();
+
+  const resolvedGearsets = gearsets.map(item => {
+    return {
+      ...item,
+      weaponImg: resolveImagePath(item.weapon, '', 'weapon', mappingConfig),
+      offhandImg: resolveImagePath(item.offhand, '', 'weapon', mappingConfig),
+      helmImg: resolveImagePath(item.helm, '', 'armor', mappingConfig),
+      armorImg: resolveImagePath(item.armor, '', 'armor', mappingConfig),
+      shoesImg: resolveImagePath(item.shoes, '', 'armor', mappingConfig),
+      capeImg: resolveImagePath(item.cape, '', 'armor', mappingConfig),
+      foodImg: resolveImagePath(item.food, '', 'weapon', mappingConfig)
+    };
+  });
+
+  res.json({ success: true, gearsets: resolvedGearsets });
+});
+
+// 📌 기어세트 저장 API (관리자 전용)
+app.post('/api/gearsets', (req, res) => {
+  const { gearsets } = req.body;
+  try {
+    saveGearsets(gearsets || []);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '저장 실패' });
+  }
+});
+
 // 📌 관리자 API: loadouts 폴더 내 .txt 파일 목록 조회
 app.get('/api/admin/loadouts', (req, res) => {
   try {
@@ -399,7 +454,6 @@ io.on('connection', (socket) => {
       data.slots[index] = { ...data.slots[index], ...updatedSlot };
       saveData(data);
 
-      // Free Role이 아닐 때만 일반 코멘트를 txt 파일 원본에 반영
       if (updatedSlot.comment !== undefined && (!data.slots[index].party || !data.slots[index].party.includes('FREE ROLE'))) {
         updateTxtFileLine(updatedSlot.id, updatedSlot.comment);
       }
@@ -418,10 +472,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('resetData', () => {
-    // 💡 초기화 시에는 isReset을 true로 주어 닉네임, 길드, 출석, 그리고 Free Role 희망포지션까지 싹 비움
     const resetData = loadInitialState(false, true); 
     saveData(resetData);
-    io.setItem ? null : null; // 호환용
     io.emit('dataUpdated', resetData);
   });
 });
