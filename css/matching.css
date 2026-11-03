@@ -220,7 +220,7 @@ table.sheet-table tr:hover { background-color: #273549; }
 .gear-cell span { overflow: hidden; text-overflow: ellipsis; }
 
 input[type="text"], select { 
-  width: 100vw; 
+  width: 100%; 
   max-width: 100%;
   background: #0f172a; 
   color: #f8fafc; 
@@ -238,15 +238,13 @@ select { padding-right: 2px; text-align: center; }
 
 /* 📌 모바일 화면 반응형 최적화 (768px 이하) */
 @media (max-width: 768px) {
-  /* 1. DA 박스와 인원 현황 영역 정렬 */
+  /* 1. DA 박스와 조합명 숨김 */
   .header-left {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     width: 100%;
   }
-
-  /* 2. 모바일에서 DA 및 조합명 숨김 */
   #header-da-summary-box {
     display: none !important;
   }
@@ -254,7 +252,7 @@ select { padding-right: 2px; text-align: center; }
     display: none !important;
   }
 
-  /* 3. 모바일에서 순번(1), 갑옷(3), 코멘트(4), 출석(7) 컬럼 숨김 */
+  /* 2. 일반 파티 테이블: 순번(1), 갑옷(3), 코멘트(4), 출석(7) 컬럼 숨김 및 너비 균형 배분 */
   table.sheet-table th:nth-child(1),
   table.sheet-table td:nth-child(1),
   table.sheet-table th:nth-child(3),
@@ -264,5 +262,25 @@ select { padding-right: 2px; text-align: center; }
   table.sheet-table th:nth-child(7),
   table.sheet-table td:nth-child(7) {
     display: none !important;
+  }
+
+  /* 3. FREE ROLE 테이블: 희망 포지션 칸 폭 제어 및 출석 대신 닉네임이 오도록 순서/너비 강제 배분 */
+  /* FREE ROLE 구조: 1(순번-숨김), 2(희망포지션), 3(길드), 4(닉네임), 5(출석-숨김) */
+  table.sheet-table tr th:nth-child(2),
+  table.sheet-table tr td:nth-child(2) {
+    width: 45% !important; /* 희망 포지션 입력칸 너비 적당히 축소 */
+  }
+  table.sheet-table tr th:nth-child(3),
+  table.sheet-table tr td:nth-child(3) {
+    width: 20% !important; /* 길드 셀 */
+  }
+  table.sheet-table tr th:nth-child(4),
+  table.sheet-table tr td:nth-child(4) {
+    width: 35% !important; /* 닉네임 셀이 맨 오른쪽에 위치하도록 함 */
+    display: table-cell !important;
+  }
+  table.sheet-table tr th:nth-child(5),
+  table.sheet-table tr td:nth-child(5) {
+    display: none !important; /* 기존 출석 셀 완전 숨김 */
   }
 }
