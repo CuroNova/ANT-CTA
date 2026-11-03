@@ -363,14 +363,6 @@ function renderPartyTables() {
 
   const tabsContainer = document.getElementById('party-tabs');
   tabsContainer.innerHTML = '';
-  // 📌 모바일 화면 너비에 맞춰 꽉 차게 확장하고 상하 여백 확보
-  tabsContainer.style.display = 'flex';
-  tabsContainer.style.justifyContent = 'space-between';
-  tabsContainer.style.alignItems = 'center';
-  tabsContainer.style.position = 'relative';
-  tabsContainer.style.width = '100%';
-  tabsContainer.style.boxSizing = 'border-box';
-  tabsContainer.style.padding = '8px 12px'; // 상하 좁았던 여백 확장
 
   // 1) 좌측 파티 탭들을 담을 래퍼
   const leftTabsWrapper = document.createElement('div');
@@ -378,30 +370,9 @@ function renderPartyTables() {
   leftTabsWrapper.style.gap = '8px';
   leftTabsWrapper.style.alignItems = 'center';
 
-  // 2) 💡 관리자 메뉴 버튼 크기감에 맞춘 정중앙 상하 배치 조합명 배너
+  // 2) 💡 관리자 메뉴 버튼 크기와 완벽히 일치하는 정중앙 상하 배치 조합명 배너
   const loadoutTitleIndicator = document.createElement('div');
   loadoutTitleIndicator.className = 'current-loadout-indicator';
-  loadoutTitleIndicator.style.cssText = `
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1e293b;
-    color: #38bdf8;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.8rem;
-    border: 1px solid #334155;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    pointer-events: none;
-    white-space: nowrap;
-    text-align: center;
-    line-height: 1.15;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 110px;
-  `;
   
   const currentLoadoutName = currentData.currentLoadout || '기본 조합';
   loadoutTitleIndicator.innerHTML = `
@@ -685,7 +656,7 @@ function openAdminFloatingModal() {
       <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; color: #38bdf8;">⚙️ 관리자 제어 메뉴</h3>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: nil; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        <button id="btn-loadout-change" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
           📂 조합 변경
         </button>
 
