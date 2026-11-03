@@ -229,9 +229,9 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-left] 영역에 `.summary-box` + `.summary-item` 구조로 DA 박스를 인원현황 맨 왼쪽에 주입
-  const headerLeft = document.querySelector('.header-left');
-  if (headerLeft) {
+  // 📌 1. [header-right] 영역의 맨 왼쪽(인원현황 바로 왼쪽)에 DA 박스 주입
+  const headerRight = document.querySelector('.header-right');
+  if (headerRight) {
     let daBoxContainer = document.getElementById('header-da-summary-box');
     if (!daBoxContainer) {
       daBoxContainer = document.createElement('div');
@@ -243,7 +243,8 @@ function renderSummaryPanels() {
           <span id="header-da-value" style="font-weight: bold; font-size: 0.95rem;">0</span>
         </div>
       `;
-      headerLeft.insertBefore(daBoxContainer, headerLeft.firstChild); // 맨 왼쪽에 삽입
+      // 우측 인원현황 그룹의 맨 처음에 삽입하여 인원현황보다 왼쪽에 위치시킴
+      headerRight.insertBefore(daBoxContainer, headerRight.firstChild);
     }
 
     const daValueSpan = document.getElementById('header-da-value');
@@ -384,7 +385,6 @@ function renderPartyTables() {
 
   tabs.forEach(tab => {
     const btn = document.createElement('button');
-    // 📌 웹 환경에서 관리메뉴 버튼이 확실히 우측 끝으로 밀려나도록 클래스 부여
     btn.className = tab.isAdminTab ? `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}` : `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     btn.innerText = tab.label;
     btn.onclick = () => {
@@ -406,7 +406,7 @@ function renderPartyTables() {
   tabsContainer.appendChild(leftTabsWrapper);
   tabsContainer.appendChild(loadoutTitleIndicator);
   if (adminTabBtn) {
-    tabsContainer.appendChild(adminTabBtn); // 📌 우측 끝에 관리메뉴 버튼 주입
+    tabsContainer.appendChild(adminTabBtn); // 우측 끝에 관리메뉴 버튼 주입
   }
 
   const container = document.getElementById('sheet-container');
