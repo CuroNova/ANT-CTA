@@ -376,7 +376,6 @@ function renderPartyTables() {
   
   const currentLoadoutName = currentData.currentLoadout || '기본 조합';
   loadoutTitleIndicator.innerHTML = `
-    <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 500; letter-spacing: -0.3px;">조합명</span>
     <span style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">[${currentLoadoutName}]</span>
   `;
 
