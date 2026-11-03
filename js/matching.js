@@ -65,8 +65,8 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderHeaderButtons();     // 📌 좌측 상단 헤더 영역에 버튼들 생성
+  removeOldResetButtons();    // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
+  renderHeaderButtons();      // 📌 좌측 상단 헤더 영역에 버튼들 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -358,13 +358,13 @@ function renderPartyTables() {
   leftTabsWrapper.style.gap = '8px';
   leftTabsWrapper.style.alignItems = 'center';
 
-  // 2) 💡 정중앙 상하 배치 조합명 배너
+  // 2) 💡 정중앙 조합명 배너 (틀/테두리 제거 및 글씨 크기 키움)
   const loadoutTitleIndicator = document.createElement('div');
   loadoutTitleIndicator.className = 'current-loadout-indicator';
   
   const currentLoadoutName = currentData.currentLoadout || '기본 조합';
   loadoutTitleIndicator.innerHTML = `
-    <span style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">[${currentLoadoutName}]</span>
+    <span style="font-size: 1.15rem; color: #38bdf8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 250px; background: transparent; border: none; box-shadow: none; padding: 0;">[${currentLoadoutName}]</span>
   `;
 
   // 3) 관리자 메뉴 버튼 변수
