@@ -66,7 +66,7 @@ function initUtcClock(selector = '[data-utc-clock]') {
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
   removeOldResetButtons();   // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
-  renderFloatingButtons();   // 📌 좌측 하단 마우스 오버 전용 플로팅 버튼들 동적 생성
+  renderFloatingButtons();   // 📌 좌측 하단 항상 노출되는 플로팅 버튼들 동적 생성
 });
 
 // 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
@@ -101,7 +101,7 @@ function handleNicknameBlur(inputEl) {
   }
 }
 
-// 📌 화면 좌측 하단 마우스 오버 플로팅 버튼 생성
+// 📌 화면 좌측 하단 플로팅 버튼 생성 (마우스 오버 없이 항시 노출)
 function renderFloatingButtons() {
   const existingContainer = document.getElementById('floating-buttons-container');
   if (existingContainer) existingContainer.remove();
@@ -110,12 +110,12 @@ function renderFloatingButtons() {
   container.id = 'floating-buttons-container';
   container.style.cssText = `
     position: fixed;
-    bottom: 70px;
-    left: 20px;
+    bottom: 34px;
+    left: 24px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 9998;
+    z-index: 1000;
   `;
 
   const buttonStyle = `
@@ -127,20 +127,18 @@ function renderFloatingButtons() {
     font-weight: bold;
     font-size: 0.9rem;
     cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     width: 135px;
     text-align: center;
     box-sizing: border-box;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease, background 0.2s;
+    transition: background 0.2s, transform 0.1s;
   `;
 
   const postingBtn = document.createElement('button');
   postingBtn.innerText = '포스팅 하러가기';
   postingBtn.style.cssText = buttonStyle;
-  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; };
-  postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; };
+  postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; postingBtn.style.transform = 'translateY(-2px)'; };
+  postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; postingBtn.style.transform = 'translateY(0)'; };
   postingBtn.onclick = () => {
     window.open('https://www.naver.com', '_blank');
   };
@@ -148,28 +146,14 @@ function renderFloatingButtons() {
   const regearBtn = document.createElement('button');
   regearBtn.innerText = '리기어 신청';
   regearBtn.style.cssText = buttonStyle;
-  regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; };
-  regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; };
+  regearBtn.onmouseover = () => { regearBtn.style.background = '#334155'; regearBtn.style.transform = 'translateY(-2px)'; };
+  regearBtn.onmouseout = () => { regearBtn.style.background = '#475569'; regearBtn.style.transform = 'translateY(0)'; };
   regearBtn.onclick = () => {
     window.open('https://docs.google.com/spreadsheets/d/155P_zDLKiue4DuxCKz5-q3R7lzkSVrSRiZHO2RgbkuU/edit?usp=sharing', '_blank');
   };
 
   container.appendChild(postingBtn);
   container.appendChild(regearBtn);
-
-  container.onmouseenter = () => {
-    postingBtn.style.opacity = '1';
-    postingBtn.style.pointerEvents = 'auto';
-    regearBtn.style.opacity = '1';
-    regearBtn.style.pointerEvents = 'auto';
-  };
-
-  container.onmouseleave = () => {
-    postingBtn.style.opacity = '0';
-    postingBtn.style.pointerEvents = 'none';
-    regearBtn.style.opacity = '0';
-    regearBtn.style.pointerEvents = 'none';
-  };
 
   document.body.appendChild(container);
 }
