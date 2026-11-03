@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Another Guild Gearsets</title>
+  
+  <script src="/js/header.js"></script>
+  <link rel="stylesheet" href="/css/gearset.css">
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <!-- 📌 뒤로가기 버튼 (matching.html로 이동) -->
+      <button onclick="location.href='/matching'" style="background: #475569; color: #f8fafc; border: 1px solid #64748b; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer;">
+        🔙 메인으로 돌아가기
+      </button>
+    </div>
+    
+    <div class="header-center">
+      <h1>🛡️ Guild Gearsets 🛡️</h1>
+      <div data-utc-clock class="utc-clock">UTC --:--:--</div>
+    </div>
+
+    <div class="header-right">
+      <!-- 관리자일 때만 노출되는 기어 추가 버튼 -->
+      <div id="admin-action-area"></div>
+    </div>
+  </div>
+
+  <!-- 📌 역할별 박스(오펜/디펜/서폿/힐러/딜러) 컨테이너 -->
+  <div id="gearset-container"></div>
+
+  <!-- 📌 관리자 편집용 모달 컨테이너 -->
+  <div id="gearset-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modal-title" style="color: #38bdf8; margin-top: 0;">기어 세트 관리</h3>
+      <form id="gearset-form">
+        <input type="hidden" id="form-id">
+        <div class="form-group">
+          <label>역할 (POSITION)</label>
+          <select id="form-role" required>
+            <option value="오펜">오펜</option>
+            <option value="디펜">디펜</option>
+            <option value="서폿">서폿</option>
+            <option value="힐러">힐러</option>
+            <option value="딜러">딜러</option>
+          </select>
+        </div>
+        <div class="form-group"><label>무기 (WEAPON)</label><input type="text" id="form-weapon" placeholder="예: 불의 도끼"></div>
+        <div class="form-group"><label>보조무기 (OFF-HAND)</label><input type="text" id="form-offhand" placeholder="예: 방패"></div>
+        <div class="form-group"><label>머리 (HELMET)</label><input type="text" id="form-helm" placeholder="예: 기사 투구"></div>
+        <div class="form-group"><label>갑옷 (ARMOR)</label><input type="text" id="form-armor" placeholder="예: 데몬 갑옷"></div>
+        <div class="form-group"><label>신발 (SHOES)</label><input type="text" id="form-shoes" placeholder="예: 로열 신발"></div>
+        <div class="form-group"><label>망토 (CAPE)</label><input type="text" id="form-cape" placeholder="예: 데몬 망토"></div>
+        <div class="form-group"><label>음식 (FOOD)</label><input type="text" id="form-food" placeholder="예: 고기 스튜"></div>
+        <div class="form-group"><label>스킬셋 (SKILL SET)</label><input type="text" id="form-skillset" placeholder="예: Q1 W2 E1"></div>
+        <div class="form-group"><label>코멘트 (COMMENTS)</label><textarea id="form-comment" placeholder="특이사항 입력"></textarea></div>
+        
+        <div class="modal-btns">
+          <button type="submit" class="btn-save">저장</button>
+          <button type="button" class="btn-close" onclick="closeGearModal()">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/gearset.js"></script>
+  <script src="/js/footer.js"></script>
+</body>
+</html>
