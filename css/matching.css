@@ -62,8 +62,8 @@ h1 {
 .header-right { 
   display: flex; 
   flex-direction: column; 
-  align-items: flex-end;    
-  gap: 8px;                 
+  align-items: flex-end;     
+  gap: 8px;                     
 }
 
 @media (max-width: 1200px) {
@@ -74,7 +74,7 @@ h1 {
     gap: 15px; 
   }
   .header-right { 
-    align-items: center;    
+    align-items: center;     
     width: 100%; 
   }
 }
@@ -135,15 +135,18 @@ h1 {
   transform: translateY(-2px);
 }
 
-/* 📌 탭 영역: 일반 탭은 왼쪽 정렬 유지 */
+/* 📌 탭 영역 */
 .party-tabs { 
   display: flex; 
   align-items: center; 
   margin-bottom: 16px; 
   border-bottom: 2px solid #334155; 
-  padding-bottom: 4px; 
+  padding: 8px 12px; 
   overflow-x: auto; 
   gap: 8px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-btn { 
@@ -160,9 +163,8 @@ h1 {
 }
 .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-/* 📌 핵심: 관리자 탭만 margin-left: auto를 주어 오른쪽 끝으로 밀어냄 */
+/* 관리자 탭 */
 .admin-tab-btn {
-  margin-left: auto;
   background: #7f1d1d;
   border-color: #ef4444;
   color: #f87171;
@@ -170,6 +172,28 @@ h1 {
 .admin-tab-btn.active {
   background: #ef4444;
   color: #ffffff;
+}
+
+/* 📌 조합표 이름 정중앙 상하 배치 배너 스타일 (관리자 메뉴 버튼 크기감 일치) */
+.current-loadout-indicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #38bdf8;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid #334155;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
 }
 
 .side-by-side-grid {
@@ -196,7 +220,7 @@ table.sheet-table tr:hover { background-color: #273549; }
 .gear-cell span { overflow: hidden; text-overflow: ellipsis; }
 
 input[type="text"], select { 
-  width: 100%; 
+  width: 100vw; 
   max-width: 100%;
   background: #0f172a; 
   color: #f8fafc; 
@@ -211,3 +235,13 @@ select { padding-right: 2px; text-align: center; }
 
 .chk-center { text-align: center; }
 .chk-center input { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
+
+/* 📌 모바일 화면 반응형 대응: DA 박스가 인원 현황 왼쪽에 딱 붙도록 설정 */
+@media (max-width: 768px) {
+  .header-left {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+  }
+}
