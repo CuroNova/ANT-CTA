@@ -53,7 +53,6 @@ h1 {
   letter-spacing: 0.5px;
 }
 
-/* 📌 DA 현황과 길드/갑옷 현황을 감싸는 영역이 왼쪽에 나란히 붙도록 설정 */
 .header-left { 
   display: flex; 
   align-items: center; 
@@ -61,11 +60,20 @@ h1 {
   gap: 10px;
 }
 
+/* 📌 우측 영역: 상하 2단 구조 정렬 */
 .header-right { 
   display: flex; 
   flex-direction: column; 
   align-items: flex-end;     
-  gap: 8px;                     
+  gap: 6px;                     
+}
+
+/* 📌 우측 상단 줄: [DA 박스] + [길드(인원현황) 박스] 가로 나란히 배치 */
+.header-right-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (max-width: 1200px) {
@@ -78,6 +86,9 @@ h1 {
   .header-right { 
     align-items: center;     
     width: 100%; 
+  }
+  .header-right-top {
+    justify-content: center;
   }
 }
 
@@ -137,7 +148,7 @@ h1 {
   transform: translateY(-2px);
 }
 
-/* 📌 상단 탭 영역: Flex로 배치하되 관리자 버튼을 우측 끝으로 밀어냄 */
+/* 📌 탭 영역 */
 .party-tabs { 
   display: flex; 
   align-items: center; 
@@ -165,7 +176,7 @@ h1 {
 }
 .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-/* 📌 웹 환경 관리자 탭 강제 우측 정렬 */
+/* 📌 관리자 탭 우측 끝 정렬 */
 .admin-tab-btn {
   margin-left: auto !important;
   background: #7f1d1d;
@@ -241,7 +252,7 @@ select { padding-right: 2px; text-align: center; }
 
 /* 📌 모바일 화면 반응형 최적화 (768px 이하) */
 @media (max-width: 768px) {
-  /* 1. DA 박스와 조합명 숨김 */
+  /* 1. 모바일에서 DA 및 조합명 숨김 */
   .header-left {
     display: flex;
     justify-content: flex-start;
