@@ -76,7 +76,7 @@ function loadMappingConfig() {
   return { weapon: {}, armor: {} };
 }
 
-// 📌 이미지 경로 결정 함수 (확장자가 없으면 자동으로 .webp를 붙여주도록 업그레이드!)
+// 📌 이미지 경로 결정 함수 (웹 링크는 그대로 살리고, 일반 파일명은 자동으로 .webp와 /images/ 장착!)
 function resolveImagePath(name, directUrl, type, mappingConfig) {
   if (directUrl && directUrl.trim() !== '') {
     return directUrl.trim();
@@ -87,9 +87,11 @@ function resolveImagePath(name, directUrl, type, mappingConfig) {
     const trimmedName = name.trim();
     for (const [key, imagePath] of Object.entries(mapRules)) {
       if (trimmedName.includes(key)) {
+        // 💡 매핑된 값이 완전한 웹 링크('http://', 'https://')이거나 절대 경로('/')로 시작하면 그대로 반환
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('/')) {
           return imagePath;
         }
+
         // 💡 확장자가 생략되어 있다면 자동으로 .webp를 붙여줌
         const finalPath = imagePath.includes('.') ? imagePath : `${imagePath}.webp`;
         return `/images/${finalPath}`;
