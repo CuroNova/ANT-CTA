@@ -47,8 +47,9 @@ h1 {
   white-space: nowrap; 
 }
 
+/* 💡 UTC 시계 크기 확대 (타이틀보다 작고, 기존보다 잘 보이게 1.05rem으로 상향) */
 .utc-clock {
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   color: #94a3b8;
   font-weight: 600;
   letter-spacing: 0.5px;
