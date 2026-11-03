@@ -1,15 +1,15 @@
 {
   "armor": {
-    "데몬": "armor/armor_Demon.png",
-    "심판관": "armor/armor_Judicator.png",
-    "기사": "armor/armor_Knight.png",
-    "가디언": "armor/armor_Guardian.png",
-    "더스크": "armor/armor_Duskweaver.png",
-    "왕실아머": "armor/armor_Royalarmor.png",
-    "왕실재킷": "armor/armor_Royaljacket.png",
-    "재킷": "armor/armor_Mercenary.png",
-    "로브": "armor/armor_Robe.png",
-    "판금": "armor/armor_Plate.png"
+    "데몬": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_HELL",
+    "심판관": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_KEEPER",
+    "기사": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET2",
+    "가디언": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET3",
+    "더스크": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_FEY",
+    "왕실아머": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_ROYAL",
+    "왕실재킷": "https://render.albiononline.com/v1/item/T8_ARMOR_LEATHER_ROYAL",
+    "로브": "https://render.albiononline.com/v1/item/T8_ARMOR_CLOTH_SET1",
+    "재킷": "https://render.albiononline.com/v1/item/T8_ARMOR_LEATHER_SET1",
+    "판금": "https://render.albiononline.com/v1/item/T8_ARMOR_PLATE_SET1"
   },
   "weapon": {
     "자유무기": "weapon/weapon_Free.png",
