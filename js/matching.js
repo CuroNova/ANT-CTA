@@ -229,9 +229,16 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-right] 영역의 맨 왼쪽(인원현황 바로 왼쪽)에 DA 박스 주입
+  // 📌 우측 영역(.header-right) 상단에 [DA 박스] + [길드(인원현황)] 가로 나란히 배치
   const headerRight = document.querySelector('.header-right');
   if (headerRight) {
+    let rightTopGroup = headerRight.querySelector('.header-right-top');
+    if (!rightTopGroup) {
+      rightTopGroup = document.createElement('div');
+      rightTopGroup.className = 'header-right-top';
+      headerRight.insertBefore(rightTopGroup, headerRight.firstChild);
+    }
+
     let daBoxContainer = document.getElementById('header-da-summary-box');
     if (!daBoxContainer) {
       daBoxContainer = document.createElement('div');
@@ -243,8 +250,14 @@ function renderSummaryPanels() {
           <span id="header-da-value" style="font-weight: bold; font-size: 0.95rem;">0</span>
         </div>
       `;
-      // 우측 인원현황 그룹의 맨 처음에 삽입하여 인원현황보다 왼쪽에 위치시킴
-      headerRight.insertBefore(daBoxContainer, headerRight.firstChild);
+    }
+
+    rightTopGroup.appendChild(daBoxContainer);
+
+    // 길드 현황 컨테이너를 DA 박스 바로 오른쪽에 붙임
+    const guildSummaryContainer = document.getElementById('guild-summary');
+    if (guildSummaryContainer) {
+      rightTopGroup.appendChild(guildSummaryContainer);
     }
 
     const daValueSpan = document.getElementById('header-da-value');
@@ -263,7 +276,7 @@ function renderSummaryPanels() {
     }
   }
 
-  // 📌 2. 길드 현황 업데이트
+  // 📌 길드 현황 데이터 렌더링
   const guildSummaryContainer = document.getElementById('guild-summary');
   if (guildSummaryContainer && currentData.guilds) {
     guildSummaryContainer.innerHTML = '';
@@ -285,7 +298,7 @@ function renderSummaryPanels() {
     });
   }
 
-  // 📌 3. 갑옷 현황 업데이트
+  // 📌 갑옷 현황 렌더링 (하단 위치 고정)
   const armorSummaryContainer = document.getElementById('armor-summary');
   if (armorSummaryContainer) {
     armorSummaryContainer.innerHTML = '';
@@ -303,6 +316,10 @@ function renderSummaryPanels() {
       `;
       armorSummaryContainer.appendChild(itemDiv);
     });
+
+    if (headerRight) {
+      headerRight.appendChild(armorSummaryContainer);
+    }
   }
 }
 
