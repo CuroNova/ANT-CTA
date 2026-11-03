@@ -54,7 +54,7 @@ h1 {
   letter-spacing: 0.5px;
 }
 
-/* 📌 좌측 상단으로 이동한 CTA 버튼 컨테이너 */
+/* 📌 좌측 상단 CTA 버튼 컨테이너 */
 .header-left { 
   display: flex; 
   align-items: center; 
@@ -91,10 +91,6 @@ h1 {
   }
   .header-right-top {
     justify-content: center;
-  }
-  .header-left {
-    justify-content: center;
-    width: 100%;
   }
 }
 
@@ -258,12 +254,9 @@ select { padding-right: 2px; text-align: center; }
 
 /* 📌 모바일 화면 반응형 최적화 (768px 이하) */
 @media (max-width: 768px) {
-  /* 1. 모바일에서 DA 및 조합명 숨김 */
+  /* 1. 모바일에서 좌측 CTA 버튼들, DA 박스 및 조합명 숨김 */
   .header-left {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
+    display: none !important;
   }
   #header-da-summary-box {
     display: none !important;
