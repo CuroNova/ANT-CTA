@@ -250,11 +250,6 @@ function renderSummaryPanels() {
     if (daValueSpan) {
       daValueSpan.innerText = daValue;
       
-      // 📌 요청하신 DA 색상 규칙 적용
-      // 0일 때: 흰색 (#f8fafc)
-      // 10 이하(1~10): 노란색 (#eab308)
-      // 20 이하(11~20): 주황색 (#f97316)
-      // 20 초과(21+): 빨간색 (#f43f5e)
       if (daValue > 20) {
         daValueSpan.style.cssText = 'color: #f43f5e !important; font-weight: bold; font-size: 0.95rem;'; // 빨간색
       } else if (daValue > 10) {
@@ -368,6 +363,50 @@ function renderPartyTables() {
 
   const tabsContainer = document.getElementById('party-tabs');
   tabsContainer.innerHTML = '';
+  tabsContainer.style.display = 'flex';
+  tabsContainer.style.justifyContent = 'space-between';
+  tabsContainer.style.alignItems = 'center';
+  tabsContainer.style.position = 'relative'; // 💡 정중앙 배치를 위한 부모 relative 설정
+
+  // 1) 좌측 파티 탭들을 담을 래퍼
+  const leftTabsWrapper = document.createElement('div');
+  leftTabsWrapper.style.display = 'flex';
+  leftTabsWrapper.style.gap = '8px';
+  leftTabsWrapper.style.alignItems = 'center';
+
+  // 2) 💡 정중앙에 상하 배치할 현재 조합표 이름 표시 배너
+  const loadoutTitleIndicator = document.createElement('div');
+  loadoutTitleIndicator.className = 'current-loadout-indicator';
+  loadoutTitleIndicator.style.cssText = `
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #38bdf8;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border: 1px solid #334155;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    pointer-events: none;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  `;
+  
+  const currentLoadoutName = currentData.currentLoadout || '기본 조합';
+  loadoutTitleIndicator.innerHTML = `
+    <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 500;">조합명</span>
+    <span style="font-size: 0.85rem; color: #38bdf8; font-weight: bold;">[${currentLoadoutName}]</span>
+  `;
+
+  // 3) 우측 관리자 메뉴 버튼 분리 보관용 변수
+  let adminTabBtn = null;
+
   tabs.forEach(tab => {
     const btn = document.createElement('button');
     btn.className = tab.isAdminTab ? `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}` : `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
@@ -380,8 +419,19 @@ function renderPartyTables() {
         render();
       }
     };
-    tabsContainer.appendChild(btn);
+
+    if (tab.isAdminTab) {
+      adminTabBtn = btn;
+    } else {
+      leftTabsWrapper.appendChild(btn);
+    }
   });
+
+  tabsContainer.appendChild(leftTabsWrapper);
+  tabsContainer.appendChild(loadoutTitleIndicator); // 💡 정중앙 상하 배치 타이틀 주입
+  if (adminTabBtn) {
+    tabsContainer.appendChild(adminTabBtn);
+  }
 
   const container = document.getElementById('sheet-container');
   container.innerHTML = '';
