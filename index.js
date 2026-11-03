@@ -33,7 +33,14 @@ app.get('/matching', (req, res) => {
 // 📌 정적 파일 및 에셋 폴더 서빙 설정 (루트 기준 폴더별 매핑)
 app.use(express.static(path.join(__dirname, 'views')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// 💡 [적용 완료] 이미지 폴더 브라우저 캐시(7일) 적용으로 중복 트래픽 및 낭비 차단
+app.use('/images', express.static(path.join(__dirname, 'images'), {
+  maxAge: '7d', // 7일 동안 브라우저에 캐시 저장
+  etag: true,
+  lastModified: true
+}));
+
 app.use('/css', express.static(path.join(__dirname, 'css')));
 
 // 📌 💡 통합 설정 파일(config.json) 로드 함수
