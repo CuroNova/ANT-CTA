@@ -65,21 +65,8 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  removeOldResetButtons();    // 📌 기존에 남아있던 하단 초기화 버튼들 완전히 제거
   renderHeaderButtons();      // 📌 좌측 상단 헤더 영역에 버튼들 생성
 });
-
-// 📌 기존 HTML나 화면에 남아있는 초기화 관련 버튼들을 검색하여 완전히 제거하는 함수
-function removeOldResetButtons() {
-  const allElements = document.querySelectorAll('button, a, div, span');
-  allElements.forEach(el => {
-    if (el.innerText && (el.innerText.includes('초기화') || el.innerText.includes('Reset'))) {
-      if (!el.closest('#admin-floating-modal')) {
-        el.remove();
-      }
-    }
-  });
-}
 
 // 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트/희망포지션용)
 function handleTextAlign(inputEl) {
