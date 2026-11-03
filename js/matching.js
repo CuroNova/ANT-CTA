@@ -229,7 +229,7 @@ function renderSummaryPanels() {
   // DA 계산식 적용
   const daValue = currentData.daValue !== undefined ? currentData.daValue : calculateDisarray(activePlayerCount);
 
-  // 📌 1. [header-left] 영역에 `.summary-box` + `.summary-item` 구조로 DA 박스 주입
+  // 📌 1. [header-left] 영역에 `.summary-box` + `.summary-item` 구조로 DA 박스를 인원현황 맨 왼쪽에 주입
   const headerLeft = document.querySelector('.header-left');
   if (headerLeft) {
     let daBoxContainer = document.getElementById('header-da-summary-box');
@@ -370,7 +370,7 @@ function renderPartyTables() {
   leftTabsWrapper.style.gap = '8px';
   leftTabsWrapper.style.alignItems = 'center';
 
-  // 2) 💡 관리자 메뉴 버튼 크기와 완벽히 일치하는 정중앙 상하 배치 조합명 배너
+  // 2) 💡 정중앙 상하 배치 조합명 배너
   const loadoutTitleIndicator = document.createElement('div');
   loadoutTitleIndicator.className = 'current-loadout-indicator';
   
@@ -379,11 +379,12 @@ function renderPartyTables() {
     <span style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">[${currentLoadoutName}]</span>
   `;
 
-  // 3) 우측 관리자 메뉴 버튼 분리 보관용 변수
+  // 3) 관리자 메뉴 버튼 변수
   let adminTabBtn = null;
 
   tabs.forEach(tab => {
     const btn = document.createElement('button');
+    // 📌 웹 환경에서 관리메뉴 버튼이 확실히 우측 끝으로 밀려나도록 클래스 부여
     btn.className = tab.isAdminTab ? `tab-btn admin-tab-btn ${tab.label === activeTabLabel ? 'active' : ''}` : `tab-btn ${tab.label === activeTabLabel ? 'active' : ''}`;
     btn.innerText = tab.label;
     btn.onclick = () => {
@@ -405,7 +406,7 @@ function renderPartyTables() {
   tabsContainer.appendChild(leftTabsWrapper);
   tabsContainer.appendChild(loadoutTitleIndicator);
   if (adminTabBtn) {
-    tabsContainer.appendChild(adminTabBtn);
+    tabsContainer.appendChild(adminTabBtn); // 📌 우측 끝에 관리메뉴 버튼 주입
   }
 
   const container = document.getElementById('sheet-container');
