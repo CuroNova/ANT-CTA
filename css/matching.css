@@ -221,6 +221,15 @@ table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 6px; f
 table.sheet-table td { padding: 5px 6px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; overflow: hidden; }
 table.sheet-table tr:hover { background-color: #273549; }
 
+/* 📌 닉네임 입력 완료 시 행 전체 흐림(Dimmed) 처리 */
+table.sheet-table tr.dimmed-row {
+  opacity: 0.45;
+  transition: opacity 0.2s ease-in-out;
+}
+table.sheet-table tr.dimmed-row:hover {
+  opacity: 0.85;
+}
+
 .gear-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; width: 100%; }
 .gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
 .gear-cell span { overflow: hidden; text-overflow: ellipsis; }
