@@ -272,7 +272,7 @@ select { padding-right: 2px; text-align: center; }
 .chk-center { text-align: center; }
 .chk-center input { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
 
-/* 📌 모바일 화면 반응형 최적화 (768px 이하) */
+/* 📌 모바일 화면 반응형 최적화 (768px 이하) - 코멘트 대신 길드 노출 */
 @media (max-width: 768px) {
   /* 1. 모바일에서 좌측 CTA 버튼들, DA 박스 및 조합명 숨김 */
   .header-left {
@@ -285,19 +285,26 @@ select { padding-right: 2px; text-align: center; }
     display: none !important;
   }
 
-  /* 2. 일반 파티 테이블 컬럼 숨김 */
+  /* 2. 일반 파티 테이블 컬럼 숨김 (순번, 무기, 갑옷, 코멘트, 출석 중 순번/갑옷/코멘트/출석 숨김 -> 무기, 길드, 닉네임 노출) */
   table.sheet-table th:nth-child(1),
   table.sheet-table td:nth-child(1),
   table.sheet-table th:nth-child(3),
   table.sheet-table td:nth-child(3),
-  table.sheet-table th:nth-child(4),
-  table.sheet-table td:nth-child(4),
+  table.sheet-table th:nth-child(4), /* 코멘트 열 숨김 */
+  table.sheet-table td:nth-child(4), /* 코멘트 열 숨김 */
   table.sheet-table th:nth-child(7),
   table.sheet-table td:nth-child(7) {
     display: none !important;
   }
 
-  /* 3. FREE ROLE 테이블 컬럼 조정 */
+  /* 3. 일반 파티 테이블에서 길드(5번째 열)를 모바일에 표시 */
+  table.sheet-table tr th:nth-child(5),
+  table.sheet-table tr td:nth-child(5) {
+    width: 25% !important;
+    display: table-cell !important;
+  }
+
+  /* 4. FREE ROLE 테이블 컬럼 조정 */
   table.sheet-table tr th:nth-child(2),
   table.sheet-table tr td:nth-child(2) {
     width: 45% !important;
