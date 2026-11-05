@@ -317,7 +317,7 @@ function updateTxtFileLine(slotId, newComment) {
 
 function getData() {
   if (!fs.existsSync(DATA_FILE)) {
-    const initialData = loadInitialState(false);
+    const initialData = loadInitialState(true);
     fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
     return initialData;
   }
@@ -325,7 +325,7 @@ function getData() {
     const content = fs.readFileSync(DATA_FILE, 'utf8');
     return JSON.parse(content);
   } catch (err) {
-    const initialData = loadInitialState(false);
+    const initialData = loadInitialState(true);
     fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
     return initialData;
   }
