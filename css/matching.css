@@ -271,75 +271,65 @@ select { padding-right: 2px; text-align: center; }
 
 /* 📌 모바일 화면 반응형 최적화 (768px 이하) */
 @media (max-width: 768px) {
-  /* 1. 모바일에서 상단 불필요 요소 숨김 */
+  /* 1. 상단 불필요 요소 숨김 */
   .header-left, #header-da-summary-box, .current-loadout-indicator {
     display: none !important;
   }
 
   /* -------------------------------------------------------------
-     2. [일반 파티 (1, 2, 3파티)] 컬럼 제어 (총 7개 컬럼)
-     노출: 2번(무기), 5번(길드), 6번(닉네임)
-     숨김: 1번(순번), 3번(갑옷), 4번(코멘트), 7번(출석)
+     2. [일반 파티 (1, 2, 3파티)] 무기(2), 길드(5), 닉네임(6) 노출
      ------------------------------------------------------------- */
-  /* 일반 파티 1, 3, 4, 7번 컬럼 숨김 (th, td 공통) */
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(1),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(1),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(3),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(3),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(4),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(4),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(7),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(7) {
+  table.sheet-table:not(:has(input[data-field-type="comment"])) th:nth-child(1),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) td:nth-child(1),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) th:nth-child(3),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) td:nth-child(3),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) th:nth-child(4),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) td:nth-child(4),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) th:nth-child(7),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) td:nth-child(7) {
     display: none !important;
   }
 
-  /* 일반 파티 2번(무기), 5번(길드), 6번(닉네임) 너비 조절 및 노출 */
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(2),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(2) {
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr th:nth-child(2),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr td:nth-child(2) {
     width: 40% !important;
     display: table-cell !important;
   }
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(5),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(5) {
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr th:nth-child(5),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr td:nth-child(5) {
     width: 25% !important;
     display: table-cell !important;
   }
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr th:nth-child(6),
-  table.sheet-table:not([id*="free"]):not([id*="FREE"]) tr td:nth-child(6) {
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr th:nth-child(6),
+  table.sheet-table:not(:has(input[data-field-type="comment"])) tr td:nth-child(6) {
     width: 35% !important;
     display: table-cell !important;
   }
 
   /* -------------------------------------------------------------
-     3. [FREE ROLE 파티] 컬럼 제어 (총 5개 컬럼)
-     컬럼 순서: 1(순번), 2(희망포지션/코멘트), 3(길드), 4(이름), 5(출석)
-     노출: 2번(희망포지션/코멘트), 3번(길드), 4번(이름)
-     숨김: 1번(순번), 5번(출석)
+     3. [FREE ROLE 파티] 코멘트(2), 길드(3), 이름(4) 노출
      ------------------------------------------------------------- */
-  /* FREE ROLE 파티의 모든 테이블 중 1번, 5번 컬럼(th, td 전체) 숨김 */
-  table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(1),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(1),
-  table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(5),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(5),
-  /* FREE ROLE 테이블 헤더(th) 직접 타겟팅 */
-  table.sheet-table:has(tbody tr input[data-field-type="comment"]) thead tr th:nth-child(1),
-  table.sheet-table:has(tbody tr input[data-field-type="comment"]) thead tr th:nth-child(5) {
+  /* FREE ROLE 테이블 전체에서 1번(순번), 5번(출석) 열 숨김 (헤더 및 데이터 공통) */
+  table.sheet-table:has(input[data-field-type="comment"]) th:nth-child(1),
+  table.sheet-table:has(input[data-field-type="comment"]) td:nth-child(1),
+  table.sheet-table:has(input[data-field-type="comment"]) th:nth-child(5),
+  table.sheet-table:has(input[data-field-type="comment"]) td:nth-child(5) {
     display: none !important;
   }
 
-  /* FREE ROLE 2번(희망포지션), 3번(길드), 4번(이름) 너비 조절 및 확실한 노출 */
-  table.sheet-table:has(tbody tr input[data-field-type="comment"]) thead tr th:nth-child(2),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(2) {
+  /* FREE ROLE 테이블의 2번(코멘트), 3번(길드), 4번(이름) 열 노출 및 너비 지정 */
+  table.sheet-table:has(input[data-field-type="comment"]) th:nth-child(2),
+  table.sheet-table:has(input[data-field-type="comment"]) td:nth-child(2) {
     width: 45% !important;
     display: table-cell !important;
   }
-  table.sheet-table:has(tbody tr input[data-field-type="comment"]) thead tr th:nth-child(3),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(3) {
+  table.sheet-table:has(input[data-field-type="comment"]) th:nth-child(3),
+  table.sheet-table:has(input[data-field-type="comment"]) td:nth-child(3) {
     width: 25% !important;
     display: table-cell !important;
   }
-  table.sheet-table:has(tbody tr input[data-field-type="comment"]) thead tr th:nth-child(4),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(4) {
+  table.sheet-table:has(input[data-field-type="comment"]) th:nth-child(4),
+  table.sheet-table:has(input[data-field-type="comment"]) td:nth-child(4) {
     width: 30% !important;
     display: table-cell !important;
   }
