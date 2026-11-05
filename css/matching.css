@@ -310,26 +310,28 @@ select { padding-right: 2px; text-align: center; }
     width: 35% !important;
   }
 
-  /* 3. [FREE ROLE 파티] 테이블 설정: 코멘트와 닉네임만 노출 (나머지 숨김) */
-  /* FREE ROLE 행에서 코멘트(2번째), 닉네임(4번째) 외의 열(1번, 3번, 5번 등)을 숨김 */
+  /* 3. [FREE ROLE 파티] 테이블 설정: 코멘트, 길드, 닉네임만 노출 (나머지 순번/출석 등 숨김) */
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(1),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(1),
-  table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(3),
-  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(3),
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(5),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(5) {
     display: none !important;
   }
 
-  /* FREE ROLE의 코멘트(2번)와 닉네임(4번) 너비 지정 및 확실한 노출 */
+  /* FREE ROLE의 코멘트(2번), 길드(3번), 닉네임(4번) 너비 및 노출 설정 */
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(2),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(2) {
-    width: 60% !important;
+    width: 45% !important;
+    display: table-cell !important;
+  }
+  table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(3),
+  table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(3) {
+    width: 25% !important;
     display: table-cell !important;
   }
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(4),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(4) {
-    width: 40% !important;
+    width: 30% !important;
     display: table-cell !important;
   }
 }
