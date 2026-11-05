@@ -284,7 +284,7 @@ select { padding-right: 2px; text-align: center; }
     display: none !important;
   }
 
-  /* 2. [1, 2, 3파티 등 일반 파티] 테이블 설정: 무기, 길드, 닉네임 노출 */
+  /* 2. [1, 2, 3파티 등 일반 파티] 테이블 설정: 무기(2), 길드(5), 닉네임(6) 노출 */
   table.sheet-table th:not(:has(input[data-field-type="comment"])):nth-child(1),
   table.sheet-table td:not(:has(input[data-field-type="comment"])):nth-child(1),
   table.sheet-table th:not(:has(input[data-field-type="comment"])):nth-child(3),
@@ -310,7 +310,8 @@ select { padding-right: 2px; text-align: center; }
     width: 35% !important;
   }
 
-  /* 3. [FREE ROLE 파티] 테이블 설정: 코멘트, 길드, 닉네임만 노출 (나머지 순번/출석 등 숨김) */
+  /* 3. [FREE ROLE 파티] 테이블 설정: 희망 포지션(2), 길드(3), 이름(4)만 노출 */
+  /* 헤더(th) 및 데이터(td)의 1번(순번) 및 5번(출석) 컬럼 숨김 */
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(1),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(1),
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(5),
@@ -318,7 +319,7 @@ select { padding-right: 2px; text-align: center; }
     display: none !important;
   }
 
-  /* FREE ROLE의 코멘트(2번), 길드(3번), 닉네임(4번) 너비 및 노출 설정 */
+  /* FREE ROLE 헤더 및 데이터의 2번(희망 포지션), 3번(길드), 4번(이름) 컬럼 노출 및 너비 지정 */
   table.sheet-table tr:has(input[data-field-type="comment"]) th:nth-child(2),
   table.sheet-table tr:has(input[data-field-type="comment"]) td:nth-child(2) {
     width: 45% !important;
