@@ -115,7 +115,7 @@ function renderHeaderButtons() {
   postingBtn.onmouseover = () => { postingBtn.style.background = '#334155'; postingBtn.style.transform = 'translateY(-1px)'; };
   postingBtn.onmouseout = () => { postingBtn.style.background = '#475569'; postingBtn.style.transform = 'translateY(0)'; };
   postingBtn.onclick = () => {
-    window.open('https://www.naver.com', '_blank');
+    window.open('https://discord.com/channels/1289824713769615403/1322576705100976210', '_blank');
   };
 
   const regearBtn = document.createElement('button');
