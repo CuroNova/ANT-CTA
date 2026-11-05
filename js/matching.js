@@ -65,7 +65,7 @@ function initUtcClock(selector = '[data-utc-clock]') {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUtcClock('[data-utc-clock]');
-  renderHeaderButtons();      // 📌 좌측 상단 헤더 영역에 버튼들 생성
+  renderHeaderButtons();     // 📌 좌측 상단 헤더 영역에 버튼들 생성
 });
 
 // 📌 입력값 유무에 따라 텍스트 정렬을 동적으로 바꿔주는 함수 (코멘트/희망포지션용)
@@ -460,10 +460,14 @@ function renderPartyTables() {
 
         const attendanceAttr = isAdmin ? '' : 'disabled';
         const nicknameAlign = (currentNickname && currentNickname.trim() !== '') ? 'left' : 'center';
+        
+        // 📌 닉네임 유무에 따라 tr에 'has-nickname' 클래스 부여
+        const hasNickname = currentNickname && currentNickname.trim() !== '';
+        const rowClass = hasNickname ? 'has-nickname' : '';
 
         if (isFreeRole) {
           tbodyHtml += `
-            <tr>
+            <tr class="${rowClass}">
               <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
               <td style="width: 455px;">${commentHtml}</td>
               <td style="width: 65px;">
@@ -487,7 +491,7 @@ function renderPartyTables() {
           const weaponTextColor = getRoleColor(slot.role);
 
           tbodyHtml += `
-            <tr>
+            <tr class="${rowClass}">
               <td style="width: 35px; text-align: center; font-weight: bold; color: #94a3b8; white-space: nowrap;">${formattedIndex}</td>
               <td style="width: 110px;">
                 <div class="gear-cell">
