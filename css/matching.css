@@ -221,14 +221,39 @@ table.sheet-table th { background: #0f172a; color: #38bdf8; padding: 10px 6px; f
 table.sheet-table td { padding: 5px 6px; border-bottom: 1px solid #334155; border-right: 1px solid #1e293b; vertical-align: middle; overflow: hidden; }
 table.sheet-table tr:hover { background-color: #273549; }
 
-/* 📌 닉네임(값이) 존재할 때 마우스 오버가 없어도 적용되는 어두운 배경 스타일 */
-table.sheet-table tr.has-nickname {
-  background-color: #151d2e;
+/* 📌 닉네임 입력칸에 값이 들어있을 때 적용되는 어둡게 처리 스타일 */
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)) {
+  background-color: #111827; /* 행 배경색을 더 어두운 톤으로 변경 */
+}
+
+/* 닉네임이 작성된 행의 텍스트/장비 색상 감쇄 (색감 유지하며 투명도/밝기 톤다운) */
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)) .gear-cell span {
+  opacity: 0.6; /* 기존 무기/갑옷 색감을 살리면서 어둡게 조절 */
+  filter: brightness(0.8);
+}
+
+/* 닉네임이 작성된 행의 장비 아이콘 이미지도 약간 어둡게 조절 */
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)) .gear-img {
+  filter: brightness(0.7);
+}
+
+/* 마우스 오버 시 다시 원래 밝기와 배경으로 복원 */
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)):hover {
+  background-color: #273549;
+}
+
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)):hover .gear-cell span {
+  opacity: 1;
+  filter: brightness(1);
+}
+
+table.sheet-table tr:has(input[data-field-type="nickname"]:not(:placeholder-shown)):hover .gear-img {
+  filter: brightness(1);
 }
 
 .gear-cell { display: flex; align-items: center; justify-content: flex-start; gap: 6px; white-space: nowrap; overflow: hidden; width: 100%; }
-.gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; }
-.gear-cell span { overflow: hidden; text-overflow: ellipsis; }
+.gear-img { width: 32px; height: 32px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #334155; padding: 2px; flex-shrink: 0; transition: filter 0.2s; }
+.gear-cell span { overflow: hidden; text-overflow: ellipsis; transition: opacity 0.2s, filter 0.2s; }
 
 input[type="text"], select { 
   width: 100%; 
